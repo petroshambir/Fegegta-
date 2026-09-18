@@ -1,3 +1,6 @@
+
+
+
 // import { ArrowLeft } from 'lucide-react'
 // import { Link } from 'react-router-dom'
 
@@ -10,7 +13,9 @@
 
 //   return (
 //     <section className="mx-auto max-w-7xl px-4 py-8 sm:px-6 sm:py-10 lg:px-8">
-//       {/* Header */}
+//       {/* =====================================================
+//           HEADER
+//       ===================================================== */}
 //       <div className="border-b border-gray-200 pb-8">
 //         <Link
 //           to="/"
@@ -21,22 +26,26 @@
 //         </Link>
 
 //         <div>
+//           {/* Marketplace */}
 //           <p className="text-sm font-medium text-gray-500">
-//             ፈገግታ Marketplace
+//             ፈገግታ {t('marketplace')}
 //           </p>
 
+//           {/* Categories title */}
 //           <h1 className="mt-2 text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl lg:text-5xl">
-//             Categories
+//             {t('categoriesTitle')}
 //           </h1>
 
+//           {/* Categories description */}
 //           <p className="mt-3 max-w-2xl text-sm leading-6 text-gray-500 sm:text-base">
-//             Explore products by category and discover items from trusted
-//             sellers.
+//             {t('categoriesDescription')}
 //           </p>
 //         </div>
 //       </div>
 
-//       {/* Categories */}
+//       {/* =====================================================
+//           CATEGORIES GRID
+//       ===================================================== */}
 //       <div className="mt-8 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4 lg:gap-6">
 //         {categories.map((category) => (
 //           <CategoryCard
@@ -50,7 +59,6 @@
 // }
 
 // export default Categories
-
 
 import { ArrowLeft } from 'lucide-react'
 import { Link } from 'react-router-dom'
@@ -110,4 +118,3 @@ function Categories() {
 }
 
 export default Categories
-
