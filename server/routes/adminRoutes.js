@@ -1,45 +1,4 @@
-// import express from 'express';
 
-// import {
-//   getDashboard,
-//   getUsers,
-//   getSellers,
-//   approveSeller,
-//   rejectSeller,
-//   getProducts,
-//   approveProduct,
-//   rejectProduct,
-//   getOrders,
-// } from '../controllers/adminController.js';
-
-// import { protect } from '../middleware/authMiddleware.js';
-// import { adminOnly } from '../middleware/adminMiddleware.js';
-
-// const router = express.Router();
-
-// // All admin routes require authentication + admin role
-// router.use(protect, adminOnly);
-
-// // Dashboard
-// router.get('/dashboard', getDashboard);
-
-// // Users
-// router.get('/users', getUsers);
-
-// // Sellers
-// router.get('/sellers', getSellers);
-// router.put('/sellers/:id/approve', approveSeller);
-// router.put('/sellers/:id/reject', rejectSeller);
-
-// // Products
-// router.get('/products', getProducts);
-// router.put('/products/:id/approve', approveProduct);
-// router.put('/products/:id/reject', rejectProduct);
-
-// // Orders
-// router.get('/orders', getOrders);
-
-// export default router;
 
 import express from 'express'
 
@@ -49,6 +8,7 @@ import express from 'express'
 
 import {
   getDashboard,
+
   getUsers,
   updateUserRole,
 
@@ -57,6 +17,9 @@ import {
   rejectSeller,
 
   getProducts,
+  createProduct,
+  updateProduct,
+  deleteProduct,
   approveProduct,
   rejectProduct,
 
@@ -67,6 +30,13 @@ import {
   getNotifications,
   markNotificationAsRead,
   markAllNotificationsAsRead,
+
+  // ==========================================================
+  // ADMIN SETTINGS
+  // ==========================================================
+
+  getAdminSettings,
+  updateAdminSettings,
 } from '../controllers/adminController.js'
 
 // ============================================================
@@ -75,6 +45,7 @@ import {
 
 import { protect } from '../middleware/authMiddleware.js'
 import { adminOnly } from '../middleware/adminMiddleware.js'
+import upload from '../middleware/uploadMiddleware.js'
 
 // ============================================================
 // ROUTER
@@ -84,10 +55,14 @@ const router = express.Router()
 
 // ============================================================
 // ALL ADMIN ROUTES
+//
 // Authentication + Admin Role Required
 // ============================================================
 
-router.use(protect, adminOnly)
+router.use(
+  protect,
+  adminOnly
+)
 
 // ============================================================
 // DASHBOARD
@@ -144,15 +119,56 @@ router.put(
 // PRODUCTS
 // ============================================================
 
+// ------------------------------------------------------------
+// GET ALL PRODUCTS
+// ------------------------------------------------------------
+
 router.get(
   '/products',
   getProducts
 )
 
+// ------------------------------------------------------------
+// CREATE PRODUCT FROM ADMIN
+// ------------------------------------------------------------
+
+router.post(
+  '/products',
+  upload.array('images', 4),
+  createProduct
+)
+
+// ------------------------------------------------------------
+// UPDATE PRODUCT FROM ADMIN
+// ------------------------------------------------------------
+
+router.put(
+  '/products/:id',
+  upload.array('images', 4),
+  updateProduct
+)
+
+// ------------------------------------------------------------
+// DELETE PRODUCT FROM ADMIN
+// ------------------------------------------------------------
+
+router.delete(
+  '/products/:id',
+  deleteProduct
+)
+
+// ------------------------------------------------------------
+// APPROVE SELLER PRODUCT
+// ------------------------------------------------------------
+
 router.put(
   '/products/:id/approve',
   approveProduct
 )
+
+// ------------------------------------------------------------
+// REJECT SELLER PRODUCT
+// ------------------------------------------------------------
 
 router.put(
   '/products/:id/reject',
@@ -185,6 +201,28 @@ router.put(
 router.put(
   '/notifications/read-all',
   markAllNotificationsAsRead
+)
+
+// ============================================================
+// ADMIN SETTINGS
+// ============================================================
+
+// ------------------------------------------------------------
+// GET ADMIN SETTINGS
+// ------------------------------------------------------------
+
+router.get(
+  '/settings',
+  getAdminSettings
+)
+
+// ------------------------------------------------------------
+// UPDATE ADMIN SETTINGS
+// ------------------------------------------------------------
+
+router.put(
+  '/settings',
+  updateAdminSettings
 )
 
 // ============================================================

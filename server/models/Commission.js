@@ -1,4 +1,5 @@
-import mongoose from 'mongoose';
+
+import mongoose from 'mongoose'
 
 const commissionSchema = new mongoose.Schema(
   {
@@ -6,6 +7,12 @@ const commissionSchema = new mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: 'Seller',
       required: true,
+    },
+
+    store: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Store',
+      default: null,
     },
 
     order: {
@@ -66,15 +73,24 @@ const commissionSchema = new mongoose.Schema(
   {
     timestamps: true,
   }
-);
+)
 
-commissionSchema.index({ seller: 1, createdAt: -1 });
-commissionSchema.index({ order: 1 });
-commissionSchema.index({ status: 1 });
+commissionSchema.index({
+  seller: 1,
+  createdAt: -1,
+})
 
-const Commission = mongoose.model(
-  'Commission',
-  commissionSchema
-);
+commissionSchema.index({
+  order: 1,
+})
 
-export default Commission;
+commissionSchema.index({
+  status: 1,
+})
+
+const Commission =
+  mongoose.models.Commission ||
+  mongoose.model('Commission', commissionSchema)
+
+export default Commission
+

@@ -1,33 +1,13 @@
-// import express from 'express';
-
-// import {
-//   registerUser,
-//   loginUser,
-//   getMe,
-//   updateProfile,
-// } from '../controllers/authController.js';
-
-// import { protect } from '../middleware/authMiddleware.js';
-
-// const router = express.Router();
-
-// // Public routes
-// router.post('/register', registerUser);
-// router.post('/login', loginUser);
-
-// // Protected routes
-// router.get('/me', protect, getMe);
-// router.put('/profile', protect, updateProfile);
-
-// export default router;
-
-
 import express from 'express'
 
 import {
   registerUser,
   loginUser,
   getCurrentUser,
+  updateProfile,
+  updateSettings,
+  forgotPassword,
+  resetPassword,
 } from '../controllers/authController.js'
 
 import { protect } from '../middleware/authMiddleware.js'
@@ -38,14 +18,53 @@ const router = express.Router()
 // PUBLIC ROUTES
 // ============================================================
 
-router.post('/register', registerUser)
+// Register
+router.post(
+  '/register',
+  registerUser
+)
 
-router.post('/login', loginUser)
+// Login
+router.post(
+  '/login',
+  loginUser
+)
+
+// Forgot password
+router.post(
+  '/forgot-password',
+  forgotPassword
+)
+
+// Reset password
+router.post(
+  '/reset-password/:token',
+  resetPassword
+)
 
 // ============================================================
 // PROTECTED ROUTES
 // ============================================================
 
-router.get('/me', protect, getCurrentUser)
+// Get currently logged-in user
+router.get(
+  '/me',
+  protect,
+  getCurrentUser
+)
+
+// Update currently logged-in user's profile
+router.put(
+  '/profile',
+  protect,
+  updateProfile
+)
+
+// Update currently logged-in user's settings
+router.put(
+  '/settings',
+  protect,
+  updateSettings
+)
 
 export default router

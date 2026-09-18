@@ -1,4 +1,6 @@
-import express from 'express';
+
+
+import express from 'express'
 
 import {
   createOrder,
@@ -6,25 +8,48 @@ import {
   getOrderById,
   cancelOrder,
   updateOrderStatus,
-} from '../controllers/orderController.js';
+} from '../controllers/orderController.js'
 
-import { protect } from '../middleware/authMiddleware.js';
-import { sellerOnly } from '../middleware/sellerMiddleware.js';
-import { adminOnly } from '../middleware/adminMiddleware.js';
+import { protect } from '../middleware/authMiddleware.js'
 
-const router = express.Router();
+const router = express.Router()
 
-// Customer routes
-router.post('/', protect, createOrder);
-router.get('/my-orders', protect, getMyOrders);
-router.get('/:id', protect, getOrderById);
-router.put('/:id/cancel', protect, cancelOrder);
+// ============================================================
+// CUSTOMER ROUTES
+// ============================================================
 
-// Seller/Admin order status
+router.post(
+  '/',
+  protect,
+  createOrder
+)
+
+router.get(
+  '/my-orders',
+  protect,
+  getMyOrders
+)
+
+router.get(
+  '/:id',
+  protect,
+  getOrderById
+)
+
+router.put(
+  '/:id/cancel',
+  protect,
+  cancelOrder
+)
+
+// ============================================================
+// ADMIN / SELLER ORDER STATUS
+// ============================================================
+
 router.put(
   '/:id/status',
   protect,
   updateOrderStatus
-);
+)
 
-export default router;
+export default router

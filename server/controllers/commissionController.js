@@ -1,153 +1,5 @@
-
-// import Commission from '../models/Commission.js'
-
-// // ============================================================
-// // GET SELLER COMMISSIONS
-// // ============================================================
-
-// export const getSellerCommissions = async (
-//   req,
-//   res,
-//   next
-// ) => {
-//   try {
-//     const commissions = await Commission.find({
-//       seller: req.user.id,
-//     })
-//       .populate(
-//         'order',
-//         'orderNumber total createdAt status'
-//       )
-//       .populate(
-//         'store',
-//         'name slug'
-//       )
-//       .sort({
-//         createdAt: -1,
-//       })
-
-//     const summary = commissions.reduce(
-//       (result, commission) => {
-//         result.totalSales +=
-//           Number(commission.saleAmount || 0)
-
-//         result.totalCommission +=
-//           Number(commission.commissionAmount || 0)
-
-//         result.totalEarnings +=
-//           Number(commission.sellerAmount || 0)
-
-//         return result
-//       },
-//       {
-//         totalSales: 0,
-//         totalCommission: 0,
-//         totalEarnings: 0,
-//       }
-//     )
-
-//     return res.status(200).json({
-//       success: true,
-//       commissions,
-//       summary,
-//     })
-//   } catch (error) {
-//     next(error)
-//   }
-// }
-
-// // ============================================================
-// // GET ALL COMMISSIONS — ADMIN
-// // ============================================================
-
-// export const getAllCommissions = async (
-//   req,
-//   res,
-//   next
-// ) => {
-//   try {
-//     const commissions = await Commission.find()
-//       .populate(
-//         'seller',
-//         'name email'
-//       )
-//       .populate(
-//         'store',
-//         'name slug'
-//       )
-//       .populate(
-//         'order',
-//         'orderNumber total createdAt status'
-//       )
-//       .sort({
-//         createdAt: -1,
-//       })
-
-//     return res.status(200).json({
-//       success: true,
-//       commissions,
-//     })
-//   } catch (error) {
-//     next(error)
-//   }
-// }
-
-// // ============================================================
-// // UPDATE COMMISSION STATUS — ADMIN
-// // ============================================================
-
-// export const updateCommissionStatus = async (
-//   req,
-//   res,
-//   next
-// ) => {
-//   try {
-//     const { status } = req.body
-
-//     const allowedStatuses = [
-//       'pending',
-//       'paid',
-//       'cancelled',
-//     ]
-
-//     if (!allowedStatuses.includes(status)) {
-//       return res.status(400).json({
-//         success: false,
-//         message: 'Invalid commission status.',
-//       })
-//     }
-
-//     const commission =
-//       await Commission.findByIdAndUpdate(
-//         req.params.id,
-//         {
-//           status,
-//         },
-//         {
-//           new: true,
-//           runValidators: true,
-//         }
-//       )
-
-//     if (!commission) {
-//       return res.status(404).json({
-//         success: false,
-//         message: 'Commission not found.',
-//       })
-//     }
-
-//     return res.status(200).json({
-//       success: true,
-//       message:
-//         'Commission status updated successfully.',
-//       commission,
-//     })
-//   } catch (error) {
-//     next(error)
-//   }
-// }
-
 import Commission from '../models/Commission.js'
+import CommissionSetting from '../models/CommissionSetting.js'
 import Seller from '../models/Seller.js'
 
 // ============================================================
@@ -160,15 +12,32 @@ export const getCommissionSettings = async (
   next
 ) => {
   try {
-    const commissionRate =
-      Number(
-        process.env.DEFAULT_COMMISSION_RATE
-      ) || 10
+    let setting =
+      await CommissionSetting.findOne()
+
+    if (!setting) {
+      const defaultRate =
+        Number(
+          process.env.DEFAULT_COMMISSION_RATE
+        )
+
+      setting =
+        await CommissionSetting.create({
+          commissionRate:
+            Number.isFinite(defaultRate) &&
+            defaultRate >= 0 &&
+            defaultRate <= 100
+              ? defaultRate
+              : 10,
+        })
+    }
 
     return res.status(200).json({
       success: true,
+
       settings: {
-        commissionRate,
+        commissionRate:
+          Number(setting.commissionRate),
       },
     })
   } catch (error) {
@@ -186,9 +55,11 @@ export const updateCommissionSettings = async (
   next
 ) => {
   try {
-    const { commissionRate } = req.body
+    const { commissionRate } =
+      req.body
 
-    const rate = Number(commissionRate)
+    const rate =
+      Number(commissionRate)
 
     if (
       !Number.isFinite(rate) ||
@@ -202,23 +73,29 @@ export const updateCommissionSettings = async (
       })
     }
 
-    /*
-      IMPORTANT:
-      Environment variables cannot safely be changed
-      permanently while the Node.js server is running.
+    let setting =
+      await CommissionSetting.findOne()
 
-      For now we return the validated rate.
+    if (!setting) {
+      setting =
+        await CommissionSetting.create({
+          commissionRate: rate,
+        })
+    } else {
+      setting.commissionRate = rate
 
-      Later we should store the commission setting
-      inside MongoDB so Admin changes persist.
-    */
+      await setting.save()
+    }
 
     return res.status(200).json({
       success: true,
+
       message:
-        'Commission settings validated successfully.',
+        'Commission rate updated successfully.',
+
       settings: {
-        commissionRate: rate,
+        commissionRate:
+          Number(setting.commissionRate),
       },
     })
   } catch (error) {
@@ -236,12 +113,14 @@ export const getSellerCommissions = async (
   next
 ) => {
   try {
-    const sellerId = req.seller?._id
+    const sellerId =
+      req.seller?._id
 
     if (!sellerId) {
       return res.status(403).json({
         success: false,
-        message: 'Seller account not found.',
+        message:
+          'Seller account not found.',
       })
     }
 
@@ -251,11 +130,11 @@ export const getSellerCommissions = async (
       })
         .populate(
           'order',
-          'orderNumber total createdAt status'
+          'orderNumber total createdAt orderStatus'
         )
         .populate(
           'store',
-          'name slug'
+          'name slug status'
         )
         .sort({
           createdAt: -1,
@@ -266,7 +145,7 @@ export const getSellerCommissions = async (
         (result, commission) => {
           result.totalSales +=
             Number(
-              commission.saleAmount || 0
+              commission.orderAmount || 0
             )
 
           result.totalCommission +=
@@ -290,7 +169,9 @@ export const getSellerCommissions = async (
 
     return res.status(200).json({
       success: true,
+
       commissions,
+
       summary,
     })
   } catch (error) {
@@ -320,7 +201,7 @@ export const getAllCommissions = async (
         )
         .populate(
           'order',
-          'orderNumber total createdAt status'
+          'orderNumber total createdAt orderStatus'
         )
         .sort({
           createdAt: -1,
@@ -328,6 +209,7 @@ export const getAllCommissions = async (
 
     return res.status(200).json({
       success: true,
+
       commissions,
     })
   } catch (error) {
@@ -353,11 +235,14 @@ export const markCommissionAsPaid = async (
     if (!commission) {
       return res.status(404).json({
         success: false,
-        message: 'Commission not found.',
+        message:
+          'Commission not found.',
       })
     }
 
-    if (commission.status === 'paid') {
+    if (
+      commission.status === 'paid'
+    ) {
       return res.status(400).json({
         success: false,
         message:
@@ -365,7 +250,9 @@ export const markCommissionAsPaid = async (
       })
     }
 
-    if (commission.status === 'cancelled') {
+    if (
+      commission.status === 'cancelled'
+    ) {
       return res.status(400).json({
         success: false,
         message:
@@ -373,16 +260,21 @@ export const markCommissionAsPaid = async (
       })
     }
 
-    commission.status = 'paid'
+    // ========================================================
+    // UPDATE COMMISSION
+    // ========================================================
 
-    commission.paidAt = new Date()
+    commission.status =
+      'paid'
+
+    commission.paidAt =
+      new Date()
 
     await commission.save()
 
-    /*
-      Update seller balance when the commission
-      is marked as paid.
-    */
+    // ========================================================
+    // UPDATE SELLER BALANCE
+    // ========================================================
 
     if (commission.seller) {
       const seller =
@@ -391,29 +283,33 @@ export const markCommissionAsPaid = async (
         )
 
       if (seller) {
+        const sellerAmount =
+          Number(
+            commission.sellerAmount || 0
+          )
+
+        const commissionAmount =
+          Number(
+            commission.commissionAmount || 0
+          )
+
         seller.availableBalance =
           Number(
             seller.availableBalance || 0
           ) +
-          Number(
-            commission.sellerAmount || 0
-          )
+          sellerAmount
 
         seller.totalEarnings =
           Number(
             seller.totalEarnings || 0
           ) +
-          Number(
-            commission.sellerAmount || 0
-          )
+          sellerAmount
 
         seller.totalCommission =
           Number(
             seller.totalCommission || 0
           ) +
-          Number(
-            commission.commissionAmount || 0
-          )
+          commissionAmount
 
         await seller.save()
       }
@@ -421,8 +317,10 @@ export const markCommissionAsPaid = async (
 
     return res.status(200).json({
       success: true,
+
       message:
         'Commission marked as paid successfully.',
+
       commission,
     })
   } catch (error) {

@@ -1,3 +1,4 @@
+
 import mongoose from 'mongoose'
 
 const sellerSchema = new mongoose.Schema(
@@ -58,6 +59,28 @@ const sellerSchema = new mongoose.Schema(
       max: 100,
     },
 
+    // ========================================================
+    // SELLER EARNINGS
+    // ========================================================
+
+    availableBalance: {
+      type: Number,
+      default: 0,
+      min: 0,
+    },
+
+    totalEarnings: {
+      type: Number,
+      default: 0,
+      min: 0,
+    },
+
+    totalCommission: {
+      type: Number,
+      default: 0,
+      min: 0,
+    },
+
     status: {
       type: String,
       enum: [
@@ -80,3 +103,4 @@ const Seller =
   mongoose.model('Seller', sellerSchema)
 
 export default Seller
+
