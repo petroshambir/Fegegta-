@@ -1,5 +1,8 @@
+
 // import { useState } from 'react'
+
 // import { Link, useLocation, useNavigate } from 'react-router-dom'
+
 // import {
 //   Eye,
 //   EyeOff,
@@ -56,6 +59,7 @@
 //   const validateForm = () => {
 //     const newErrors = {}
 
+//     // Email
 //     if (!formData.email.trim()) {
 //       newErrors.email = t('requiredField')
 //     } else if (
@@ -66,6 +70,7 @@
 //       newErrors.email = t('invalidEmail')
 //     }
 
+//     // Password
 //     if (!formData.password) {
 //       newErrors.password = t('requiredField')
 //     }
@@ -84,6 +89,7 @@
 
 //     setServerMessage('')
 
+//     // Validate form first
 //     if (!validateForm()) {
 //       return
 //     }
@@ -96,6 +102,10 @@
 //         password: formData.password,
 //       })
 
+//       // ========================================================
+//       // LOGIN FAILED
+//       // ========================================================
+
 //       if (!result?.success) {
 //         setServerMessage(
 //           result?.message || t('invalidLogin')
@@ -105,12 +115,15 @@
 //       }
 
 //       // ========================================================
-//       // REDIRECT BASED ON USER ROLE
+//       // LOGIN SUCCESS
 //       // ========================================================
 
 //       const user = result.user
 
-//       // Admin login
+//       // ========================================================
+//       // ADMIN
+//       // ========================================================
+
 //       if (user?.role === 'admin') {
 //         navigate('/admin', {
 //           replace: true,
@@ -119,7 +132,10 @@
 //         return
 //       }
 
-//       // Seller login
+//       // ========================================================
+//       // SELLER
+//       // ========================================================
+
 //       if (user?.role === 'seller') {
 //         navigate('/seller', {
 //           replace: true,
@@ -128,7 +144,10 @@
 //         return
 //       }
 
-//       // Customer login
+//       // ========================================================
+//       // CUSTOMER
+//       // ========================================================
+
 //       if (user?.role === 'customer') {
 //         navigate('/account', {
 //           replace: true,
@@ -137,7 +156,10 @@
 //         return
 //       }
 
-//       // Fallback if the role is missing or unknown
+//       // ========================================================
+//       // FALLBACK
+//       // ========================================================
+
 //       const from = location.state?.from || '/'
 
 //       navigate(from, {
@@ -159,9 +181,9 @@
 //       <div className="mx-auto max-w-6xl">
 //         <div className="grid overflow-hidden rounded-3xl border border-gray-200 bg-white shadow-sm lg:grid-cols-2">
 
-//           {/* ================================================== */}
-//           {/* LEFT SIDE */}
-//           {/* ================================================== */}
+//           {/* ==================================================
+//               LEFT SIDE
+//           ================================================== */}
 
 //           <div className="hidden bg-black p-10 text-white lg:flex lg:flex-col lg:justify-between xl:p-14">
 //             <div>
@@ -193,9 +215,9 @@
 //             </div>
 //           </div>
 
-//           {/* ================================================== */}
-//           {/* RIGHT SIDE */}
-//           {/* ================================================== */}
+//           {/* ==================================================
+//               RIGHT SIDE
+//           ================================================== */}
 
 //           <div className="p-6 sm:p-10 lg:p-12 xl:p-14">
 //             <div className="mx-auto max-w-md">
@@ -218,7 +240,9 @@
 //                 </p>
 //               </div>
 
-//               {/* SERVER ERROR */}
+//               {/* ==================================================
+//                   SERVER ERROR
+//               ================================================== */}
 
 //               {serverMessage && (
 //                 <div className="mt-6 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm leading-5 text-red-700">
@@ -226,13 +250,18 @@
 //                 </div>
 //               )}
 
-//               {/* LOGIN FORM */}
+//               {/* ==================================================
+//                   LOGIN FORM
+//               ================================================== */}
 
 //               <form
 //                 onSubmit={handleSubmit}
 //                 className="mt-8 space-y-5"
 //               >
-//                 {/* EMAIL */}
+
+//                 {/* ==================================================
+//                     EMAIL
+//                 ================================================== */}
 
 //                 <InputField
 //                   label={t('email')}
@@ -247,7 +276,9 @@
 //                   autoComplete="email"
 //                 />
 
-//                 {/* PASSWORD */}
+//                 {/* ==================================================
+//                     PASSWORD
+//                 ================================================== */}
 
 //                 <div>
 //                   <div className="mb-2 flex items-center justify-between gap-4">
@@ -318,7 +349,9 @@
 //                   )}
 //                 </div>
 
-//                 {/* LOGIN BUTTON */}
+//                 {/* ==================================================
+//                     LOGIN BUTTON
+//                 ================================================== */}
 
 //                 <button
 //                   type="submit"
@@ -341,7 +374,9 @@
 //                 </button>
 //               </form>
 
-//               {/* REGISTER */}
+//               {/* ==================================================
+//                   REGISTER
+//               ================================================== */}
 
 //               <div className="mt-7 text-center text-sm text-gray-500">
 //                 {t('dontHaveAccount')}{' '}
@@ -354,7 +389,9 @@
 //                 </Link>
 //               </div>
 
-//               {/* SELLER INFORMATION */}
+//               {/* ==================================================
+//                   SELLER INFORMATION
+//               ================================================== */}
 
 //               <div className="mt-7 rounded-2xl border border-gray-200 bg-gray-50 p-4">
 //                 <p className="text-xs leading-5 text-gray-500">
@@ -427,7 +464,11 @@
 
 import { useState } from 'react'
 
-import { Link, useLocation, useNavigate } from 'react-router-dom'
+import {
+  Link,
+  useLocation,
+  useNavigate,
+} from 'react-router-dom'
 
 import {
   Eye,
@@ -448,22 +489,33 @@ function Login() {
   const navigate = useNavigate()
   const location = useLocation()
 
-  const [formData, setFormData] = useState({
-    email: '',
-    password: '',
-  })
+  const [formData, setFormData] =
+    useState({
+      email: '',
+      password: '',
+    })
 
-  const [showPassword, setShowPassword] = useState(false)
-  const [errors, setErrors] = useState({})
-  const [serverMessage, setServerMessage] = useState('')
-  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [showPassword, setShowPassword] =
+    useState(false)
+
+  const [errors, setErrors] =
+    useState({})
+
+  const [serverMessage, setServerMessage] =
+    useState('')
+
+  const [isSubmitting, setIsSubmitting] =
+    useState(false)
 
   // ============================================================
   // HANDLE INPUT
   // ============================================================
 
   const handleChange = (event) => {
-    const { name, value } = event.target
+    const {
+      name,
+      value,
+    } = event.target
 
     setFormData((previous) => ({
       ...previous,
@@ -485,37 +537,50 @@ function Login() {
   const validateForm = () => {
     const newErrors = {}
 
-    // Email
+    // ==========================================================
+    // EMAIL
+    // ==========================================================
+
     if (!formData.email.trim()) {
-      newErrors.email = t('requiredField')
+      newErrors.email =
+        t('requiredField')
     } else if (
       !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(
         formData.email.trim()
       )
     ) {
-      newErrors.email = t('invalidEmail')
+      newErrors.email =
+        t('invalidEmail')
     }
 
-    // Password
+    // ==========================================================
+    // PASSWORD
+    // ==========================================================
+
     if (!formData.password) {
-      newErrors.password = t('requiredField')
+      newErrors.password =
+        t('requiredField')
     }
 
     setErrors(newErrors)
 
-    return Object.keys(newErrors).length === 0
+    return (
+      Object.keys(newErrors).length ===
+      0
+    )
   }
 
   // ============================================================
   // LOGIN
   // ============================================================
 
-  const handleSubmit = async (event) => {
+  const handleSubmit = async (
+    event
+  ) => {
     event.preventDefault()
 
     setServerMessage('')
 
-    // Validate form first
     if (!validateForm()) {
       return
     }
@@ -523,10 +588,16 @@ function Login() {
     setIsSubmitting(true)
 
     try {
-      const result = await login({
-        email: formData.email.trim().toLowerCase(),
-        password: formData.password,
-      })
+      const result =
+        await login({
+          email:
+            formData.email
+              .trim()
+              .toLowerCase(),
+
+          password:
+            formData.password,
+        })
 
       // ========================================================
       // LOGIN FAILED
@@ -534,7 +605,8 @@ function Login() {
 
       if (!result?.success) {
         setServerMessage(
-          result?.message || t('invalidLogin')
+          result?.message ||
+            t('invalidLogin')
         )
 
         return
@@ -544,13 +616,16 @@ function Login() {
       // LOGIN SUCCESS
       // ========================================================
 
-      const user = result.user
+      const user =
+        result.user
 
       // ========================================================
       // ADMIN
       // ========================================================
 
-      if (user?.role === 'admin') {
+      if (
+        user?.role === 'admin'
+      ) {
         navigate('/admin', {
           replace: true,
         })
@@ -562,7 +637,9 @@ function Login() {
       // SELLER
       // ========================================================
 
-      if (user?.role === 'seller') {
+      if (
+        user?.role === 'seller'
+      ) {
         navigate('/seller', {
           replace: true,
         })
@@ -574,8 +651,14 @@ function Login() {
       // CUSTOMER
       // ========================================================
 
-      if (user?.role === 'customer') {
-        navigate('/account', {
+      if (
+        user?.role === 'customer'
+      ) {
+        const from =
+          location.state?.from ||
+          '/account'
+
+        navigate(from, {
           replace: true,
         })
 
@@ -586,13 +669,14 @@ function Login() {
       // FALLBACK
       // ========================================================
 
-      const from = location.state?.from || '/'
-
-      navigate(from, {
+      navigate('/', {
         replace: true,
       })
     } catch (error) {
-      console.error('Login error:', error)
+      console.error(
+        'Login error:',
+        error
+      )
 
       setServerMessage(
         t('somethingWentWrong')
@@ -666,45 +750,50 @@ function Login() {
                 </p>
               </div>
 
-              {/* ==================================================
-                  SERVER ERROR
-              ================================================== */}
+              {/* SERVER ERROR */}
 
               {serverMessage && (
-                <div className="mt-6 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm leading-5 text-red-700">
+                <div
+                  role="alert"
+                  className="mt-6 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm leading-5 text-red-700"
+                >
                   {serverMessage}
                 </div>
               )}
 
-              {/* ==================================================
-                  LOGIN FORM
-              ================================================== */}
+              {/* LOGIN FORM */}
 
               <form
-                onSubmit={handleSubmit}
+                onSubmit={
+                  handleSubmit
+                }
                 className="mt-8 space-y-5"
               >
 
-                {/* ==================================================
-                    EMAIL
-                ================================================== */}
+                {/* EMAIL */}
 
                 <InputField
                   label={t('email')}
                   name="email"
                   type="email"
-                  value={formData.email}
-                  onChange={handleChange}
-                  error={errors.email}
+                  value={
+                    formData.email
+                  }
+                  onChange={
+                    handleChange
+                  }
+                  error={
+                    errors.email
+                  }
                   icon={Mail}
                   placeholder="name@example.com"
-                  disabled={isSubmitting}
+                  disabled={
+                    isSubmitting
+                  }
                   autoComplete="email"
                 />
 
-                {/* ==================================================
-                    PASSWORD
-                ================================================== */}
+                {/* PASSWORD */}
 
                 <div>
                   <div className="mb-2 flex items-center justify-between gap-4">
@@ -734,9 +823,15 @@ function Login() {
                           ? 'text'
                           : 'password'
                       }
-                      value={formData.password}
-                      onChange={handleChange}
-                      disabled={isSubmitting}
+                      value={
+                        formData.password
+                      }
+                      onChange={
+                        handleChange
+                      }
+                      disabled={
+                        isSubmitting
+                      }
                       autoComplete="current-password"
                       className={`w-full rounded-xl border bg-white py-3 pl-10 pr-11 text-sm text-gray-900 outline-none transition ${
                         errors.password
@@ -749,10 +844,13 @@ function Login() {
                       type="button"
                       onClick={() =>
                         setShowPassword(
-                          (previous) => !previous
+                          (previous) =>
+                            !previous
                         )
                       }
-                      disabled={isSubmitting}
+                      disabled={
+                        isSubmitting
+                      }
                       aria-label={
                         showPassword
                           ? 'Hide password'
@@ -770,18 +868,20 @@ function Login() {
 
                   {errors.password && (
                     <p className="mt-1.5 text-xs text-red-600">
-                      {errors.password}
+                      {
+                        errors.password
+                      }
                     </p>
                   )}
                 </div>
 
-                {/* ==================================================
-                    LOGIN BUTTON
-                ================================================== */}
+                {/* LOGIN BUTTON */}
 
                 <button
                   type="submit"
-                  disabled={isSubmitting}
+                  disabled={
+                    isSubmitting
+                  }
                   className="flex w-full items-center justify-center gap-2 rounded-xl bg-black px-5 py-3.5 text-sm font-semibold text-white transition hover:bg-gray-800 disabled:cursor-not-allowed disabled:opacity-60"
                 >
                   {isSubmitting ? (
@@ -800,9 +900,7 @@ function Login() {
                 </button>
               </form>
 
-              {/* ==================================================
-                  REGISTER
-              ================================================== */}
+              {/* REGISTER */}
 
               <div className="mt-7 text-center text-sm text-gray-500">
                 {t('dontHaveAccount')}{' '}
@@ -815,9 +913,7 @@ function Login() {
                 </Link>
               </div>
 
-              {/* ==================================================
-                  SELLER INFORMATION
-              ================================================== */}
+              {/* SELLER INFORMATION */}
 
               <div className="mt-7 rounded-2xl border border-gray-200 bg-gray-50 p-4">
                 <p className="text-xs leading-5 text-gray-500">
@@ -833,7 +929,7 @@ function Login() {
 }
 
 // ============================================================
-// INPUT FIELD COMPONENT
+// INPUT FIELD
 // ============================================================
 
 function InputField({
@@ -868,7 +964,9 @@ function InputField({
           onChange={onChange}
           placeholder={placeholder}
           disabled={disabled}
-          autoComplete={autoComplete}
+          autoComplete={
+            autoComplete
+          }
           className={`w-full rounded-xl border bg-white py-3 pl-10 pr-4 text-sm text-gray-900 outline-none transition placeholder:text-gray-400 ${
             error
               ? 'border-red-300 focus:border-red-400 focus:ring-2 focus:ring-red-100'
