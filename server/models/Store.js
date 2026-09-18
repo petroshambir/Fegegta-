@@ -1,3 +1,5 @@
+
+
 import mongoose from 'mongoose'
 
 const storeSchema = new mongoose.Schema(
@@ -32,9 +34,10 @@ const storeSchema = new mongoose.Schema(
       default: '',
     },
 
+    // Store belongs to a Seller, not directly to User
     seller: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: 'User',
+      ref: 'Seller',
       required: true,
     },
 
@@ -54,6 +57,10 @@ const storeSchema = new mongoose.Schema(
     timestamps: true,
   }
 )
+
+// Helpful indexes
+storeSchema.index({ seller: 1 })
+storeSchema.index({ status: 1 })
 
 const Store =
   mongoose.models.Store ||

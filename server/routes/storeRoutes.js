@@ -1,4 +1,6 @@
-import express from 'express';
+
+
+import express from 'express'
 
 import {
   getStores,
@@ -6,20 +8,56 @@ import {
   getMyStore,
   createStore,
   updateStore,
-} from '../controllers/storeController.js';
+} from '../controllers/storeController.js'
 
-import { protect } from '../middleware/authMiddleware.js';
-import { sellerOnly } from '../middleware/sellerMiddleware.js';
+import { protect } from '../middleware/authMiddleware.js'
+import { sellerOnly } from '../middleware/sellerMiddleware.js'
 
-const router = express.Router();
+const router = express.Router()
 
-// Public store routes
-router.get('/', getStores);
-router.get('/:id', getStoreById);
+// ============================================================
+// PUBLIC STORE ROUTES
+// ============================================================
 
-// Seller store routes
-router.get('/seller/my-store', protect, sellerOnly, getMyStore);
-router.post('/', protect, sellerOnly, createStore);
-router.put('/:id', protect, sellerOnly, updateStore);
+// Get all approved/active stores
+router.get('/', getStores)
 
-export default router;
+// ============================================================
+// SELLER STORE ROUTES
+// ============================================================
+
+// Get current seller's store
+router.get(
+  '/seller/my-store',
+  protect,
+  sellerOnly,
+  getMyStore
+)
+
+// Create store
+router.post(
+  '/',
+  protect,
+  sellerOnly,
+  createStore
+)
+
+// Update store
+router.put(
+  '/:id',
+  protect,
+  sellerOnly,
+  updateStore
+)
+
+// ============================================================
+// PUBLIC STORE BY ID
+// ============================================================
+
+// Keep this AFTER /seller/my-store
+router.get(
+  '/:id',
+  getStoreById
+)
+
+export default router

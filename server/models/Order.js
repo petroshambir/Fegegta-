@@ -1,3 +1,4 @@
+
 import mongoose from 'mongoose';
 
 const orderItemSchema = new mongoose.Schema(
@@ -53,6 +54,13 @@ const orderItemSchema = new mongoose.Schema(
       type: String,
       default: '',
       trim: true,
+    },
+
+    // Customer measurements / size information
+    // sent from Checkout.jsx
+    sizeData: {
+      type: mongoose.Schema.Types.Mixed,
+      default: {},
     },
 
     subtotal: {
@@ -171,13 +179,23 @@ const orderSchema = new mongoose.Schema(
 
     paymentMethod: {
       type: String,
-      enum: ['cash_on_delivery', 'stripe', 'paypal', 'bank_transfer'],
+      enum: [
+        'cash_on_delivery',
+        'stripe',
+        'paypal',
+        'bank_transfer',
+      ],
       default: 'cash_on_delivery',
     },
 
     paymentStatus: {
       type: String,
-      enum: ['pending', 'paid', 'failed', 'refunded'],
+      enum: [
+        'pending',
+        'paid',
+        'failed',
+        'refunded',
+      ],
       default: 'pending',
     },
 
@@ -222,9 +240,18 @@ const orderSchema = new mongoose.Schema(
   }
 );
 
-orderSchema.index({ customer: 1, createdAt: -1 });
-orderSchema.index({ orderStatus: 1 });
-orderSchema.index({ paymentStatus: 1 });
+orderSchema.index({
+  customer: 1,
+  createdAt: -1,
+});
+
+orderSchema.index({
+  orderStatus: 1,
+});
+
+orderSchema.index({
+  paymentStatus: 1,
+});
 
 const Order = mongoose.model('Order', orderSchema);
 

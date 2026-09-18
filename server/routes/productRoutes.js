@@ -1,30 +1,3 @@
-// import express from 'express';
-
-// import {
-//   getProducts,
-//   getProductById,
-//   createProduct,
-//   updateProduct,
-//   deleteProduct,
-//   getMyProducts,
-// } from '../controllers/productController.js';
-
-// import { protect } from '../middleware/authMiddleware.js';
-// import { sellerOnly } from '../middleware/sellerMiddleware.js';
-
-// const router = express.Router();
-
-// // Public product routes
-// router.get('/', getProducts);
-// router.get('/:id', getProductById);
-
-// // Seller product routes
-// router.get('/seller/my-products', protect, sellerOnly, getMyProducts);
-// router.post('/', protect, sellerOnly, createProduct);
-// router.put('/:id', protect, sellerOnly, updateProduct);
-// router.delete('/:id', protect, sellerOnly, deleteProduct);
-
-// export default router;
 
 import express from 'express'
 
@@ -38,7 +11,10 @@ import {
 } from '../controllers/productController.js'
 
 import { protect } from '../middleware/authMiddleware.js'
+
 import { sellerOnly } from '../middleware/sellerMiddleware.js'
+
+import upload from '../middleware/uploadMiddleware.js'
 
 const router = express.Router()
 
@@ -46,8 +22,11 @@ const router = express.Router()
 // PUBLIC PRODUCT ROUTES
 // ============================================================
 
-// Get all products
-router.get('/', getProducts)
+// Get all approved and active products
+router.get(
+  '/',
+  getProducts
+)
 
 // ============================================================
 // SELLER PRODUCT ROUTES
@@ -66,17 +45,26 @@ router.get(
 // ============================================================
 
 // Get one product by ID
-router.get('/:id', getProductById)
+router.get(
+  '/:id',
+  getProductById
+)
 
 // ============================================================
 // CREATE PRODUCT
 // ============================================================
 
 // Seller creates a product
+//
+// images:
+// - Maximum 4 images
+// - Uploaded directly to Cloudinary
+//
 router.post(
   '/',
   protect,
   sellerOnly,
+  upload.array('images', 4),
   createProduct
 )
 
@@ -85,10 +73,15 @@ router.post(
 // ============================================================
 
 // Seller updates their product
+//
+// New images can also be uploaded.
+// Maximum total images remains 4 inside controller.
+//
 router.put(
   '/:id',
   protect,
   sellerOnly,
+  upload.array('images', 4),
   updateProduct
 )
 
