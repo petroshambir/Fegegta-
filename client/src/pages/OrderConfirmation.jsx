@@ -1,3 +1,5 @@
+
+
 // import {
 //   Check,
 //   Mail,
@@ -16,6 +18,100 @@
 //   const location = useLocation()
 
 //   const order = location.state?.order
+
+//   // ============================================================
+//   // SAVE ORDER NOTIFICATION FOR ADMIN
+//   // ============================================================
+
+//   useEffect(() => {
+//     if (!order) {
+//       return
+//     }
+
+//     try {
+//       const NOTIFICATIONS_KEY =
+//         'fegegta_admin_notifications'
+
+//       const existingNotifications =
+//         JSON.parse(
+//           localStorage.getItem(NOTIFICATIONS_KEY) || '[]'
+//         )
+
+//       const orderId =
+//         order.orderNumber ||
+//         order.orderId ||
+//         order.id ||
+//         order._id
+
+//       // ----------------------------------------------------------
+//       // Prevent duplicate notification
+//       // ----------------------------------------------------------
+
+//       const alreadyExists =
+//         existingNotifications.some(
+//           (notification) =>
+//             notification.orderId === orderId ||
+//             notification.order?.orderNumber === orderId ||
+//             notification.order?.orderId === orderId ||
+//             notification.order?.id === orderId ||
+//             notification.order?._id === orderId
+//         )
+
+//       if (alreadyExists) {
+//         return
+//       }
+
+//       // ----------------------------------------------------------
+//       // Create admin notification
+//       // ----------------------------------------------------------
+
+//       const notification = {
+//         id: `notification-${Date.now()}-${Math.random()
+//           .toString(36)
+//           .substring(2, 9)}`,
+
+//         type: 'new_order',
+
+//         title: 'New Order Received',
+
+//         message: `A new order ${
+//           orderId || ''
+//         } has been placed.`,
+
+//         orderId: orderId || null,
+
+//         read: false,
+
+//         createdAt: new Date().toISOString(),
+
+//         // --------------------------------------------------------
+//         // Keep complete order information for admin
+//         // --------------------------------------------------------
+
+//         order: order,
+//       }
+
+//       const updatedNotifications = [
+//         notification,
+//         ...existingNotifications,
+//       ]
+
+//       localStorage.setItem(
+//         NOTIFICATIONS_KEY,
+//         JSON.stringify(updatedNotifications)
+//       )
+
+//       console.log(
+//         'Admin order notification created:',
+//         notification
+//       )
+//     } catch (error) {
+//       console.error(
+//         'Failed to create admin order notification:',
+//         error
+//       )
+//     }
+//   }, [order])
 
 //   // ============================================================
 //   // NO ORDER DATA
@@ -60,11 +156,13 @@
 //     <section className="min-h-screen bg-gray-50 px-4 py-10 sm:px-6 sm:py-14 lg:px-8">
 //       <div className="mx-auto max-w-5xl">
 //         <div className="overflow-hidden rounded-3xl border border-gray-200 bg-white shadow-sm">
+
 //           {/* ======================================================
 //               SUCCESS HEADER
 //           ======================================================= */}
 
 //           <div className="border-b border-gray-100 px-6 py-10 text-center sm:px-10 sm:py-14">
+
 //             {/* SUCCESS ICON */}
 
 //             <div className="relative mx-auto flex h-24 w-24 items-center justify-center">
@@ -122,6 +220,7 @@
 //           ======================================================= */}
 
 //           <div className="grid border-b border-gray-100 sm:grid-cols-3">
+
 //             {/* ORDER NUMBER */}
 
 //             <div className="border-b border-gray-100 px-6 py-5 sm:border-b-0 sm:border-r">
@@ -142,7 +241,10 @@
 //               </p>
 
 //               <p className="mt-2 text-sm font-bold text-gray-900">
-//                 {formatPaymentMethod(order.paymentMethod, t)}
+//                 {formatPaymentMethod(
+//                   order.paymentMethod,
+//                   t
+//                 )}
 //               </p>
 //             </div>
 
@@ -164,11 +266,13 @@
 //           ======================================================= */}
 
 //           <div className="grid lg:grid-cols-[minmax(0,1fr)_320px]">
+
 //             {/* ====================================================
 //                 ORDER ITEMS
 //             ===================================================== */}
 
 //             <div className="p-6 sm:p-8">
+
 //               <div className="flex items-center gap-3">
 //                 <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gray-100">
 //                   <Package className="h-5 w-5 text-gray-700" />
@@ -217,6 +321,7 @@
 //             ===================================================== */}
 
 //             <div className="border-t border-gray-100 bg-gray-50 p-6 sm:p-8 lg:border-l lg:border-t-0">
+
 //               <h2 className="text-lg font-bold text-gray-900">
 //                 {t('orderSummary')}
 //               </h2>
@@ -224,6 +329,7 @@
 //               {/* PRICE SUMMARY */}
 
 //               <div className="mt-6 space-y-4">
+
 //                 <div className="flex items-center justify-between text-sm text-gray-600">
 //                   <span>{t('subtotal')}</span>
 
@@ -279,11 +385,13 @@
 //               {/* SHIPPING ADDRESS */}
 
 //               <div className="mt-4 rounded-2xl bg-white p-4">
+
 //                 <p className="text-sm font-semibold text-gray-900">
 //                   {t('shippingAddress')}
 //                 </p>
 
 //                 <div className="mt-2 text-xs leading-5 text-gray-500">
+
 //                   {customer.address && (
 //                     <p>{customer.address}</p>
 //                   )}
@@ -318,9 +426,11 @@
 
 //               <div className="mt-4 rounded-2xl bg-white p-4">
 //                 <div className="flex gap-3">
+
 //                   <Mail className="mt-0.5 h-5 w-5 shrink-0 text-gray-600" />
 
 //                   <div className="min-w-0">
+
 //                     <p className="text-sm font-semibold text-gray-900">
 //                       {t('email')}
 //                     </p>
@@ -328,6 +438,7 @@
 //                     <p className="mt-1 break-all text-xs text-gray-500">
 //                       {customer.email || '-'}
 //                     </p>
+
 //                   </div>
 //                 </div>
 //               </div>
@@ -335,11 +446,13 @@
 //               {/* SECURITY */}
 
 //               <div className="mt-4 flex items-start gap-3 rounded-2xl border border-gray-200 bg-white p-4">
+
 //                 <ShieldCheck className="mt-0.5 h-5 w-5 shrink-0 text-gray-600" />
 
 //                 <p className="text-xs leading-5 text-gray-500">
 //                   {t('securePurchase')}
 //                 </p>
+
 //               </div>
 //             </div>
 //           </div>
@@ -349,14 +462,18 @@
 //           ======================================================= */}
 
 //           <div className="border-t border-gray-100 px-6 py-6 sm:px-8">
+
 //             <div className="flex flex-col gap-3 sm:flex-row sm:justify-center">
+
 //               <Link
 //                 to="/products"
 //                 className="inline-flex items-center justify-center gap-2 rounded-xl bg-black px-6 py-3.5 text-sm font-semibold text-white transition hover:bg-gray-800"
 //               >
 //                 <ShoppingBag className="h-4 w-4" />
+
 //                 {t('continueShopping')}
 //               </Link>
+
 //             </div>
 //           </div>
 //         </div>
@@ -364,6 +481,7 @@
 //     </section>
 //   )
 // }
+
 
 // /* ============================================================
 //    ORDER ITEM
@@ -380,20 +498,25 @@
 
 //   return (
 //     <div className="rounded-2xl border border-gray-100 p-4">
+
 //       <div className="flex gap-4">
+
 //         {/* IMAGE */}
 
 //         <div className="h-20 w-20 shrink-0 overflow-hidden rounded-xl bg-gray-100">
+
 //           <img
 //             src={image}
 //             alt={item.name || 'Product'}
 //             className="h-full w-full object-cover"
 //           />
+
 //         </div>
 
 //         {/* INFORMATION */}
 
 //         <div className="min-w-0 flex-1">
+
 //           <h3 className="line-clamp-2 text-sm font-semibold text-gray-900">
 //             {item.name || '-'}
 //           </h3>
@@ -405,6 +528,7 @@
 //           )}
 
 //           <div className="mt-2 flex flex-wrap gap-3 text-xs text-gray-500">
+
 //             <span>
 //               {t('quantity')}: {quantity}
 //             </span>
@@ -418,6 +542,7 @@
 //                 €{(price * quantity).toFixed(2)}
 //               </span>
 //             )}
+
 //           </div>
 //         </div>
 //       </div>
@@ -428,9 +553,11 @@
 //         item={item}
 //         t={t}
 //       />
+
 //     </div>
 //   )
 // }
+
 
 // /* ============================================================
 //    PAYMENT METHOD
@@ -452,6 +579,7 @@
 //   return method || '-'
 // }
 
+
 // /* ============================================================
 //    SHIPPING METHOD
 // ============================================================ */
@@ -467,6 +595,7 @@
 
 //   return method || '-'
 // }
+
 
 // /* ============================================================
 //    ORDER SIZE SUMMARY
@@ -534,7 +663,10 @@
 //      BAGS
 //   =========================================================== */
 
-//   if (type === 'bags' && sizeData.bagSize) {
+//   if (
+//     type === 'bags' &&
+//     sizeData.bagSize
+//   ) {
 //     values.push(
 //       `${t('bagSize')}: ${translateSizeValue(
 //         sizeData.bagSize,
@@ -593,11 +725,13 @@
 
 //   return (
 //     <div className="mt-4 rounded-xl bg-gray-50 px-3 py-3">
+
 //       <p className="text-[11px] font-semibold uppercase tracking-wide text-gray-400">
 //         {t('selectedSize')}
 //       </p>
 
 //       <div className="mt-2 flex flex-wrap gap-2">
+
 //         {values.map((value) => (
 //           <span
 //             key={value}
@@ -606,10 +740,12 @@
 //             {value}
 //           </span>
 //         ))}
+
 //       </div>
 //     </div>
 //   )
 // }
+
 
 // /* ============================================================
 //    SIZE VALUE TRANSLATION
@@ -632,6 +768,7 @@
 
 //   return value
 // }
+
 
 // /* ============================================================
 //    PRODUCT TYPE
@@ -722,6 +859,7 @@
 //   return 'other'
 // }
 
+
 // /* ============================================================
 //    NORMALIZE PRODUCT TYPE
 // ============================================================ */
@@ -769,8 +907,10 @@
 //   return normalized
 // }
 
+
 // export default OrderConfirmation
 
+import { useEffect } from 'react'
 import {
   Check,
   Mail,
@@ -803,10 +943,9 @@ function OrderConfirmation() {
       const NOTIFICATIONS_KEY =
         'fegegta_admin_notifications'
 
-      const existingNotifications =
-        JSON.parse(
-          localStorage.getItem(NOTIFICATIONS_KEY) || '[]'
-        )
+      const existingNotifications = JSON.parse(
+        localStorage.getItem(NOTIFICATIONS_KEY) || '[]'
+      )
 
       const orderId =
         order.orderNumber ||
@@ -818,15 +957,14 @@ function OrderConfirmation() {
       // Prevent duplicate notification
       // ----------------------------------------------------------
 
-      const alreadyExists =
-        existingNotifications.some(
-          (notification) =>
-            notification.orderId === orderId ||
-            notification.order?.orderNumber === orderId ||
-            notification.order?.orderId === orderId ||
-            notification.order?.id === orderId ||
-            notification.order?._id === orderId
-        )
+      const alreadyExists = existingNotifications.some(
+        (notification) =>
+          notification.orderId === orderId ||
+          notification.order?.orderNumber === orderId ||
+          notification.order?.orderId === orderId ||
+          notification.order?.id === orderId ||
+          notification.order?._id === orderId
+      )
 
       if (alreadyExists) {
         return
@@ -859,7 +997,7 @@ function OrderConfirmation() {
         // Keep complete order information for admin
         // --------------------------------------------------------
 
-        order: order,
+        order,
       }
 
       const updatedNotifications = [
@@ -917,7 +1055,10 @@ function OrderConfirmation() {
   }
 
   const customer = order.customer || {}
-  const items = Array.isArray(order.items) ? order.items : []
+
+  const items = Array.isArray(order.items)
+    ? order.items
+    : []
 
   const subtotal = Number(order.subtotal || 0)
   const shipping = Number(order.shipping || 0)
@@ -1069,6 +1210,7 @@ function OrderConfirmation() {
                       key={
                         item.cartItemId ||
                         item.id ||
+                        item._id ||
                         index
                       }
                       item={item}
@@ -1178,7 +1320,7 @@ function OrderConfirmation() {
                       customer.postalCode,
                     ]
                       .filter(Boolean)
-                      .join(', ')}
+                      .join(', ') || '-'}
                   </p>
 
                   {customer.country && (
@@ -1186,7 +1328,10 @@ function OrderConfirmation() {
                   )}
 
                   {!customer.address &&
+                    !customer.apartment &&
                     !customer.city &&
+                    !customer.state &&
+                    !customer.postalCode &&
                     !customer.country && (
                       <p>-</p>
                     )}
@@ -1264,7 +1409,11 @@ function OrderItem({ item, t }) {
 
   const image =
     item.image ||
-    item.images?.[0] ||
+    (Array.isArray(item.images)
+      ? typeof item.images[0] === 'string'
+        ? item.images[0]
+        : item.images[0]?.url
+      : '') ||
     '/placeholder-product.png'
 
   return (
@@ -1680,4 +1829,3 @@ function normalizeProductType(type) {
 
 
 export default OrderConfirmation
-

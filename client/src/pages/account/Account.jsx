@@ -1,3 +1,4 @@
+
 // import React from 'react'
 // import { Link } from 'react-router-dom'
 // import {
@@ -10,6 +11,9 @@
 //   ShoppingBag,
 //   Clock3,
 //   CheckCircle2,
+//   Store,
+//   Clock,
+//   XCircle,
 // } from 'lucide-react'
 
 // import { useAuth } from '../../context/AuthContext'
@@ -24,6 +28,16 @@
 //     user?.name ||
 //     user?.fullName?.split(' ')[0] ||
 //     'Customer'
+
+//   /*
+//     Seller status:
+
+//     none     → Sell With Us
+//     pending  → Application Pending
+//     rejected → Apply Again
+//     approved → My Store
+//   */
+//   const sellerStatus = user?.sellerStatus || 'none'
 
 //   const accountCards = [
 //     {
@@ -67,6 +81,96 @@
 //       href: '/account/settings',
 //     },
 //   ]
+
+//   const getSellerSection = () => {
+//     if (sellerStatus === 'approved') {
+//       return {
+//         title: t('myStore') || 'My Store',
+//         description:
+//           t('myStoreDescription') ||
+//           'Manage your store, products, orders, and sales.',
+//         button:
+//           t('openMyStore') || 'Open My Store',
+//         href: '/seller',
+//         icon: Store,
+//         iconBg: 'bg-gray-900',
+//         iconColor: 'text-white',
+//         badge:
+//           t('sellerApproved') || 'Seller Approved',
+//         badgeClass: 'bg-green-50 text-green-700 border-green-200',
+//       }
+//     }
+
+//     if (sellerStatus === 'pending') {
+//       return {
+//         title:
+//           t('applicationPending') ||
+//           'Application Pending',
+//         description:
+//           t('applicationPendingDescription') ||
+//           'Your seller application is waiting for admin review.',
+//         button:
+//           t('viewApplication') ||
+//           'View Application',
+//         href: '/seller/application',
+//         icon: Clock,
+//         iconBg: 'bg-amber-100',
+//         iconColor: 'text-amber-700',
+//         badge:
+//           t('pendingReview') ||
+//           'Pending Review',
+//         badgeClass:
+//           'bg-amber-50 text-amber-700 border-amber-200',
+//       }
+//     }
+
+//     if (sellerStatus === 'rejected') {
+//       return {
+//         title:
+//           t('applicationRejected') ||
+//           'Application Rejected',
+//         description:
+//           t('applicationRejectedDescription') ||
+//           'Your seller application was not approved. You can apply again.',
+//         button:
+//           t('applyAgain') ||
+//           'Apply Again',
+//         href: '/seller/apply',
+//         icon: XCircle,
+//         iconBg: 'bg-red-100',
+//         iconColor: 'text-red-700',
+//         badge:
+//           t('rejected') ||
+//           'Rejected',
+//         badgeClass:
+//           'bg-red-50 text-red-700 border-red-200',
+//       }
+//     }
+
+//     return {
+//       title:
+//         t('sellWithUs') ||
+//         'Sell With Us',
+//       description:
+//         t('sellWithUsDescription') ||
+//         'Start selling your products on ፈገግታ and grow your business.',
+//       button:
+//         t('startSelling') ||
+//         'Start Selling',
+//       href: '/seller/apply',
+//       icon: Store,
+//       iconBg: 'bg-gray-100',
+//       iconColor: 'text-gray-700',
+//       badge:
+//         t('becomeSeller') ||
+//         'Become a Seller',
+//       badgeClass:
+//         'bg-gray-100 text-gray-700 border-gray-200',
+//     }
+//   }
+
+//   const sellerSection = getSellerSection()
+//   const SellerIcon = sellerSection.icon
 
 //   return (
 //     <section className="min-h-screen bg-gray-50">
@@ -190,6 +294,58 @@
 
 //         </div>
 
+//         {/* Seller Section */}
+//         <div className="mb-10 overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm">
+//           <div className="p-6 sm:p-8">
+
+//             <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
+
+//               <div className="flex items-start gap-4">
+
+//                 <div
+//                   className={`flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl ${sellerSection.iconBg}`}
+//                 >
+//                   <SellerIcon
+//                     size={25}
+//                     className={sellerSection.iconColor}
+//                   />
+//                 </div>
+
+//                 <div>
+//                   <div className="flex flex-wrap items-center gap-3">
+
+//                     <h2 className="text-xl font-semibold text-gray-900">
+//                       {sellerSection.title}
+//                     </h2>
+
+//                     <span
+//                       className={`inline-flex items-center rounded-full border px-3 py-1 text-xs font-medium ${sellerSection.badgeClass}`}
+//                     >
+//                       {sellerSection.badge}
+//                     </span>
+
+//                   </div>
+
+//                   <p className="mt-2 max-w-2xl text-sm leading-6 text-gray-500">
+//                     {sellerSection.description}
+//                   </p>
+//                 </div>
+
+//               </div>
+
+//               <Link
+//                 to={sellerSection.href}
+//                 className="inline-flex shrink-0 items-center justify-center gap-2 rounded-lg bg-gray-900 px-5 py-3 text-sm font-semibold text-white transition hover:bg-gray-800"
+//               >
+//                 {sellerSection.button}
+//                 <ChevronRight size={18} />
+//               </Link>
+
+//             </div>
+
+//           </div>
+//         </div>
+
 //         {/* Account Sections */}
 //         <div>
 //           <div className="mb-5">
@@ -250,9 +406,7 @@
 // }
 
 // export default Account
-
-
-import React from 'react'
+import React, { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import {
   User,
@@ -272,9 +426,15 @@ import {
 import { useAuth } from '../../context/AuthContext'
 import { useLanguage } from '../../context/LanguageContext'
 
+const API_URL = 'https://fegegta-server.onrender.com/api'
+
 function Account() {
-  const { user } = useAuth()
+  const { user, getToken } = useAuth()
   const { t } = useLanguage()
+
+  const [orders, setOrders] = useState([])
+  const [isLoadingStats, setIsLoadingStats] = useState(true)
+  const [statsError, setStatsError] = useState('')
 
   const firstName =
     user?.firstName ||
@@ -291,6 +451,148 @@ function Account() {
     approved → My Store
   */
   const sellerStatus = user?.sellerStatus || 'none'
+
+  // ============================================================
+  // LOAD CUSTOMER ORDERS
+  // ============================================================
+
+  useEffect(() => {
+    let isMounted = true
+
+    const loadAccountOrders = async () => {
+      const token = getToken?.()
+
+      if (!token) {
+        if (isMounted) {
+          setOrders([])
+          setIsLoadingStats(false)
+        }
+        return
+      }
+
+      try {
+        setIsLoadingStats(true)
+        setStatsError('')
+
+        const response = await fetch(
+          `${API_URL}/orders/my-orders`,
+          {
+            method: 'GET',
+            headers: {
+              Authorization: `Bearer ${token}`,
+              'Content-Type': 'application/json',
+            },
+          }
+        )
+
+        const data = await response.json()
+
+        if (!response.ok) {
+          throw new Error(
+            data?.message ||
+              'Failed to load account order statistics.'
+          )
+        }
+
+        const receivedOrders = Array.isArray(data)
+          ? data
+          : Array.isArray(data?.orders)
+            ? data.orders
+            : Array.isArray(data?.data)
+              ? data.data
+              : []
+
+        if (isMounted) {
+          setOrders(receivedOrders)
+        }
+      } catch (error) {
+        console.error(
+          'Failed to load account orders:',
+          error
+        )
+
+        if (isMounted) {
+          setOrders([])
+          setStatsError(
+            error?.message ||
+              'Unable to load your order statistics.'
+          )
+        }
+      } finally {
+        if (isMounted) {
+          setIsLoadingStats(false)
+        }
+      }
+    }
+
+    loadAccountOrders()
+
+    return () => {
+      isMounted = false
+    }
+  }, [getToken])
+
+  // ============================================================
+  // ORDER STATUS HELPERS
+  // ============================================================
+
+  const getOrderStatus = (order) => {
+    return String(
+      order?.status ||
+      order?.orderStatus ||
+      order?.fulfillmentStatus ||
+      ''
+    ).toLowerCase()
+  }
+
+  const isCompletedOrder = (order) => {
+    const status = getOrderStatus(order)
+
+    return [
+      'completed',
+      'delivered',
+      'fulfilled',
+      'complete',
+    ].includes(status)
+  }
+
+  const isPendingOrder = (order) => {
+    const status = getOrderStatus(order)
+
+    return [
+      'pending',
+      'processing',
+      'confirmed',
+      'paid',
+      'shipped',
+      'out_for_delivery',
+      'out-for-delivery',
+      'ready',
+    ].includes(status)
+  }
+
+  // ============================================================
+  // ACCOUNT STATISTICS
+  // ============================================================
+
+  const totalOrders = orders.length
+
+  const pendingOrders = orders.filter(
+    (order) => isPendingOrder(order) && !isCompletedOrder(order)
+  ).length
+
+  const completedOrders = orders.filter(
+    (order) => isCompletedOrder(order)
+  ).length
+
+  /*
+    Favorites API has not been connected yet because we do not
+    have a confirmed backend favorites endpoint in the current
+    backend contract.
+
+    Keep this at 0 instead of inventing an API route.
+  */
+  const favoriteItems = 0
 
   const accountCards = [
     {
@@ -350,7 +652,8 @@ function Account() {
         iconColor: 'text-white',
         badge:
           t('sellerApproved') || 'Seller Approved',
-        badgeClass: 'bg-green-50 text-green-700 border-green-200',
+        badgeClass:
+          'bg-green-50 text-green-700 border-green-200',
       }
     }
 
@@ -489,6 +792,7 @@ function Account() {
         {/* Quick Stats */}
         <div className="mb-8 grid grid-cols-2 gap-4 lg:grid-cols-4">
 
+          {/* Total Orders */}
           <div className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
             <div className="mb-4 flex h-10 w-10 items-center justify-center rounded-xl bg-gray-100">
               <ShoppingBag size={20} className="text-gray-700" />
@@ -499,10 +803,11 @@ function Account() {
             </p>
 
             <p className="mt-1 text-2xl font-bold text-gray-900">
-              0
+              {isLoadingStats ? '—' : totalOrders}
             </p>
           </div>
 
+          {/* Pending Orders */}
           <div className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
             <div className="mb-4 flex h-10 w-10 items-center justify-center rounded-xl bg-gray-100">
               <Clock3 size={20} className="text-gray-700" />
@@ -513,10 +818,11 @@ function Account() {
             </p>
 
             <p className="mt-1 text-2xl font-bold text-gray-900">
-              0
+              {isLoadingStats ? '—' : pendingOrders}
             </p>
           </div>
 
+          {/* Completed Orders */}
           <div className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
             <div className="mb-4 flex h-10 w-10 items-center justify-center rounded-xl bg-gray-100">
               <CheckCircle2 size={20} className="text-gray-700" />
@@ -527,10 +833,11 @@ function Account() {
             </p>
 
             <p className="mt-1 text-2xl font-bold text-gray-900">
-              0
+              {isLoadingStats ? '—' : completedOrders}
             </p>
           </div>
 
+          {/* Favorites */}
           <div className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
             <div className="mb-4 flex h-10 w-10 items-center justify-center rounded-xl bg-gray-100">
               <Heart size={20} className="text-gray-700" />
@@ -541,11 +848,18 @@ function Account() {
             </p>
 
             <p className="mt-1 text-2xl font-bold text-gray-900">
-              0
+              {favoriteItems}
             </p>
           </div>
 
         </div>
+
+        {/* Optional Stats Error */}
+        {statsError && (
+          <div className="mb-8 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-700">
+            {statsError}
+          </div>
+        )}
 
         {/* Seller Section */}
         <div className="mb-10 overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm">
