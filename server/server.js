@@ -416,33 +416,92 @@ const app = express()
 // ============================================================
 
 // Frontend URLs allowed to access this backend
+// const allowedOrigins = [
+//   'https://fegegta.onrender.com',
+//   'http://localhost:5173',
+//   process.env.CLIENT_URL,
+// ]
+//   .filter(Boolean)
+//   .map((url) => url.replace(/\/$/, ''))
+
+// console.log('Allowed CORS origins:', allowedOrigins)
+
+// app.use(
+//   cors({
+//     origin: (origin, callback) => {
+//       // Allow requests without an Origin
+//       // Example: Postman / server-to-server requests
+//       if (!origin) {
+//         return callback(null, true)
+//       }
+
+//       const cleanOrigin = origin.replace(/\/$/, '')
+
+//       if (allowedOrigins.includes(cleanOrigin)) {
+//         return callback(null, true)
+//       }
+
+//       console.error(
+//         `CORS blocked for origin: ${origin}`
+//       )
+
+//       return callback(
+//         new Error(
+//           `CORS blocked for origin: ${origin}`
+//         )
+//       )
+//     },
+
+//     credentials: true,
+
+//     methods: [
+//       'GET',
+//       'POST',
+//       'PUT',
+//       'PATCH',
+//       'DELETE',
+//       'OPTIONS',
+//     ],
+
+//     allowedHeaders: [
+//       'Content-Type',
+//       'Authorization',
+//     ],
+
+//     optionsSuccessStatus: 204,
+//   })
+// )
+// ============================================================
+// CORS
+// ============================================================
+
 const allowedOrigins = [
   'https://fegegta.onrender.com',
   'http://localhost:5173',
   process.env.CLIENT_URL,
-]
-  .filter(Boolean)
-  .map((url) => url.replace(/\/$/, ''))
+].filter(Boolean)
 
-console.log('Allowed CORS origins:', allowedOrigins)
+console.log(
+  'Allowed CORS origins:',
+  allowedOrigins
+)
 
 app.use(
   cors({
     origin: (origin, callback) => {
-      // Allow requests without an Origin
-      // Example: Postman / server-to-server requests
+      // Allow requests without Origin
+      // Example: Postman / server-to-server
       if (!origin) {
         return callback(null, true)
       }
 
-      const cleanOrigin = origin.replace(/\/$/, '')
-
-      if (allowedOrigins.includes(cleanOrigin)) {
+      if (allowedOrigins.includes(origin)) {
         return callback(null, true)
       }
 
       console.error(
-        `CORS blocked for origin: ${origin}`
+        'CORS blocked for origin:',
+        origin
       )
 
       return callback(
@@ -471,7 +530,6 @@ app.use(
     optionsSuccessStatus: 204,
   })
 )
-
 // ============================================================
 // BODY PARSER
 // ============================================================
