@@ -12,145 +12,102 @@ const ADMIN_PASSWORD = 'fegegta@shope2026!'
 const makeAdmin = async () => {
   try {
     if (!process.env.MONGO_URI) {
-      throw new Error(
-        'MONGO_URI is not configured in .env'
-      )
+      throw new Error('MONGO_URI is not configured')
     }
 
-    await mongoose.connect(
-      process.env.MONGO_URI
-    )
+    console.log('Connecting to production MongoDB...')
 
-    console.log(
-      'MongoDB connected successfully.'
-    )
+    await mongoose.connect(process.env.MONGO_URI)
 
-    // Check whether this admin already exists
-    const existingAdmin =
-      await User.findOne({
-        email: ADMIN_EMAIL,
-      })
+    console.log('MongoDB connected successfully.')
 
-    if (existingAdmin) {
-      console.log(
-        `User already exists: ${ADMIN_EMAIL}`
+    // -------------------------------------------------------
+    // Check existing user
+    // -------------------------------------------------------
+
+    const existingUser = await User.findOne({
+      email: ADMIN_EMAIL.toLowerCase(),
+    })
+
+    // -------------------------------------------------------
+    // If user already exists
+    // -------------------------------------------------------
+
+    if (existingUser) {
+      console.log(`User already exists: ${ADMIN_EMAIL}`)
+
+      const hashedPassword = await bcrypt.hash(
+        ADMIN_PASSWORD,
+        12
       )
 
-      // Make sure the existing user is admin
-      const hashedPassword =
-        await bcrypt.hash(
-          ADMIN_PASSWORD,
-          12
-        )
+      existingUser.password = hashedPassword
+      existingUser.role = 'admin'
+      existingUser.status = 'active'
 
-      existingAdmin.password =
-        hashedPassword
-
-      existingAdmin.role =
-        'admin'
-
-      existingAdmin.status =
-        'active'
-
-      await existingAdmin.save()
+      await existingUser.save()
 
       console.log('')
-      console.log(
-        '=========================================='
-      )
-      console.log(
-        '       FEGEGTA ADMIN ACCOUNT READY'
-      )
-      console.log(
-        '=========================================='
-      )
-      console.log(
-        `Email:  ${existingAdmin.email}`
-      )
-      console.log(
-        `Role:   ${existingAdmin.role}`
-      )
-      console.log(
-        `Status: ${existingAdmin.status}`
-      )
-      console.log(
-        '=========================================='
-      )
+      console.log('==========================================')
+      console.log('       FEGEGTA ADMIN ACCOUNT READY')
+      console.log('==========================================')
+      console.log(`Email:  ${existingUser.email}`)
+      console.log(`Role:   ${existingUser.role}`)
+      console.log(`Status: ${existingUser.status}`)
+      console.log('==========================================')
 
       await mongoose.disconnect()
       process.exit(0)
     }
 
+    // -------------------------------------------------------
     // Create hashed password
-    const hashedPassword =
-      await bcrypt.hash(
-        ADMIN_PASSWORD,
-        12
-      )
+    // -------------------------------------------------------
 
-    // Create new admin user
-    const admin =
-      await User.create({
-        firstName: 'Fegegta',
-        lastName: 'Admin',
-        name: 'Fegegta Admin',
-        email: ADMIN_EMAIL,
-        password: hashedPassword,
-        role: 'admin',
-        status: 'active',
-        notificationsEnabled: true,
-      })
+    const hashedPassword = await bcrypt.hash(
+      ADMIN_PASSWORD,
+      12
+    )
+
+    // -------------------------------------------------------
+    // Create admin
+    // -------------------------------------------------------
+
+    const admin = await User.create({
+      firstName: 'Fegegta',
+      lastName: 'Admin',
+      name: 'Fegegta Admin',
+      email: ADMIN_EMAIL.toLowerCase(),
+      password: hashedPassword,
+      role: 'admin',
+      status: 'active',
+      notificationsEnabled: true,
+    })
 
     console.log('')
-    console.log(
-      '=========================================='
-    )
-    console.log(
-      '       FEGEGTA ADMIN ACCOUNT CREATED'
-    )
-    console.log(
-      '=========================================='
-    )
-    console.log(
-      `Email:  ${admin.email}`
-    )
-    console.log(
-      `Role:   ${admin.role}`
-    )
-    console.log(
-      `Status: ${admin.status}`
-    )
-    console.log(
-      '=========================================='
-    )
-    console.log(
-      'Admin account created successfully.'
-    )
+    console.log('==========================================')
+    console.log('       FEGEGTA ADMIN ACCOUNT CREATED')
+    console.log('==========================================')
+    console.log(`Email:  ${admin.email}`)
+    console.log(`Role:   ${admin.role}`)
+    console.log(`Status: ${admin.status}`)
+    console.log('==========================================')
+    console.log('Admin account created successfully.')
 
     await mongoose.disconnect()
-
     process.exit(0)
+
   } catch (error) {
     console.error('')
-    console.error(
-      '=========================================='
-    )
-    console.error(
-      '       MAKE ADMIN FAILED'
-    )
-    console.error(
-      '=========================================='
-    )
+    console.error('==========================================')
+    console.error('       MAKE ADMIN FAILED')
+    console.error('==========================================')
     console.error(error.message)
-    console.error(
-      '=========================================='
-    )
+    console.error('==========================================')
 
     try {
       await mongoose.disconnect()
-    } catch {
-      // Ignore disconnect errors
-    }
+    } catch {}
 
     process.exit(1)
   }
