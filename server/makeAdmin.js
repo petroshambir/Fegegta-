@@ -6,8 +6,8 @@ import User from './models/User.js'
 
 dotenv.config()
 
-const ADMIN_EMAIL ='fegegta@shope.com'
-const ADMIN_PASSWORD ='fegegta@shope2026!'
+const ADMIN_EMAIL = 'fegegta@shope.com'
+const ADMIN_PASSWORD = 'fegegta@shope2026!'
 
 const makeAdmin = async () => {
   try {
@@ -25,61 +25,106 @@ const makeAdmin = async () => {
       'MongoDB connected successfully.'
     )
 
-    const user =
+    // Check whether this admin already exists
+    const existingAdmin =
       await User.findOne({
         email: ADMIN_EMAIL,
-      }).select('+password')
+      })
 
-    if (!user) {
-      console.error(
-        `User not found: ${ADMIN_EMAIL}`
+    if (existingAdmin) {
+      console.log(
+        `User already exists: ${ADMIN_EMAIL}`
+      )
+
+      // Make sure the existing user is admin
+      const hashedPassword =
+        await bcrypt.hash(
+          ADMIN_PASSWORD,
+          12
+        )
+
+      existingAdmin.password =
+        hashedPassword
+
+      existingAdmin.role =
+        'admin'
+
+      existingAdmin.status =
+        'active'
+
+      await existingAdmin.save()
+
+      console.log('')
+      console.log(
+        '=========================================='
+      )
+      console.log(
+        '       FEGEGTA ADMIN ACCOUNT READY'
+      )
+      console.log(
+        '=========================================='
+      )
+      console.log(
+        `Email:  ${existingAdmin.email}`
+      )
+      console.log(
+        `Role:   ${existingAdmin.role}`
+      )
+      console.log(
+        `Status: ${existingAdmin.status}`
+      )
+      console.log(
+        '=========================================='
       )
 
       await mongoose.disconnect()
-      process.exit(1)
+      process.exit(0)
     }
 
+    // Create hashed password
     const hashedPassword =
       await bcrypt.hash(
         ADMIN_PASSWORD,
         12
       )
 
-    user.password =
-      hashedPassword
-
-    user.role =
-      'admin'
-
-    user.status =
-      'active'
-
-    await user.save()
+    // Create new admin user
+    const admin =
+      await User.create({
+        firstName: 'Fegegta',
+        lastName: 'Admin',
+        name: 'Fegegta Admin',
+        email: ADMIN_EMAIL,
+        password: hashedPassword,
+        role: 'admin',
+        status: 'active',
+        notificationsEnabled: true,
+      })
 
     console.log('')
     console.log(
       '=========================================='
     )
     console.log(
-      '       FEGEGTA ADMIN ACCOUNT READY'
+      '       FEGEGTA ADMIN ACCOUNT CREATED'
     )
     console.log(
       '=========================================='
     )
     console.log(
-      `Email:    ${user.email}`
+      `Email:  ${admin.email}`
     )
     console.log(
-      `Role:     ${user.role}`
+      `Role:   ${admin.role}`
     )
     console.log(
-      `Status:   ${user.status}`
+      `Status: ${admin.status}`
     )
     console.log(
       '=========================================='
     )
     console.log(
-      'Admin account updated successfully.'
+      'Admin account created successfully.'
     )
 
     await mongoose.disconnect()
@@ -96,9 +141,7 @@ const makeAdmin = async () => {
     console.error(
       '=========================================='
     )
-    console.error(
-      error.message
-    )
+    console.error(error.message)
     console.error(
       '=========================================='
     )
@@ -114,4 +157,3 @@ const makeAdmin = async () => {
 }
 
 makeAdmin()
-//save email and password
