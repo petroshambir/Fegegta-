@@ -114,3 +114,4 @@ const makeAdmin = async () => {
 }
 
 makeAdmin()
+//save email and password
