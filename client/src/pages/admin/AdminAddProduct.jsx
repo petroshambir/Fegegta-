@@ -2652,16 +2652,16 @@
 
 // export default AdminAddProduct
 
-import React, { useEffect, useMemo, useState } from 'react'
+
+
+import React, { useEffect, useState } from 'react'
 import {
   ArrowLeft,
   CheckCircle2,
   ImagePlus,
   PackagePlus,
-  Store,
   Trash2,
   Upload,
-  UserRound,
   X,
 } from 'lucide-react'
 import { Link, useNavigate } from 'react-router-dom'
@@ -2680,9 +2680,6 @@ function AdminAddProduct() {
 
   const [mobileOpen, setMobileOpen] = useState(false)
 
-  const [sellers, setSellers] = useState([])
-  const [loadingSellers, setLoadingSellers] = useState(true)
-
   const [form, setForm] = useState({
     name: '',
     description: '',
@@ -2697,8 +2694,6 @@ function AdminAddProduct() {
     colors: '',
     features: '',
     tags: '',
-    sellerId: '',
-    storeId: '',
     images: [],
   })
 
@@ -2706,84 +2701,18 @@ function AdminAddProduct() {
   const [error, setError] = useState('')
 
   // ============================================================
-  // LOAD APPROVED SELLERS
+  // CLEANUP IMAGE PREVIEWS
   // ============================================================
 
   useEffect(() => {
-    const loadSellers = async () => {
-      try {
-        setLoadingSellers(true)
-        setError('')
-
-        const token = getToken()
-
-        if (!token) {
-          setError(
-            'Your session has expired. Please login again.'
-          )
-          setLoadingSellers(false)
-          return
+    return () => {
+      form.images.forEach((image) => {
+        if (image?.preview) {
+          URL.revokeObjectURL(image.preview)
         }
-
-        const response = await fetch(
-          `${API_URL}/admin/sellers`,
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        )
-
-        const data = await response.json()
-
-        if (!response.ok) {
-          throw new Error(
-            data?.message ||
-              'Failed to load sellers.'
-          )
-        }
-
-        const approvedSellers = (
-          data?.sellers || []
-        ).filter((seller) => {
-          const sellerApproved =
-            seller?.status === 'approved'
-
-          const storeApproved =
-            seller?.store &&
-            ['approved', 'active'].includes(
-              seller.store.status
-            )
-
-          return sellerApproved && storeApproved
-        })
-
-        setSellers(approvedSellers)
-      } catch (err) {
-        setError(
-          err.message ||
-            'Failed to load approved sellers.'
-        )
-      } finally {
-        setLoadingSellers(false)
-      }
+      })
     }
-
-    loadSellers()
   }, [])
-
-  // ============================================================
-  // SELECTED SELLER
-  // ============================================================
-
-  const selectedSeller = useMemo(() => {
-    return sellers.find(
-      (seller) => seller._id === form.sellerId
-    )
-  }, [sellers, form.sellerId])
-
-  const selectedStore =
-    selectedSeller?.store || null
 
   // ============================================================
   // FORM CHANGE
@@ -2803,35 +2732,15 @@ function AdminAddProduct() {
   }
 
   // ============================================================
-  // SELLER CHANGE
-  // ============================================================
-
-  const handleSellerChange = (e) => {
-    const sellerId = e.target.value
-
-    const seller = sellers.find(
-      (item) => item._id === sellerId
-    )
-
-    setForm((prev) => ({
-      ...prev,
-      sellerId,
-      storeId: seller?.store?._id || '',
-    }))
-
-    setError('')
-  }
-
-  // ============================================================
   // IMAGE UPLOAD
   // ============================================================
 
   const handleImageChange = (e) => {
-    const selectedFiles = Array.from(
-      e.target.files || []
-    )
+    const selectedFiles = Array.from(e.target.files || [])
 
-    if (!selectedFiles.length) return
+    if (!selectedFiles.length) {
+      return
+    }
 
     const allowedTypes = [
       'image/jpeg',
@@ -2840,22 +2749,15 @@ function AdminAddProduct() {
       'image/webp',
     ]
 
-    const availableSlots =
-      4 - form.images.length
+    const availableSlots = 4 - form.images.length
 
     if (availableSlots <= 0) {
-      setError(
-        'You can upload a maximum of 4 images.'
-      )
-
+      setError('You can upload a maximum of 4 images.')
       e.target.value = ''
       return
     }
 
-    const filesToAdd = selectedFiles.slice(
-      0,
-      availableSlots
-    )
+    const filesToAdd = selectedFiles.slice(0, availableSlots)
 
     for (const file of filesToAdd) {
       if (!allowedTypes.includes(file.type)) {
@@ -2909,8 +2811,7 @@ function AdminAddProduct() {
       return {
         ...prev,
         images: prev.images.filter(
-          (_, imageIndex) =>
-            imageIndex !== index
+          (_, imageIndex) => imageIndex !== index
         ),
       }
     })
@@ -2959,14 +2860,6 @@ function AdminAddProduct() {
       return 'Please enter a valid stock quantity.'
     }
 
-    if (!form.sellerId) {
-      return 'Please select an approved seller.'
-    }
-
-    if (!form.storeId) {
-      return 'The selected seller does not have an approved store.'
-    }
-
     if (form.images.length < 1) {
       return 'Please upload at least one product image.'
     }
@@ -2987,8 +2880,7 @@ function AdminAddProduct() {
 
     setError('')
 
-    const validationError =
-      validateForm()
+    const validationError = validateForm()
 
     if (validationError) {
       setError(validationError)
@@ -3008,6 +2900,11 @@ function AdminAddProduct() {
         'Your session has expired. Please login again.'
       )
 
+      window.scrollTo({
+        top: 0,
+        behavior: 'smooth',
+      })
+
       return
     }
 
@@ -3015,6 +2912,19 @@ function AdminAddProduct() {
       setSaving(true)
 
       const formData = new FormData()
+
+      // ========================================================
+      // PRODUCT OWNERSHIP
+      // ========================================================
+
+      formData.append(
+        'ownerType',
+        'platform'
+      )
+
+      // ========================================================
+      // BASIC INFORMATION
+      // ========================================================
 
       formData.append(
         'name',
@@ -3041,6 +2951,10 @@ function AdminAddProduct() {
         form.sku.trim()
       )
 
+      // ========================================================
+      // PRICE
+      // ========================================================
+
       formData.append(
         'price',
         form.price
@@ -3053,10 +2967,18 @@ function AdminAddProduct() {
         )
       }
 
+      // ========================================================
+      // STOCK
+      // ========================================================
+
       formData.append(
         'stock',
         form.stock
       )
+
+      // ========================================================
+      // PRODUCT DETAILS
+      // ========================================================
 
       formData.append(
         'material',
@@ -3083,15 +3005,9 @@ function AdminAddProduct() {
         form.tags.trim()
       )
 
-      formData.append(
-        'sellerId',
-        form.sellerId
-      )
-
-      formData.append(
-        'storeId',
-        form.storeId
-      )
+      // ========================================================
+      // IMAGES
+      // ========================================================
 
       form.images.forEach((image) => {
         formData.append(
@@ -3100,13 +3016,19 @@ function AdminAddProduct() {
         )
       })
 
+      // ========================================================
+      // API REQUEST
+      // ========================================================
+
       const response = await fetch(
         `${API_URL}/admin/products`,
         {
           method: 'POST',
+
           headers: {
             Authorization: `Bearer ${token}`,
           },
+
           body: formData,
         }
       )
@@ -3116,25 +3038,31 @@ function AdminAddProduct() {
       if (!response.ok) {
         throw new Error(
           data?.message ||
-            'Failed to create the product.'
+          'Failed to create the product.'
         )
       }
+
+      // ========================================================
+      // SUCCESS
+      // ========================================================
 
       alert(
         'Product created successfully and published.'
       )
 
       navigate('/admin/my-products')
+
     } catch (err) {
       setError(
         err.message ||
-          'Something went wrong while creating the product.'
+        'Something went wrong while creating the product.'
       )
 
       window.scrollTo({
         top: 0,
         behavior: 'smooth',
       })
+
     } finally {
       setSaving(false)
     }
@@ -3147,10 +3075,18 @@ function AdminAddProduct() {
   return (
     <div className="min-h-screen bg-slate-50">
 
+      {/* ======================================================
+          ADMIN SIDEBAR
+      ====================================================== */}
+
       <AdminSidebar
         mobileOpen={mobileOpen}
         setMobileOpen={setMobileOpen}
       />
+
+      {/* ======================================================
+          MAIN AREA
+      ====================================================== */}
 
       <div className="lg:pl-72">
 
@@ -3192,11 +3128,13 @@ function AdminAddProduct() {
                   </h1>
 
                   <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-500">
-                    Create a product and publish it directly
-                    to an approved seller's store.
+                    Create and publish a product directly
+                    as a Fegegta platform product.
                   </p>
 
                 </div>
+
+                {/* ADMIN STATUS */}
 
                 <div className="flex w-fit items-center gap-3 rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3">
 
@@ -3208,6 +3146,7 @@ function AdminAddProduct() {
                   </div>
 
                   <div>
+
                     <p className="text-[11px] font-bold uppercase tracking-wider text-emerald-600">
                       Admin Publishing
                     </p>
@@ -3215,11 +3154,13 @@ function AdminAddProduct() {
                     <p className="text-sm font-semibold text-emerald-900">
                       Approved & Active
                     </p>
+
                   </div>
 
                 </div>
 
               </div>
+
             </div>
 
             {/* ==================================================
@@ -3239,13 +3180,17 @@ function AdminAddProduct() {
               </div>
             )}
 
+            {/* ==================================================
+                FORM
+            ================================================== */}
+
             <form onSubmit={handleSubmit}>
 
               <div className="space-y-6">
 
-                {/* ==================================================
+                {/* =================================================
                     PRODUCT IMAGES
-                ================================================== */}
+                ================================================= */}
 
                 <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
 
@@ -3261,6 +3206,7 @@ function AdminAddProduct() {
                       </div>
 
                       <div>
+
                         <h2 className="font-semibold text-slate-900">
                           Product Images
                         </h2>
@@ -3269,6 +3215,7 @@ function AdminAddProduct() {
                           Upload up to 4 images for this
                           product.
                         </p>
+
                       </div>
 
                     </div>
@@ -3345,16 +3292,17 @@ function AdminAddProduct() {
 
                     <p className="mt-4 text-xs text-slate-400">
                       {form.images.length}/4 images selected
-                      • Maximum 5MB per image
+                      {' • '}
+                      Maximum 5MB per image
                     </p>
 
                   </div>
 
                 </section>
 
-                {/* ==================================================
+                {/* =================================================
                     PRODUCT INFORMATION
-                ================================================== */}
+                ================================================= */}
 
                 <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
 
@@ -3370,6 +3318,7 @@ function AdminAddProduct() {
                       </div>
 
                       <div>
+
                         <h2 className="font-semibold text-slate-900">
                           Product Information
                         </h2>
@@ -3378,6 +3327,7 @@ function AdminAddProduct() {
                           Enter the information customers
                           will see.
                         </p>
+
                       </div>
 
                     </div>
@@ -3495,13 +3445,18 @@ function AdminAddProduct() {
                       placeholder="traditional, dress, handmade"
                     />
 
+                    {/* DESCRIPTION */}
+
                     <div className="sm:col-span-2">
 
                       <label className="mb-2 block text-sm font-semibold text-slate-700">
+
                         Product Description
+
                         <span className="ml-1 text-red-500">
                           *
                         </span>
+
                       </label>
 
                       <textarea
@@ -3524,9 +3479,9 @@ function AdminAddProduct() {
 
                 </section>
 
-                {/* ==================================================
-                    SELLER & STORE
-                ================================================== */}
+                {/* =================================================
+                    PLATFORM OWNERSHIP
+                ================================================= */}
 
                 <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
 
@@ -3534,22 +3489,24 @@ function AdminAddProduct() {
 
                     <div className="flex items-start gap-3">
 
-                      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-slate-100">
-                        <Store
+                      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-slate-900">
+                        <CheckCircle2
                           size={20}
-                          className="text-slate-700"
+                          className="text-white"
                         />
                       </div>
 
                       <div>
+
                         <h2 className="font-semibold text-slate-900">
-                          Seller & Store Assignment
+                          Product Ownership
                         </h2>
 
                         <p className="mt-1 text-sm text-slate-500">
-                          Assign this product to an approved
-                          seller and their store.
+                          This product is created and owned
+                          directly by the Fegegta platform.
                         </p>
+
                       </div>
 
                     </div>
@@ -3558,124 +3515,31 @@ function AdminAddProduct() {
 
                   <div className="p-5 sm:p-6">
 
-                    <div className="grid gap-5 md:grid-cols-2">
+                    <div className="rounded-2xl border border-slate-200 bg-slate-50 p-5">
 
-                      {/* SELLER */}
+                      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
 
-                      <div>
+                        <div>
 
-                        <label className="mb-2 block text-sm font-semibold text-slate-700">
-                          Approved Seller
-                          <span className="ml-1 text-red-500">
-                            *
-                          </span>
-                        </label>
+                          <p className="text-xs font-bold uppercase tracking-wider text-slate-400">
+                            Owner
+                          </p>
 
-                        <div className="relative">
+                          <p className="mt-1 text-lg font-bold text-slate-900">
+                            Fegegta Platform
+                          </p>
 
-                          <UserRound
-                            size={18}
-                            className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"
-                          />
-
-                          <select
-                            value={form.sellerId}
-                            onChange={
-                              handleSellerChange
-                            }
-                            disabled={
-                              loadingSellers
-                            }
-                            className="h-12 w-full appearance-none rounded-xl border border-slate-200 bg-white pl-11 pr-4 text-sm text-slate-900 outline-none transition focus:border-slate-500 focus:ring-2 focus:ring-slate-100 disabled:cursor-not-allowed disabled:bg-slate-50"
-                          >
-
-                            <option value="">
-                              {loadingSellers
-                                ? 'Loading approved sellers...'
-                                : 'Select approved seller'}
-                            </option>
-
-                            {sellers.map(
-                              (seller) => (
-                                <option
-                                  key={seller._id}
-                                  value={seller._id}
-                                >
-                                  {seller.businessName ||
-                                    `${seller.user?.firstName || ''} ${seller.user?.lastName || ''}`.trim() ||
-                                    'Seller'}
-                                </option>
-                              )
-                            )}
-
-                          </select>
+                          <p className="mt-1 text-sm text-slate-500">
+                            No seller or seller approval is required.
+                          </p>
 
                         </div>
 
-                        {!loadingSellers &&
-                          sellers.length === 0 && (
-                            <p className="mt-2 text-xs text-amber-600">
-                              No approved sellers with
-                              approved stores are available.
-                            </p>
-                          )}
+                        <div className="inline-flex w-fit items-center gap-2 rounded-full bg-emerald-100 px-4 py-2 text-xs font-bold text-emerald-700">
 
-                      </div>
+                          <CheckCircle2 size={15} />
 
-                      {/* STORE */}
-
-                      <div>
-
-                        <label className="mb-2 block text-sm font-semibold text-slate-700">
-                          Assigned Store
-                        </label>
-
-                        <div className="flex min-h-12 items-center rounded-xl border border-slate-200 bg-slate-50 px-4">
-
-                          {selectedStore ? (
-                            <div className="flex items-center gap-3">
-
-                              {selectedStore.logo ? (
-                                <img
-                                  src={
-                                    selectedStore.logo
-                                  }
-                                  alt={
-                                    selectedStore.name
-                                  }
-                                  className="h-9 w-9 rounded-lg object-cover"
-                                />
-                              ) : (
-                                <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-white">
-                                  <Store
-                                    size={17}
-                                    className="text-slate-400"
-                                  />
-                                </div>
-                              )}
-
-                              <div>
-
-                                <p className="text-sm font-semibold text-slate-900">
-                                  {
-                                    selectedStore.name
-                                  }
-                                </p>
-
-                                <p className="text-xs capitalize text-emerald-600">
-                                  {
-                                    selectedStore.status
-                                  }
-                                </p>
-
-                              </div>
-
-                            </div>
-                          ) : (
-                            <span className="text-sm text-slate-400">
-                              Select a seller first
-                            </span>
-                          )}
+                          Platform Product
 
                         </div>
 
@@ -3683,55 +3547,13 @@ function AdminAddProduct() {
 
                     </div>
 
-                    {/* ASSIGNMENT PREVIEW */}
-
-                    {selectedSeller &&
-                      selectedStore && (
-                        <div className="mt-6 rounded-2xl border border-slate-200 bg-slate-50 p-4">
-
-                          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-
-                            <div>
-
-                              <p className="text-xs font-bold uppercase tracking-wider text-slate-400">
-                                Product Assignment
-                              </p>
-
-                              <p className="mt-1 text-sm font-semibold text-slate-900">
-                                {selectedSeller.businessName ||
-                                  'Seller'}{' '}
-                                →{' '}
-                                {
-                                  selectedStore.name
-                                }
-                              </p>
-
-                            </div>
-
-                            <div className="inline-flex w-fit items-center gap-2 rounded-full bg-emerald-100 px-3 py-1.5 text-xs font-semibold capitalize text-emerald-700">
-
-                              <CheckCircle2
-                                size={14}
-                              />
-
-                              {
-                                selectedStore.status
-                              }
-
-                            </div>
-
-                          </div>
-
-                        </div>
-                      )}
-
                   </div>
 
                 </section>
 
-                {/* ==================================================
+                {/* =================================================
                     ADMIN PUBLISH
-                ================================================== */}
+                ================================================= */}
 
                 <section className="overflow-hidden rounded-2xl border border-slate-900 bg-slate-900 text-white shadow-sm">
 
@@ -3752,10 +3574,9 @@ function AdminAddProduct() {
                           </h2>
 
                           <p className="mt-1 max-w-2xl text-sm leading-6 text-slate-300">
-                            Products created by an
-                            administrator are published
-                            directly. This product will be
-                            approved and active after saving.
+                            Products created by an administrator
+                            are published directly as platform
+                            products. No seller approval is required.
                           </p>
 
                         </div>
@@ -3780,9 +3601,9 @@ function AdminAddProduct() {
 
                 </section>
 
-                {/* ==================================================
+                {/* =================================================
                     ACTIONS
-                ================================================== */}
+                ================================================= */}
 
                 <div className="flex flex-col-reverse gap-3 border-t border-slate-200 pt-6 sm:flex-row sm:justify-end">
 
@@ -3795,21 +3616,20 @@ function AdminAddProduct() {
 
                   <button
                     type="submit"
-                    disabled={
-                      saving ||
-                      loadingSellers
-                    }
+                    disabled={saving}
                     className="inline-flex h-12 items-center justify-center gap-2 rounded-xl bg-slate-900 px-7 text-sm font-semibold text-white shadow-sm transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60"
                   >
 
                     {saving ? (
                       <>
                         <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" />
+
                         Publishing Product...
                       </>
                     ) : (
                       <>
                         <CheckCircle2 size={18} />
+
                         Save & Publish Product
                       </>
                     )}
