@@ -5,6 +5,7 @@
 // import Store from '../models/Store.js'
 // import Order from '../models/Order.js'
 // import Notification from '../models/Notification.js'
+// import Commission from '../models/Commission.js'
 // import AdminSettings from '../models/AdminSettings.js'
 // import bcrypt from 'bcryptjs'
 
@@ -183,15 +184,10 @@
 //         firstName: 'Fegegta',
 //         lastName: 'Admin',
 //         name: 'Fegegta Admin',
-
 //         email: normalizedEmail,
-
 //         password: hashedPassword,
-
 //         role: 'admin',
-
 //         status: 'active',
-
 //         notificationsEnabled: true,
 //       })
 
@@ -201,10 +197,8 @@
 
 //     return res.status(201).json({
 //       success: true,
-
 //       message:
 //         'Admin account created successfully.',
-
 //       user: {
 //         id: admin._id,
 //         firstName: admin.firstName,
@@ -230,45 +224,107 @@
 //   next
 // ) => {
 //   try {
+//     // ========================================================
+//     // BASIC COUNTS
+//     // ========================================================
+
 //     const [
-//       users,
-//       sellers,
-//       products,
-//       stores,
-//       orders,
+//       totalCustomers,
+//       totalSellers,
+//       totalProducts,
+//       totalStores,
+//       totalOrders,
+//       pendingSellerApplications,
+//       pendingProducts,
 //       unreadNotifications,
 //     ] = await Promise.all([
-//       User.countDocuments(),
+//       // ------------------------------------------------------
+//       // CUSTOMERS
+//       // ------------------------------------------------------
 
-//       Seller.countDocuments(),
+//       User.countDocuments({
+//         role: 'customer',
+//       }),
+
+//       // ------------------------------------------------------
+//       // APPROVED SELLERS
+//       // ------------------------------------------------------
+
+//       Seller.countDocuments({
+//         status: 'approved',
+//       }),
+
+//       // ------------------------------------------------------
+//       // ALL PRODUCTS
+//       // ------------------------------------------------------
 
 //       Product.countDocuments(),
 
+//       // ------------------------------------------------------
+//       // ALL STORES
+//       // ------------------------------------------------------
+
 //       Store.countDocuments(),
+
+//       // ------------------------------------------------------
+//       // ALL ORDERS
+//       // ------------------------------------------------------
 
 //       Order.countDocuments(),
 
+//       // ------------------------------------------------------
+//       // PENDING SELLER APPLICATIONS
+//       // ------------------------------------------------------
+
+//       Seller.countDocuments({
+//         status: 'pending',
+//       }),
+
+//       // ------------------------------------------------------
+//       // PENDING PRODUCTS
+//       // ------------------------------------------------------
+
+//       Product.countDocuments({
+//         approvalStatus: 'pending',
+//       }),
+
+//       // ------------------------------------------------------
+//       // UNREAD NOTIFICATIONS
+//       // ------------------------------------------------------
+
 //       Notification.countDocuments({
-//         read: false,
+//         isRead: false,
 //       }),
 //     ])
+
+//     // ========================================================
+//     // TOTAL SALES
+//     // ========================================================
+//     //
+//     // Only delivered orders are counted as completed sales.
+//     //
+//     // Order schema uses "orderStatus", NOT "status".
+//     //
+//     // ========================================================
 
 //     const salesResult =
 //       await Order.aggregate([
 //         {
 //           $match: {
-//             status: {
-//               $ne: 'cancelled',
-//             },
+//             orderStatus: 'delivered',
 //           },
 //         },
-
 //         {
 //           $group: {
 //             _id: null,
 
 //             totalSales: {
-//               $sum: '$total',
+//               $sum: {
+//                 $ifNull: [
+//                   '$total',
+//                   0,
+//                 ],
+//               },
 //             },
 //           },
 //         },
@@ -277,17 +333,87 @@
 //     const totalSales =
 //       salesResult[0]?.totalSales || 0
 
+//     // ========================================================
+//     // COMMISSION + SELLER EARNINGS
+//     // ========================================================
+//     //
+//     // Commission schema:
+//     // commissionAmount
+//     // sellerAmount
+//     //
+//     // Cancelled commissions are excluded.
+//     //
+//     // ========================================================
+
+//     const commissionResult =
+//       await Commission.aggregate([
+//         {
+//           $match: {
+//             status: {
+//               $ne: 'cancelled',
+//             },
+//           },
+//         },
+//         {
+//           $group: {
+//             _id: null,
+
+//             totalCommission: {
+//               $sum: {
+//                 $ifNull: [
+//                   '$commissionAmount',
+//                   0,
+//                 ],
+//               },
+//             },
+
+//             totalSellerEarnings: {
+//               $sum: {
+//                 $ifNull: [
+//                   '$sellerAmount',
+//                   0,
+//                 ],
+//               },
+//             },
+//           },
+//         },
+//       ])
+
+//     const commission =
+//       commissionResult[0]
+//         ?.totalCommission || 0
+
+//     const sellerEarnings =
+//       commissionResult[0]
+//         ?.totalSellerEarnings || 0
+
+//     // ========================================================
+//     // DASHBOARD RESPONSE
+//     // ========================================================
+//     //
+//     // IMPORTANT:
+//     // These names match AdminDashboard.jsx
+//     //
+//     // ========================================================
+
 //     return res.status(200).json({
 //       success: true,
 
-//       dashboard: {
-//         users,
-//         sellers,
-//         products,
-//         stores,
-//         orders,
-//         unreadNotifications,
+//       stats: {
 //         totalSales,
+//         totalOrders,
+//         totalCustomers,
+//         totalSellers,
+//         totalProducts,
+
+//         pendingSellerApplications,
+//         pendingProducts,
+
+//         commission,
+//         sellerEarnings,
+
+//         totalStores,
+//         unreadNotifications,
 //       },
 //     })
 //   } catch (error) {
@@ -390,10 +516,8 @@
 
 //     return res.status(200).json({
 //       success: true,
-
 //       message:
 //         'User role updated successfully.',
-
 //       user,
 //     })
 //   } catch (error) {
@@ -473,10 +597,8 @@
 
 //     return res.status(200).json({
 //       success: true,
-
 //       message:
 //         'Seller approved successfully.',
-
 //       seller,
 //     })
 //   } catch (error) {
@@ -527,11 +649,9 @@
 
 //     return res.status(200).json({
 //       success: true,
-
 //       message: reason
 //         ? `Seller rejected: ${reason}`
 //         : 'Seller rejected successfully.',
-
 //       seller,
 //     })
 //   } catch (error) {
@@ -754,7 +874,6 @@
 //             file.secure_url ||
 //             file.url ||
 //             '',
-
 //           publicId:
 //             file.filename ||
 //             file.public_id ||
@@ -881,7 +1000,6 @@
 //     const product =
 //       await Product.create({
 //         seller: seller._id,
-
 //         store: store._id,
 
 //         name: name.trim(),
@@ -961,10 +1079,8 @@
 
 //     return res.status(201).json({
 //       success: true,
-
 //       message:
 //         'Product created successfully and published.',
-
 //       product:
 //         populatedProduct,
 //     })
@@ -1324,7 +1440,6 @@
 //       while (
 //         await Product.exists({
 //           slug,
-
 //           _id: {
 //             $ne:
 //               product._id,
@@ -1426,10 +1541,8 @@
 
 //     return res.status(200).json({
 //       success: true,
-
 //       message:
 //         'Product updated successfully.',
-
 //       product:
 //         populatedProduct,
 //     })
@@ -1522,10 +1635,8 @@
 
 //     return res.status(200).json({
 //       success: true,
-
 //       message:
 //         'Product approved successfully.',
-
 //       product,
 //     })
 //   } catch (error) {
@@ -1584,11 +1695,9 @@
 
 //     return res.status(200).json({
 //       success: true,
-
 //       message: reason
 //         ? `Product rejected: ${reason}`
 //         : 'Product rejected successfully.',
-
 //       product,
 //     })
 //   } catch (error) {
@@ -1632,10 +1741,8 @@
 
 //     return res.status(200).json({
 //       success: true,
-
 //       message:
 //         'Store approved successfully.',
-
 //       store,
 //     })
 //   } catch (error) {
@@ -1659,8 +1766,8 @@
 //           createdAt: -1,
 //         })
 //         .populate(
-//           'user',
-//           'name email phone'
+//           'customer',
+//           'name firstName lastName email phone'
 //         )
 //         .populate(
 //           'items.product'
@@ -1724,10 +1831,12 @@
 //         await Notification.findByIdAndUpdate(
 //           req.params.id,
 //           {
-//             read: true,
+//             isRead: true,
+//             readAt: new Date(),
 //           },
 //           {
 //             new: true,
+//             runValidators: true,
 //           }
 //         )
 
@@ -1761,16 +1870,18 @@
 //     try {
 //       await Notification.updateMany(
 //         {
-//           read: false,
+//           isRead: false,
 //         },
 //         {
-//           read: true,
+//           $set: {
+//             isRead: true,
+//             readAt: new Date(),
+//           },
 //         }
 //       )
 
 //       return res.status(200).json({
 //         success: true,
-
 //         message:
 //           'All notifications marked as read.',
 //       })
@@ -1995,12 +2106,9 @@
 //           },
 //           {
 //             new: true,
-
 //             upsert: true,
-
 //             setDefaultsOnInsert:
 //               true,
-
 //             runValidators:
 //               true,
 //           }
@@ -2008,17 +2116,14 @@
 
 //       return res.status(200).json({
 //         success: true,
-
 //         message:
 //           'Admin settings saved successfully.',
-
 //         settings,
 //       })
 //     } catch (error) {
 //       next(error)
 //     }
 //   }
-
 
 import User from '../models/User.js'
 import Seller from '../models/Seller.js'
@@ -2321,12 +2426,6 @@ export const getDashboard = async (
     // ========================================================
     // TOTAL SALES
     // ========================================================
-    //
-    // Only delivered orders are counted as completed sales.
-    //
-    // Order schema uses "orderStatus", NOT "status".
-    //
-    // ========================================================
 
     const salesResult =
       await Order.aggregate([
@@ -2338,7 +2437,6 @@ export const getDashboard = async (
         {
           $group: {
             _id: null,
-
             totalSales: {
               $sum: {
                 $ifNull: [
@@ -2356,14 +2454,6 @@ export const getDashboard = async (
 
     // ========================================================
     // COMMISSION + SELLER EARNINGS
-    // ========================================================
-    //
-    // Commission schema:
-    // commissionAmount
-    // sellerAmount
-    //
-    // Cancelled commissions are excluded.
-    //
     // ========================================================
 
     const commissionResult =
@@ -2410,11 +2500,6 @@ export const getDashboard = async (
 
     // ========================================================
     // DASHBOARD RESPONSE
-    // ========================================================
-    //
-    // IMPORTANT:
-    // These names match AdminDashboard.jsx
-    //
     // ========================================================
 
     return res.status(200).json({
@@ -2724,6 +2809,8 @@ export const createProduct = async (
 ) => {
   try {
     const {
+      ownerType = 'platform',
+
       name,
       description,
       category,
@@ -2738,15 +2825,35 @@ export const createProduct = async (
       colors,
       features,
       tags,
+
       sellerId,
       storeId,
     } = req.body
 
-    // --------------------------------------------------------
-    // REQUIRED INFORMATION
-    // --------------------------------------------------------
+    // ========================================================
+    // VALIDATE OWNER TYPE
+    // ========================================================
 
-    if (!name || !name.trim()) {
+    if (
+      !['platform', 'seller'].includes(
+        ownerType
+      )
+    ) {
+      return res.status(400).json({
+        success: false,
+        message:
+          'Invalid product owner type.',
+      })
+    }
+
+    // ========================================================
+    // REQUIRED INFORMATION
+    // ========================================================
+
+    if (
+      !name ||
+      !String(name).trim()
+    ) {
       return res.status(400).json({
         success: false,
         message:
@@ -2767,7 +2874,7 @@ export const createProduct = async (
 
     if (
       !category ||
-      !category.trim()
+      !String(category).trim()
     ) {
       return res.status(400).json({
         success: false,
@@ -2789,103 +2896,137 @@ export const createProduct = async (
       })
     }
 
-    // --------------------------------------------------------
-    // SELLER + STORE
-    // --------------------------------------------------------
+    // ========================================================
+    // SELLER / STORE VARIABLES
+    // ========================================================
 
-    if (!sellerId) {
-      return res.status(400).json({
-        success: false,
-        message:
-          'A seller must be selected for this product.',
-      })
+    let seller = null
+    let store = null
+
+    // ========================================================
+    // SELLER PRODUCT
+    // ========================================================
+
+    if (ownerType === 'seller') {
+      // ------------------------------------------------------
+      // SELLER ID
+      // ------------------------------------------------------
+
+      if (!sellerId) {
+        return res.status(400).json({
+          success: false,
+          message:
+            'A seller must be selected for this product.',
+        })
+      }
+
+      // ------------------------------------------------------
+      // STORE ID
+      // ------------------------------------------------------
+
+      if (!storeId) {
+        return res.status(400).json({
+          success: false,
+          message:
+            'A store must be selected for this product.',
+        })
+      }
+
+      // ------------------------------------------------------
+      // FIND SELLER
+      // ------------------------------------------------------
+
+      seller =
+        await Seller.findById(
+          sellerId
+        )
+
+      if (!seller) {
+        return res.status(404).json({
+          success: false,
+          message:
+            'Selected seller was not found.',
+        })
+      }
+
+      // ------------------------------------------------------
+      // CHECK SELLER APPROVAL
+      // ------------------------------------------------------
+
+      if (
+        seller.status !==
+        'approved'
+      ) {
+        return res.status(400).json({
+          success: false,
+          message:
+            'The selected seller is not approved.',
+        })
+      }
+
+      // ------------------------------------------------------
+      // FIND STORE
+      // ------------------------------------------------------
+
+      store =
+        await Store.findById(
+          storeId
+        )
+
+      if (!store) {
+        return res.status(404).json({
+          success: false,
+          message:
+            'Selected store was not found.',
+        })
+      }
+
+      // ------------------------------------------------------
+      // CHECK STORE STATUS
+      // ------------------------------------------------------
+
+      if (
+        ![
+          'approved',
+          'active',
+        ].includes(store.status)
+      ) {
+        return res.status(400).json({
+          success: false,
+          message:
+            'The selected store is not active.',
+        })
+      }
+
+      // ------------------------------------------------------
+      // VERIFY SELLER OWNS STORE
+      // ------------------------------------------------------
+
+      if (
+        !seller.store ||
+        String(seller.store) !==
+          String(store._id)
+      ) {
+        return res.status(400).json({
+          success: false,
+          message:
+            'The selected store does not belong to the selected seller.',
+        })
+      }
     }
 
-    if (!storeId) {
-      return res.status(400).json({
-        success: false,
-        message:
-          'A store must be selected for this product.',
-      })
+    // ========================================================
+    // PLATFORM PRODUCT
+    // ========================================================
+
+    if (ownerType === 'platform') {
+      seller = null
+      store = null
     }
 
-    // --------------------------------------------------------
-    // FIND SELLER
-    // --------------------------------------------------------
-
-    const seller =
-      await Seller.findById(
-        sellerId
-      )
-
-    if (!seller) {
-      return res.status(404).json({
-        success: false,
-        message:
-          'Selected seller was not found.',
-      })
-    }
-
-    if (
-      seller.status !==
-      'approved'
-    ) {
-      return res.status(400).json({
-        success: false,
-        message:
-          'The selected seller is not approved.',
-      })
-    }
-
-    // --------------------------------------------------------
-    // FIND STORE
-    // --------------------------------------------------------
-
-    const store =
-      await Store.findById(
-        storeId
-      )
-
-    if (!store) {
-      return res.status(404).json({
-        success: false,
-        message:
-          'Selected store was not found.',
-      })
-    }
-
-    if (
-      ![
-        'approved',
-        'active',
-      ].includes(store.status)
-    ) {
-      return res.status(400).json({
-        success: false,
-        message:
-          'The selected store is not active.',
-      })
-    }
-
-    // --------------------------------------------------------
-    // VERIFY SELLER OWNS STORE
-    // --------------------------------------------------------
-
-    if (
-      !seller.store ||
-      String(seller.store) !==
-        String(store._id)
-    ) {
-      return res.status(400).json({
-        success: false,
-        message:
-          'The selected store does not belong to the selected seller.',
-      })
-    }
-
-    // --------------------------------------------------------
+    // ========================================================
     // PRODUCT IMAGES
-    // --------------------------------------------------------
+    // ========================================================
 
     const images =
       (req.files || []).map(
@@ -2895,6 +3036,7 @@ export const createProduct = async (
             file.secure_url ||
             file.url ||
             '',
+
           publicId:
             file.filename ||
             file.public_id ||
@@ -2918,9 +3060,9 @@ export const createProduct = async (
       })
     }
 
-    // --------------------------------------------------------
+    // ========================================================
     // GENERATE UNIQUE SLUG
-    // --------------------------------------------------------
+    // ========================================================
 
     const baseSlug =
       generateSlug(name)
@@ -2947,16 +3089,16 @@ export const createProduct = async (
       slugNumber += 1
     }
 
-    // --------------------------------------------------------
+    // ========================================================
     // COMPARE AT PRICE
-    // --------------------------------------------------------
+    // ========================================================
 
     const finalCompareAtPrice =
       compareAtPrice !== undefined &&
       compareAtPrice !== ''
         ? Number(compareAtPrice)
         : oldPrice !== undefined &&
-            oldPrice !== ''
+          oldPrice !== ''
           ? Number(oldPrice)
           : 0
 
@@ -2973,9 +3115,9 @@ export const createProduct = async (
       })
     }
 
-    // --------------------------------------------------------
+    // ========================================================
     // STOCK
-    // --------------------------------------------------------
+    // ========================================================
 
     const finalStock =
       stock !== undefined &&
@@ -2994,9 +3136,9 @@ export const createProduct = async (
       })
     }
 
-    // --------------------------------------------------------
+    // ========================================================
     // MATERIAL
-    // --------------------------------------------------------
+    // ========================================================
 
     const finalMaterial =
       material !== undefined &&
@@ -3004,9 +3146,9 @@ export const createProduct = async (
         ? String(material).trim()
         : ''
 
-    // --------------------------------------------------------
+    // ========================================================
     // ARRAYS
-    // --------------------------------------------------------
+    // ========================================================
 
     const finalFeatures =
       toArray(features)
@@ -3014,16 +3156,40 @@ export const createProduct = async (
     const finalTags =
       toArray(tags)
 
-    // --------------------------------------------------------
+    const finalSizes =
+      toArray(sizes)
+
+    const finalColors =
+      toArray(colors)
+
+    // ========================================================
     // CREATE PRODUCT
-    // --------------------------------------------------------
+    // ========================================================
 
     const product =
       await Product.create({
-        seller: seller._id,
-        store: store._id,
+        // ----------------------------------------------------
+        // OWNERSHIP
+        // ----------------------------------------------------
 
-        name: name.trim(),
+        ownerType,
+
+        seller:
+          seller
+            ? seller._id
+            : null,
+
+        store:
+          store
+            ? store._id
+            : null,
+
+        // ----------------------------------------------------
+        // BASIC INFORMATION
+        // ----------------------------------------------------
+
+        name:
+          String(name).trim(),
 
         slug,
 
@@ -3031,7 +3197,7 @@ export const createProduct = async (
           String(description).trim(),
 
         category:
-          category.trim(),
+          String(category).trim(),
 
         subcategory:
           subcategory
@@ -3040,14 +3206,26 @@ export const createProduct = async (
               ).trim()
             : '',
 
+        // ----------------------------------------------------
+        // MATERIAL
+        // ----------------------------------------------------
+
         material:
           finalMaterial,
+
+        // ----------------------------------------------------
+        // PRICE
+        // ----------------------------------------------------
 
         price:
           Number(price),
 
         compareAtPrice:
           finalCompareAtPrice,
+
+        // ----------------------------------------------------
+        // INVENTORY
+        // ----------------------------------------------------
 
         stock:
           finalStock,
@@ -3057,19 +3235,35 @@ export const createProduct = async (
             ? String(sku).trim()
             : '',
 
+        // ----------------------------------------------------
+        // IMAGES
+        // ----------------------------------------------------
+
         images,
 
+        // ----------------------------------------------------
+        // OPTIONS
+        // ----------------------------------------------------
+
         sizes:
-          toArray(sizes),
+          finalSizes,
 
         colors:
-          toArray(colors),
+          finalColors,
+
+        // ----------------------------------------------------
+        // FEATURES / TAGS
+        // ----------------------------------------------------
 
         features:
           finalFeatures,
 
         tags:
           finalTags,
+
+        // ----------------------------------------------------
+        // ADMIN APPROVAL
+        // ----------------------------------------------------
 
         approvalStatus:
           'approved',
@@ -3081,9 +3275,9 @@ export const createProduct = async (
           '',
       })
 
-    // --------------------------------------------------------
+    // ========================================================
     // POPULATE
-    // --------------------------------------------------------
+    // ========================================================
 
     const populatedProduct =
       await Product.findById(
@@ -3098,10 +3292,18 @@ export const createProduct = async (
           'name slug description logo banner status'
         )
 
+    // ========================================================
+    // RESPONSE MESSAGE
+    // ========================================================
+
+    const message =
+      ownerType === 'platform'
+        ? 'Platform product created successfully and published.'
+        : 'Seller product created successfully and published.'
+
     return res.status(201).json({
       success: true,
-      message:
-        'Product created successfully and published.',
+      message,
       product:
         populatedProduct,
     })
@@ -3218,7 +3420,7 @@ export const updateProduct = async (
       compareAtPrice !== ''
         ? Number(compareAtPrice)
         : oldPrice !== undefined &&
-            oldPrice !== ''
+          oldPrice !== ''
           ? Number(oldPrice)
           : 0
 
