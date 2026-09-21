@@ -1019,6 +1019,7 @@
 //     }
 //   }
 
+
 import SellerApplication from '../models/SellerApplication.js'
 import Seller from '../models/Seller.js'
 import Store from '../models/Store.js'
@@ -1041,7 +1042,8 @@ const generateStoreSlug = (name) => {
 
 const createUniqueStoreSlug = async (name) => {
   const baseSlug =
-    generateStoreSlug(name) || `store-${Date.now()}`
+    generateStoreSlug(name) ||
+    `store-${Date.now()}`
 
   let slug = baseSlug
   let counter = 1
@@ -1193,30 +1195,21 @@ export const createSellerApplication = async (
     }
 
     // ========================================================
-    // CHECK EXISTING SELLER
+    // CHECK EXISTING APPLICATION FIRST
     // ========================================================
-
-    const existingSeller =
-      await Seller.findOne({
-        user: userId,
-      })
-
-    if (existingSeller) {
-      return res.status(409).json({
-        success: false,
-        message:
-          'You already have a seller account.',
-        seller: existingSeller,
-      })
-    }
-
-    // ========================================================
-    // CHECK EXISTING APPLICATION
+    //
+    // IMPORTANT:
+    // We check the application BEFORE Seller.
+    //
+    // A previous failed approval may have created a partial
+    // Seller record. That Seller must NOT block the application.
     // ========================================================
 
     const existingApplication =
       await SellerApplication.findOne({
         user: userId,
+      }).sort({
+        createdAt: -1,
       })
 
     if (existingApplication) {
@@ -1245,12 +1238,19 @@ export const createSellerApplication = async (
         existingApplication.status ===
         'approved'
       ) {
+        const approvedSeller =
+          await Seller.findOne({
+            user: userId,
+          })
+
         return res.status(409).json({
           success: false,
           message:
             'Your seller application has already been approved.',
           application:
             existingApplication,
+          seller:
+            approvedSeller || null,
         })
       }
 
@@ -1377,6 +1377,34 @@ export const createSellerApplication = async (
             populatedApplication,
         })
       }
+    }
+
+    // ========================================================
+    // CHECK EXISTING SELLER
+    // ========================================================
+    //
+    // At this point there is no application.
+    //
+    // If a Seller really exists without an application,
+    // treat it as an existing seller account.
+    //
+    // If the Seller was created by a previous failed approval,
+    // the application will normally exist and the code above
+    // will have handled it.
+    // ========================================================
+
+    const existingSeller =
+      await Seller.findOne({
+        user: userId,
+      })
+
+    if (existingSeller) {
+      return res.status(409).json({
+        success: false,
+        message:
+          'You already have a seller account.',
+        seller: existingSeller,
+      })
     }
 
     // ========================================================
@@ -1629,56 +1657,58 @@ export const getSellerApplications = async (
 // ADMIN — GET SINGLE SELLER APPLICATION
 // ============================================================
 
-export const getSellerApplicationById = async (
-  req,
-  res,
-  next
-) => {
-  try {
-    const application =
-      await SellerApplication.findById(
-        req.params.id
-      )
-        .populate(
-          'user',
-          'name firstName lastName email phone'
+export const getSellerApplicationById =
+  async (
+    req,
+    res,
+    next
+  ) => {
+    try {
+      const application =
+        await SellerApplication.findById(
+          req.params.id
         )
-        .populate(
-          'reviewedBy',
-          'name firstName lastName email'
-        )
+          .populate(
+            'user',
+            'name firstName lastName email phone'
+          )
+          .populate(
+            'reviewedBy',
+            'name firstName lastName email'
+          )
 
-    if (!application) {
-      return res.status(404).json({
-        success: false,
-        message:
-          'Seller application not found.',
+      if (!application) {
+        return res.status(404).json({
+          success: false,
+          message:
+            'Seller application not found.',
+        })
+      }
+
+      const seller =
+        await Seller.findOne({
+          user:
+            application.user._id,
+        })
+          .populate(
+            'user',
+            'name firstName lastName email phone'
+          )
+          .populate(
+            'store',
+            'name slug description logo banner status'
+          )
+
+      return res.status(200).json({
+        success: true,
+        application,
+        seller:
+          seller || null,
       })
+    } catch (error) {
+      next(error)
     }
-
-    const seller =
-      await Seller.findOne({
-        user: application.user._id,
-      })
-        .populate(
-          'user',
-          'name firstName lastName email phone'
-        )
-        .populate(
-          'store',
-          'name slug description logo banner status'
-        )
-
-    return res.status(200).json({
-      success: true,
-      application,
-      seller:
-        seller || null,
-    })
-  } catch (error) {
-    next(error)
   }
-}
 
 // ============================================================
 // ADMIN — UPDATE SELLER APPLICATION STATUS
@@ -1796,10 +1826,8 @@ export const updateSellerApplicationStatus =
       if (
         status === 'approved'
       ) {
-
         // ----------------------------------------------------
-        // IMPORTANT:
-        // REPAIR OLD APPLICATIONS BEFORE CREATING SELLER
+        // REPAIR OLD APPLICATIONS
         // ----------------------------------------------------
 
         const legacyDescription =
@@ -1911,13 +1939,13 @@ export const updateSellerApplicationStatus =
         }
 
         // ----------------------------------------------------
-        // SAVE REPAIRED APPLICATION FIRST
+        // VALIDATE BEFORE CREATING SELLER / STORE
         // ----------------------------------------------------
 
         await application.validate()
 
         // ----------------------------------------------------
-        // CHECK IF SELLER ALREADY EXISTS
+        // CHECK EXISTING SELLER
         // ----------------------------------------------------
 
         let seller =
@@ -1977,8 +2005,9 @@ export const updateSellerApplicationStatus =
         } else {
           // --------------------------------------------------
           // REUSE EXISTING SELLER
-          // This also fixes the partial seller created by
-          // the previous failed approval.
+          //
+          // This handles the partial Seller that was created
+          // by the previous failed approval.
           // --------------------------------------------------
 
           seller.businessName =
@@ -2085,10 +2114,19 @@ export const updateSellerApplicationStatus =
             'approved'
 
           await store.save()
+
+          if (
+            !seller.store
+          ) {
+            seller.store =
+              store._id
+
+            await seller.save()
+          }
         }
 
         // ----------------------------------------------------
-        // UPDATE APPLICATION
+        // FINALLY APPROVE APPLICATION
         // ----------------------------------------------------
 
         application.status =
