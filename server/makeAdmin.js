@@ -6,7 +6,7 @@ import User from './models/User.js'
 
 dotenv.config()
 
-const ADMIN_EMAIL = 'fegegta@shope.com'
+const ADMIN_EMAIL = 'Fegegta@shope.com'
 const ADMIN_PASSWORD = 'fegegta@shope2026!'
 
 const makeAdmin = async () => {
