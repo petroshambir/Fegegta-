@@ -1,7 +1,457 @@
 
+// import Seller from '../models/Seller.js'
+
+// // ============================================================
+// // APPLY TO BECOME A SELLER
+// // ============================================================
+
+// export const createSellerApplication = async (
+//   req,
+//   res,
+//   next
+// ) => {
+//   try {
+//     const userId =
+//       req.user?._id ||
+//       req.user?.id
+
+//     if (!userId) {
+//       return res.status(401).json({
+//         success: false,
+//         message: 'Authentication required.',
+//       })
+//     }
+
+//     const {
+//       businessName,
+//       phone,
+//       email,
+//       address,
+//       description,
+//       documents,
+//     } = req.body
+
+//     // ========================================================
+//     // REQUIRED INFORMATION
+//     // ========================================================
+
+//     if (
+//       !businessName ||
+//       !String(businessName).trim()
+//     ) {
+//       return res.status(400).json({
+//         success: false,
+//         message:
+//           'Business name is required.',
+//       })
+//     }
+
+//     if (
+//       !phone ||
+//       !String(phone).trim()
+//     ) {
+//       return res.status(400).json({
+//         success: false,
+//         message:
+//           'Phone number is required.',
+//       })
+//     }
+
+//     if (
+//       !email ||
+//       !String(email).trim()
+//     ) {
+//       return res.status(400).json({
+//         success: false,
+//         message:
+//           'Email address is required.',
+//       })
+//     }
+
+//     // ========================================================
+//     // CHECK EXISTING SELLER
+//     // ========================================================
+
+//     const existingSeller =
+//       await Seller.findOne({
+//         user: userId,
+//       })
+
+//     if (existingSeller) {
+//       return res.status(409).json({
+//         success: false,
+//         message:
+//           'You already have a seller application.',
+//         seller: existingSeller,
+//       })
+//     }
+
+//     // ========================================================
+//     // CREATE SELLER APPLICATION
+//     // ========================================================
+
+//     const seller =
+//       await Seller.create({
+//         user: userId,
+
+//         store: null,
+
+//         businessName:
+//           String(
+//             businessName
+//           ).trim(),
+
+//         phone:
+//           String(
+//             phone
+//           ).trim(),
+
+//         email:
+//           String(
+//             email
+//           )
+//             .trim()
+//             .toLowerCase(),
+
+//         address:
+//           address
+//             ? String(address).trim()
+//             : '',
+
+//         description:
+//           description
+//             ? String(description).trim()
+//             : '',
+
+//         documents:
+//           documents &&
+//           typeof documents === 'object'
+//             ? documents
+//             : {},
+
+//         commissionRate: 0,
+
+//         availableBalance: 0,
+
+//         totalEarnings: 0,
+
+//         totalCommission: 0,
+
+//         status: 'pending',
+//       })
+
+//     return res.status(201).json({
+//       success: true,
+
+//       message:
+//         'Seller application submitted successfully. It is waiting for admin approval.',
+
+//       seller,
+//     })
+//   } catch (error) {
+//     next(error)
+//   }
+// }
+
+// // ============================================================
+// // GET MY SELLER APPLICATION
+// // ============================================================
+
+// export const getMySellerApplication = async (
+//   req,
+//   res,
+//   next
+// ) => {
+//   try {
+//     const userId =
+//       req.user?._id ||
+//       req.user?.id
+
+//     if (!userId) {
+//       return res.status(401).json({
+//         success: false,
+//         message:
+//           'Authentication required.',
+//       })
+//     }
+
+//     const seller =
+//       await Seller.findOne({
+//         user: userId,
+//       })
+//         .populate(
+//           'user',
+//           'name firstName lastName email phone'
+//         )
+//         .populate(
+//           'store',
+//           'name slug description logo banner status'
+//         )
+
+//     if (!seller) {
+//       return res.status(404).json({
+//         success: false,
+//         message:
+//           'You have not submitted a seller application yet.',
+//       })
+//     }
+
+//     return res.status(200).json({
+//       success: true,
+//       seller,
+//     })
+//   } catch (error) {
+//     next(error)
+//   }
+// }
+
+// // ============================================================
+// // ADMIN — GET ALL SELLER APPLICATIONS
+// // ============================================================
+
+// export const getSellerApplications = async (
+//   req,
+//   res,
+//   next
+// ) => {
+//   try {
+//     const {
+//       status,
+//     } = req.query
+
+//     const filter = {}
+
+//     if (
+//       status &&
+//       [
+//         'pending',
+//         'approved',
+//         'rejected',
+//         'suspended',
+//         'inactive',
+//       ].includes(status)
+//     ) {
+//       filter.status = status
+//     }
+
+//     const sellers =
+//       await Seller.find(filter)
+//         .populate(
+//           'user',
+//           'name firstName lastName email phone'
+//         )
+//         .populate(
+//           'store',
+//           'name slug description logo banner status'
+//         )
+//         .sort({
+//           createdAt: -1,
+//         })
+
+//     return res.status(200).json({
+//       success: true,
+//       sellers,
+//     })
+//   } catch (error) {
+//     next(error)
+//   }
+// }
+
+// // ============================================================
+// // ADMIN — GET SINGLE SELLER APPLICATION
+// // ============================================================
+
+// export const getSellerApplicationById = async (
+//   req,
+//   res,
+//   next
+// ) => {
+//   try {
+//     const seller =
+//       await Seller.findById(
+//         req.params.id
+//       )
+//         .populate(
+//           'user',
+//           'name firstName lastName email phone'
+//         )
+//         .populate(
+//           'store',
+//           'name slug description logo banner status'
+//         )
+
+//     if (!seller) {
+//       return res.status(404).json({
+//         success: false,
+//         message:
+//           'Seller application not found.',
+//       })
+//     }
+
+//     return res.status(200).json({
+//       success: true,
+//       seller,
+//     })
+//   } catch (error) {
+//     next(error)
+//   }
+// }
+
+// // ============================================================
+// // ADMIN — UPDATE SELLER APPLICATION STATUS
+// // ============================================================
+
+// export const updateSellerApplicationStatus =
+//   async (
+//     req,
+//     res,
+//     next
+//   ) => {
+//     try {
+//       const {
+//         status,
+//       } = req.body
+
+//       const allowedStatuses = [
+//         'pending',
+//         'approved',
+//         'rejected',
+//         'suspended',
+//         'inactive',
+//       ]
+
+//       if (
+//         !allowedStatuses.includes(
+//           status
+//         )
+//       ) {
+//         return res.status(400).json({
+//           success: false,
+//           message:
+//             'Invalid seller status.',
+//         })
+//       }
+
+//       const seller =
+//         await Seller.findById(
+//           req.params.id
+//         )
+
+//       if (!seller) {
+//         return res.status(404).json({
+//           success: false,
+//           message:
+//             'Seller application not found.',
+//         })
+//       }
+
+//       seller.status =
+//         status
+
+//       await seller.save()
+
+//       const updatedSeller =
+//         await Seller.findById(
+//           seller._id
+//         )
+//           .populate(
+//             'user',
+//             'name firstName lastName email phone'
+//           )
+//           .populate(
+//             'store',
+//             'name slug description logo banner status'
+//           )
+
+//       return res.status(200).json({
+//         success: true,
+
+//         message:
+//           `Seller status changed to "${status}".`,
+
+//         seller:
+//           updatedSeller,
+//       })
+//     } catch (error) {
+//       next(error)
+//     }
+//   }
+
+// // ============================================================
+// // ADMIN — DELETE SELLER APPLICATION
+// // ============================================================
+
+// export const deleteSellerApplication =
+//   async (
+//     req,
+//     res,
+//     next
+//   ) => {
+//     try {
+//       const seller =
+//         await Seller.findById(
+//           req.params.id
+//         )
+
+//       if (!seller) {
+//         return res.status(404).json({
+//           success: false,
+//           message:
+//             'Seller application not found.',
+//         })
+//       }
+
+//       await seller.deleteOne()
+
+//       return res.status(200).json({
+//         success: true,
+
+//         message:
+//           'Seller application deleted successfully.',
+//       })
+//     } catch (error) {
+//       next(error)
+//     }
+//   }
+
+
+import SellerApplication from '../models/SellerApplication.js'
 import Seller from '../models/Seller.js'
+import Store from '../models/Store.js'
 
 // ============================================================
+// HELPER — CREATE STORE SLUG
+// ============================================================
+
+const generateStoreSlug = (name) => {
+  return String(name)
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+}
+
+// ============================================================
+// HELPER — MAKE UNIQUE STORE SLUG
+// ============================================================
+
+const createUniqueStoreSlug = async (name) => {
+  const baseSlug =
+    generateStoreSlug(name) || `store-${Date.now()}`
+
+  let slug = baseSlug
+  let counter = 1
+
+  while (await Store.findOne({ slug })) {
+    slug = `${baseSlug}-${counter}`
+    counter += 1
+  }
+
+  return slug
+}
+
+// ============================================================
+// CUSTOMER / USER
 // APPLY TO BECOME A SELLER
 // ============================================================
 
@@ -41,8 +491,7 @@ export const createSellerApplication = async (
     ) {
       return res.status(400).json({
         success: false,
-        message:
-          'Business name is required.',
+        message: 'Business name is required.',
       })
     }
 
@@ -52,8 +501,7 @@ export const createSellerApplication = async (
     ) {
       return res.status(400).json({
         success: false,
-        message:
-          'Phone number is required.',
+        message: 'Phone number is required.',
       })
     }
 
@@ -63,8 +511,7 @@ export const createSellerApplication = async (
     ) {
       return res.status(400).json({
         success: false,
-        message:
-          'Email address is required.',
+        message: 'Email address is required.',
       })
     }
 
@@ -81,20 +528,116 @@ export const createSellerApplication = async (
       return res.status(409).json({
         success: false,
         message:
-          'You already have a seller application.',
+          'You already have a seller account.',
         seller: existingSeller,
       })
     }
 
     // ========================================================
-    // CREATE SELLER APPLICATION
+    // CHECK EXISTING APPLICATION
     // ========================================================
 
-    const seller =
-      await Seller.create({
+    const existingApplication =
+      await SellerApplication.findOne({
         user: userId,
+      })
 
-        store: null,
+    if (existingApplication) {
+      if (
+        existingApplication.status ===
+        'pending'
+      ) {
+        return res.status(409).json({
+          success: false,
+          message:
+            'You already have a pending seller application.',
+          application:
+            existingApplication,
+        })
+      }
+
+      if (
+        existingApplication.status ===
+        'approved'
+      ) {
+        return res.status(409).json({
+          success: false,
+          message:
+            'Your seller application has already been approved.',
+          application:
+            existingApplication,
+        })
+      }
+
+      // Rejected application can be submitted again.
+      if (
+        existingApplication.status ===
+        'rejected'
+      ) {
+        existingApplication.businessName =
+          String(
+            businessName
+          ).trim()
+
+        existingApplication.phone =
+          String(
+            phone
+          ).trim()
+
+        existingApplication.email =
+          String(
+            email
+          )
+            .trim()
+            .toLowerCase()
+
+        existingApplication.address =
+          address
+            ? String(address).trim()
+            : ''
+
+        existingApplication.description =
+          description
+            ? String(description).trim()
+            : ''
+
+        existingApplication.documents =
+          documents &&
+          typeof documents === 'object'
+            ? documents
+            : {}
+
+        existingApplication.status =
+          'pending'
+
+        existingApplication.rejectionReason =
+          ''
+
+        existingApplication.reviewedBy =
+          null
+
+        existingApplication.reviewedAt =
+          null
+
+        await existingApplication.save()
+
+        return res.status(200).json({
+          success: true,
+          message:
+            'Seller application resubmitted successfully.',
+          application:
+            existingApplication,
+        })
+      }
+    }
+
+    // ========================================================
+    // CREATE APPLICATION
+    // ========================================================
+
+    const application =
+      await SellerApplication.create({
+        user: userId,
 
         businessName:
           String(
@@ -129,24 +672,29 @@ export const createSellerApplication = async (
             ? documents
             : {},
 
-        commissionRate: 0,
-
-        availableBalance: 0,
-
-        totalEarnings: 0,
-
-        totalCommission: 0,
-
         status: 'pending',
+
+        rejectionReason: '',
+
+        reviewedBy: null,
+
+        reviewedAt: null,
       })
+
+    const populatedApplication =
+      await SellerApplication.findById(
+        application._id
+      ).populate(
+        'user',
+        'name firstName lastName email phone'
+      )
 
     return res.status(201).json({
       success: true,
-
       message:
         'Seller application submitted successfully. It is waiting for admin approval.',
-
-      seller,
+      application:
+        populatedApplication,
     })
   } catch (error) {
     next(error)
@@ -154,6 +702,7 @@ export const createSellerApplication = async (
 }
 
 // ============================================================
+// CUSTOMER / USER
 // GET MY SELLER APPLICATION
 // ============================================================
 
@@ -175,6 +724,18 @@ export const getMySellerApplication = async (
       })
     }
 
+    const application =
+      await SellerApplication.findOne({
+        user: userId,
+      })
+        .populate(
+          'user',
+          'name firstName lastName email phone'
+        )
+        .sort({
+          createdAt: -1,
+        })
+
     const seller =
       await Seller.findOne({
         user: userId,
@@ -188,7 +749,10 @@ export const getMySellerApplication = async (
           'name slug description logo banner status'
         )
 
-    if (!seller) {
+    if (
+      !application &&
+      !seller
+    ) {
       return res.status(404).json({
         success: false,
         message:
@@ -198,7 +762,10 @@ export const getMySellerApplication = async (
 
     return res.status(200).json({
       success: true,
-      seller,
+      application:
+        application || null,
+      seller:
+        seller || null,
     })
   } catch (error) {
     next(error)
@@ -227,22 +794,22 @@ export const getSellerApplications = async (
         'pending',
         'approved',
         'rejected',
-        'suspended',
-        'inactive',
       ].includes(status)
     ) {
       filter.status = status
     }
 
-    const sellers =
-      await Seller.find(filter)
+    const applications =
+      await SellerApplication.find(
+        filter
+      )
         .populate(
           'user',
           'name firstName lastName email phone'
         )
         .populate(
-          'store',
-          'name slug description logo banner status'
+          'reviewedBy',
+          'name firstName lastName email'
         )
         .sort({
           createdAt: -1,
@@ -250,7 +817,7 @@ export const getSellerApplications = async (
 
     return res.status(200).json({
       success: true,
-      sellers,
+      applications,
     })
   } catch (error) {
     next(error)
@@ -267,10 +834,31 @@ export const getSellerApplicationById = async (
   next
 ) => {
   try {
-    const seller =
-      await Seller.findById(
+    const application =
+      await SellerApplication.findById(
         req.params.id
       )
+        .populate(
+          'user',
+          'name firstName lastName email phone'
+        )
+        .populate(
+          'reviewedBy',
+          'name firstName lastName email'
+        )
+
+    if (!application) {
+      return res.status(404).json({
+        success: false,
+        message:
+          'Seller application not found.',
+      })
+    }
+
+    const seller =
+      await Seller.findOne({
+        user: application.user._id,
+      })
         .populate(
           'user',
           'name firstName lastName email phone'
@@ -280,17 +868,11 @@ export const getSellerApplicationById = async (
           'name slug description logo banner status'
         )
 
-    if (!seller) {
-      return res.status(404).json({
-        success: false,
-        message:
-          'Seller application not found.',
-      })
-    }
-
     return res.status(200).json({
       success: true,
-      seller,
+      application,
+      seller:
+        seller || null,
     })
   } catch (error) {
     next(error)
@@ -310,14 +892,13 @@ export const updateSellerApplicationStatus =
     try {
       const {
         status,
+        rejectionReason,
       } = req.body
 
       const allowedStatuses = [
         'pending',
         'approved',
         'rejected',
-        'suspended',
-        'inactive',
       ]
 
       if (
@@ -328,16 +909,16 @@ export const updateSellerApplicationStatus =
         return res.status(400).json({
           success: false,
           message:
-            'Invalid seller status.',
+            'Invalid application status.',
         })
       }
 
-      const seller =
-        await Seller.findById(
+      const application =
+        await SellerApplication.findById(
           req.params.id
         )
 
-      if (!seller) {
+      if (!application) {
         return res.status(404).json({
           success: false,
           message:
@@ -345,33 +926,267 @@ export const updateSellerApplicationStatus =
         })
       }
 
-      seller.status =
-        status
+      // ======================================================
+      // REJECT
+      // ======================================================
 
-      await seller.save()
+      if (
+        status === 'rejected'
+      ) {
+        application.status =
+          'rejected'
 
-      const updatedSeller =
-        await Seller.findById(
-          seller._id
-        )
-          .populate(
-            'user',
-            'name firstName lastName email phone'
+        application.rejectionReason =
+          rejectionReason
+            ? String(
+                rejectionReason
+              ).trim()
+            : ''
+
+        application.reviewedBy =
+          req.user._id
+
+        application.reviewedAt =
+          new Date()
+
+        await application.save()
+
+        return res.status(200).json({
+          success: true,
+          message:
+            'Seller application rejected successfully.',
+          application,
+        })
+      }
+
+      // ======================================================
+      // PENDING
+      // ======================================================
+
+      if (
+        status === 'pending'
+      ) {
+        application.status =
+          'pending'
+
+        application.rejectionReason =
+          ''
+
+        application.reviewedBy =
+          null
+
+        application.reviewedAt =
+          null
+
+        await application.save()
+
+        return res.status(200).json({
+          success: true,
+          message:
+            'Seller application moved back to pending.',
+          application,
+        })
+      }
+
+      // ======================================================
+      // APPROVE
+      // ======================================================
+
+      if (
+        status === 'approved'
+      ) {
+        // ----------------------------------------------
+        // Check if seller already exists
+        // ----------------------------------------------
+
+        let seller =
+          await Seller.findOne({
+            user: application.user,
+          })
+
+        if (
+          !seller
+        ) {
+          seller =
+            await Seller.create({
+              user:
+                application.user,
+
+              store: null,
+
+              businessName:
+                application.businessName,
+
+              phone:
+                application.phone,
+
+              email:
+                application.email,
+
+              address:
+                application.address,
+
+              description:
+                application.description,
+
+              logo:
+                application.logo || '',
+
+              documents:
+                application.documents || {},
+
+              commissionRate: 0,
+
+              availableBalance: 0,
+
+              totalEarnings: 0,
+
+              totalCommission: 0,
+
+              status:
+                'approved',
+            })
+        } else {
+          seller.businessName =
+            application.businessName
+
+          seller.phone =
+            application.phone
+
+          seller.email =
+            application.email
+
+          seller.address =
+            application.address
+
+          seller.description =
+            application.description
+
+          seller.logo =
+            application.logo || ''
+
+          seller.documents =
+            application.documents || {}
+
+          seller.status =
+            'approved'
+
+          await seller.save()
+        }
+
+        // ----------------------------------------------
+        // Create or find store
+        // ----------------------------------------------
+
+        let store = null
+
+        if (
+          seller.store
+        ) {
+          store =
+            await Store.findById(
+              seller.store
+            )
+        }
+
+        if (!store) {
+          const slug =
+            await createUniqueStoreSlug(
+              application.businessName
+            )
+
+          store =
+            await Store.create({
+              name:
+                application.businessName,
+
+              slug,
+
+              description:
+                application.description || '',
+
+              logo:
+                application.logo || '',
+
+              banner: '',
+
+              seller:
+                seller._id,
+
+              status:
+                'approved',
+            })
+
+          seller.store =
+            store._id
+
+          await seller.save()
+        } else {
+          store.name =
+            application.businessName
+
+          store.description =
+            application.description || ''
+
+          store.logo =
+            application.logo || ''
+
+          store.seller =
+            seller._id
+
+          store.status =
+            'approved'
+
+          await store.save()
+        }
+
+        // ----------------------------------------------
+        // Update application
+        // ----------------------------------------------
+
+        application.status =
+          'approved'
+
+        application.rejectionReason =
+          ''
+
+        application.reviewedBy =
+          req.user._id
+
+        application.reviewedAt =
+          new Date()
+
+        await application.save()
+
+        // ----------------------------------------------
+        // Return complete data
+        // ----------------------------------------------
+
+        const populatedSeller =
+          await Seller.findById(
+            seller._id
           )
-          .populate(
-            'store',
-            'name slug description logo banner status'
-          )
+            .populate(
+              'user',
+              'name firstName lastName email phone'
+            )
+            .populate(
+              'store',
+              'name slug description logo banner status'
+            )
 
-      return res.status(200).json({
-        success: true,
+        return res.status(200).json({
+          success: true,
 
-        message:
-          `Seller status changed to "${status}".`,
+          message:
+            'Seller application approved successfully. Seller account and store are ready.',
 
-        seller:
-          updatedSeller,
-      })
+          application,
+
+          seller:
+            populatedSeller,
+        })
+      }
     } catch (error) {
       next(error)
     }
@@ -388,12 +1203,12 @@ export const deleteSellerApplication =
     next
   ) => {
     try {
-      const seller =
-        await Seller.findById(
+      const application =
+        await SellerApplication.findById(
           req.params.id
         )
 
-      if (!seller) {
+      if (!application) {
         return res.status(404).json({
           success: false,
           message:
@@ -401,11 +1216,10 @@ export const deleteSellerApplication =
         })
       }
 
-      await seller.deleteOne()
+      await application.deleteOne()
 
       return res.status(200).json({
         success: true,
-
         message:
           'Seller application deleted successfully.',
       })
