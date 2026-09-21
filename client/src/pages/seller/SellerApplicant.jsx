@@ -141,20 +141,7 @@
 //       setSaving(true)
 
 //       // ========================================================
-//       // CURRENT BACKEND SUPPORTS THESE FIELDS:
-//       //
-//       // businessName
-//       // phone
-//       // email
-//       // address
-//       // description
-//       // documents
-//       //
-//       // The current Seller model does not have separate fields
-//       // for storeName/productType/productCategory/etc.
-//       //
-//       // We keep the existing backend untouched and include
-//       // those details inside description.
+//       // COMBINED DESCRIPTION
 //       // ========================================================
 
 //       const combinedDescription = [
@@ -171,6 +158,10 @@
 //         .filter(Boolean)
 //         .join('\n\n')
 
+//       // ========================================================
+//       // SUBMIT TO BACKEND
+//       // ========================================================
+
 //       const response = await fetch(
 //         `${API_URL}/seller-applications`,
 //         {
@@ -179,10 +170,12 @@
 //           headers: {
 //             'Content-Type':
 //               'application/json',
+
 //             Authorization: `Bearer ${token}`,
 //           },
 
 //           body: JSON.stringify({
+//             // BUSINESS INFORMATION
 //             businessName:
 //               formData.businessName.trim(),
 
@@ -197,6 +190,31 @@
 //             address:
 //               formData.address.trim(),
 
+//             // STORE INFORMATION
+//             storeName:
+//               formData.storeName.trim(),
+
+//             storeDescription:
+//               formData.storeDescription.trim(),
+
+//             // PRODUCT INFORMATION
+//             productType:
+//               formData.productType.trim(),
+
+//             productCategory:
+//               formData.productCategory.trim(),
+
+//             productDescription:
+//               formData.productDescription.trim(),
+
+//             productQuality:
+//               formData.productQuality.trim(),
+
+//             // ADDITIONAL INFORMATION
+//             otherInformation:
+//               formData.otherInformation.trim(),
+
+//             // KEEP EXISTING COMPATIBILITY
 //             description:
 //               combinedDescription,
 
@@ -205,8 +223,13 @@
 //         }
 //       )
 
-//       const data =
-//         await response.json()
+//       let data = {}
+
+//       try {
+//         data = await response.json()
+//       } catch {
+//         data = {}
+//       }
 
 //       // ========================================================
 //       // HANDLE AUTH ERROR
@@ -304,7 +327,7 @@
 //             className="space-y-8 p-6 sm:p-10"
 //           >
 //             {error && (
-//               <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700 whitespace-pre-line">
+//               <div className="whitespace-pre-line rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
 //                 {error}
 //               </div>
 //             )}
@@ -330,7 +353,9 @@
 
 //                   <select
 //                     name="productCategory"
-//                     value={formData.productCategory}
+//                     value={
+//                       formData.productCategory
+//                     }
 //                     onChange={handleChange}
 //                     required
 //                     className="w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-sm outline-none focus:border-black"
@@ -373,7 +398,9 @@
 //               <Textarea
 //                 label="Store Description"
 //                 name="storeDescription"
-//                 value={formData.storeDescription}
+//                 value={
+//                   formData.storeDescription
+//                 }
 //                 onChange={handleChange}
 //                 required
 //               />
@@ -396,7 +423,9 @@
 //                 <Field
 //                   label="Product Quality"
 //                   name="productQuality"
-//                   value={formData.productQuality}
+//                   value={
+//                     formData.productQuality
+//                   }
 //                   onChange={handleChange}
 //                   required
 //                   placeholder="Example: Premium / Handmade"
@@ -406,7 +435,9 @@
 //               <Textarea
 //                 label="Product Description"
 //                 name="productDescription"
-//                 value={formData.productDescription}
+//                 value={
+//                   formData.productDescription
+//                 }
 //                 onChange={handleChange}
 //                 required
 //               />
@@ -430,7 +461,9 @@
 //                   label="Business Email"
 //                   type="email"
 //                   name="businessEmail"
-//                   value={formData.businessEmail}
+//                   value={
+//                     formData.businessEmail
+//                   }
 //                   onChange={handleChange}
 //                   required
 //                 />
@@ -439,7 +472,9 @@
 //                   label="Business Phone"
 //                   type="tel"
 //                   name="businessPhone"
-//                   value={formData.businessPhone}
+//                   value={
+//                     formData.businessPhone
+//                   }
 //                   onChange={handleChange}
 //                   required
 //                 />
@@ -456,7 +491,9 @@
 //               <Textarea
 //                 label="Other Important Information"
 //                 name="otherInformation"
-//                 value={formData.otherInformation}
+//                 value={
+//                   formData.otherInformation
+//                 }
 //                 onChange={handleChange}
 //               />
 //             </section>
@@ -535,7 +572,6 @@
 // }
 
 // export default SellerApplicant
-
 
 import React, { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
