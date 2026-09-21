@@ -58,11 +58,29 @@
 //     }
 
 //     const {
+//       // Business
 //       businessName,
 //       phone,
 //       email,
 //       address,
+
+//       // Store
+//       storeName,
+//       storeDescription,
+
+//       // Product
+//       productType,
+//       productCategory,
+//       productDescription,
+//       productQuality,
+
+//       // Additional
+//       otherInformation,
+
+//       // Compatibility / old field
 //       description,
+
+//       logo,
 //       documents,
 //     } = req.body
 
@@ -100,6 +118,36 @@
 //       })
 //     }
 
+//     if (
+//       !storeName ||
+//       !String(storeName).trim()
+//     ) {
+//       return res.status(400).json({
+//         success: false,
+//         message: 'Store name is required.',
+//       })
+//     }
+
+//     if (
+//       !productType ||
+//       !String(productType).trim()
+//     ) {
+//       return res.status(400).json({
+//         success: false,
+//         message: 'Product type is required.',
+//       })
+//     }
+
+//     if (
+//       !productCategory ||
+//       !String(productCategory).trim()
+//     ) {
+//       return res.status(400).json({
+//         success: false,
+//         message: 'Product category is required.',
+//       })
+//     }
+
 //     // ========================================================
 //     // CHECK EXISTING SELLER
 //     // ========================================================
@@ -128,6 +176,10 @@
 //       })
 
 //     if (existingApplication) {
+//       // ------------------------------------------------------
+//       // PENDING
+//       // ------------------------------------------------------
+
 //       if (
 //         existingApplication.status ===
 //         'pending'
@@ -140,6 +192,10 @@
 //             existingApplication,
 //         })
 //       }
+
+//       // ------------------------------------------------------
+//       // APPROVED
+//       // ------------------------------------------------------
 
 //       if (
 //         existingApplication.status ===
@@ -154,7 +210,10 @@
 //         })
 //       }
 
-//       // Rejected application can be submitted again.
+//       // ------------------------------------------------------
+//       // REJECTED — ALLOW RESUBMISSION
+//       // ------------------------------------------------------
+
 //       if (
 //         existingApplication.status ===
 //         'rejected'
@@ -181,9 +240,61 @@
 //             ? String(address).trim()
 //             : ''
 
+//         // Store information
+//         existingApplication.storeName =
+//           String(
+//             storeName
+//           ).trim()
+
+//         existingApplication.storeDescription =
+//           storeDescription
+//             ? String(
+//                 storeDescription
+//               ).trim()
+//             : ''
+
+//         // Product information
+//         existingApplication.productType =
+//           String(
+//             productType
+//           ).trim()
+
+//         existingApplication.productCategory =
+//           String(
+//             productCategory
+//           ).trim()
+
+//         existingApplication.productDescription =
+//           productDescription
+//             ? String(
+//                 productDescription
+//               ).trim()
+//             : ''
+
+//         existingApplication.productQuality =
+//           productQuality
+//             ? String(
+//                 productQuality
+//               ).trim()
+//             : ''
+
+//         // Additional information
+//         existingApplication.otherInformation =
+//           otherInformation
+//             ? String(
+//                 otherInformation
+//               ).trim()
+//             : ''
+
+//         // Old / compatibility description
 //         existingApplication.description =
 //           description
 //             ? String(description).trim()
+//             : ''
+
+//         existingApplication.logo =
+//           logo
+//             ? String(logo).trim()
 //             : ''
 
 //         existingApplication.documents =
@@ -206,12 +317,20 @@
 
 //         await existingApplication.save()
 
+//         const populatedApplication =
+//           await SellerApplication.findById(
+//             existingApplication._id
+//           ).populate(
+//             'user',
+//             'name firstName lastName email phone'
+//           )
+
 //         return res.status(200).json({
 //           success: true,
 //           message:
 //             'Seller application resubmitted successfully.',
 //           application:
-//             existingApplication,
+//             populatedApplication,
 //         })
 //       }
 //     }
@@ -224,6 +343,7 @@
 //       await SellerApplication.create({
 //         user: userId,
 
+//         // Business
 //         businessName:
 //           String(
 //             businessName
@@ -246,9 +366,61 @@
 //             ? String(address).trim()
 //             : '',
 
+//         // Store
+//         storeName:
+//           String(
+//             storeName
+//           ).trim(),
+
+//         storeDescription:
+//           storeDescription
+//             ? String(
+//                 storeDescription
+//               ).trim()
+//             : '',
+
+//         // Product
+//         productType:
+//           String(
+//             productType
+//           ).trim(),
+
+//         productCategory:
+//           String(
+//             productCategory
+//           ).trim(),
+
+//         productDescription:
+//           productDescription
+//             ? String(
+//                 productDescription
+//               ).trim()
+//             : '',
+
+//         productQuality:
+//           productQuality
+//             ? String(
+//                 productQuality
+//               ).trim()
+//             : '',
+
+//         // Additional
+//         otherInformation:
+//           otherInformation
+//             ? String(
+//                 otherInformation
+//               ).trim()
+//             : '',
+
+//         // Compatibility / old field
 //         description:
 //           description
 //             ? String(description).trim()
+//             : '',
+
+//         logo:
+//           logo
+//             ? String(logo).trim()
 //             : '',
 
 //         documents:
@@ -580,18 +752,21 @@
 //       if (
 //         status === 'approved'
 //       ) {
-//         // ----------------------------------------------
+//         // ----------------------------------------------------
 //         // Check if seller already exists
-//         // ----------------------------------------------
+//         // ----------------------------------------------------
 
 //         let seller =
 //           await Seller.findOne({
-//             user: application.user,
+//             user:
+//               application.user,
 //           })
 
-//         if (
-//           !seller
-//         ) {
+//         // ----------------------------------------------------
+//         // Create seller
+//         // ----------------------------------------------------
+
+//         if (!seller) {
 //           seller =
 //             await Seller.create({
 //               user:
@@ -612,13 +787,17 @@
 //                 application.address,
 
 //               description:
-//                 application.description,
+//                 application.description ||
+//                 application.storeDescription ||
+//                 '',
 
 //               logo:
-//                 application.logo || '',
+//                 application.logo ||
+//                 '',
 
 //               documents:
-//                 application.documents || {},
+//                 application.documents ||
+//                 {},
 
 //               commissionRate: 0,
 
@@ -645,13 +824,17 @@
 //             application.address
 
 //           seller.description =
-//             application.description
+//             application.description ||
+//             application.storeDescription ||
+//             ''
 
 //           seller.logo =
-//             application.logo || ''
+//             application.logo ||
+//             ''
 
 //           seller.documents =
-//             application.documents || {}
+//             application.documents ||
+//             {}
 
 //           seller.status =
 //             'approved'
@@ -659,9 +842,9 @@
 //           await seller.save()
 //         }
 
-//         // ----------------------------------------------
+//         // ----------------------------------------------------
 //         // Create or find store
-//         // ----------------------------------------------
+//         // ----------------------------------------------------
 
 //         let store = null
 
@@ -677,21 +860,26 @@
 //         if (!store) {
 //           const slug =
 //             await createUniqueStoreSlug(
+//               application.storeName ||
 //               application.businessName
 //             )
 
 //           store =
 //             await Store.create({
 //               name:
+//                 application.storeName ||
 //                 application.businessName,
 
 //               slug,
 
 //               description:
-//                 application.description || '',
+//                 application.storeDescription ||
+//                 application.description ||
+//                 '',
 
 //               logo:
-//                 application.logo || '',
+//                 application.logo ||
+//                 '',
 
 //               banner: '',
 
@@ -708,13 +896,17 @@
 //           await seller.save()
 //         } else {
 //           store.name =
+//             application.storeName ||
 //             application.businessName
 
 //           store.description =
-//             application.description || ''
+//             application.storeDescription ||
+//             application.description ||
+//             ''
 
 //           store.logo =
-//             application.logo || ''
+//             application.logo ||
+//             ''
 
 //           store.seller =
 //             seller._id
@@ -725,9 +917,9 @@
 //           await store.save()
 //         }
 
-//         // ----------------------------------------------
+//         // ----------------------------------------------------
 //         // Update application
-//         // ----------------------------------------------
+//         // ----------------------------------------------------
 
 //         application.status =
 //           'approved'
@@ -743,9 +935,9 @@
 
 //         await application.save()
 
-//         // ----------------------------------------------
+//         // ----------------------------------------------------
 //         // Return complete data
-//         // ----------------------------------------------
+//         // ----------------------------------------------------
 
 //         const populatedSeller =
 //           await Seller.findById(
@@ -760,13 +952,27 @@
 //               'name slug description logo banner status'
 //             )
 
+//         const populatedApplication =
+//           await SellerApplication.findById(
+//             application._id
+//           )
+//             .populate(
+//               'user',
+//               'name firstName lastName email phone'
+//             )
+//             .populate(
+//               'reviewedBy',
+//               'name firstName lastName email'
+//             )
+
 //         return res.status(200).json({
 //           success: true,
 
 //           message:
 //             'Seller application approved successfully. Seller account and store are ready.',
 
-//           application,
+//           application:
+//             populatedApplication,
 
 //           seller:
 //             populatedSeller,
@@ -846,6 +1052,31 @@ const createUniqueStoreSlug = async (name) => {
   }
 
   return slug
+}
+
+// ============================================================
+// HELPER — EXTRACT OLD DESCRIPTION FIELD
+// ============================================================
+
+const extractLegacyDescriptionField = (
+  description,
+  label
+) => {
+  const text = String(description || '')
+
+  const escapedLabel = String(label).replace(
+    /[.*+?^${}()|[\]\\]/g,
+    '\\$&'
+  )
+
+  const regex = new RegExp(
+    `${escapedLabel}:\\s*([\\s\\S]*?)(?=\\n\\n[A-Za-z ]+:|$)`,
+    'i'
+  )
+
+  const match = text.match(regex)
+
+  return match?.[1]?.trim() || ''
 }
 
 // ============================================================
@@ -1565,8 +1796,128 @@ export const updateSellerApplicationStatus =
       if (
         status === 'approved'
       ) {
+
         // ----------------------------------------------------
-        // Check if seller already exists
+        // IMPORTANT:
+        // REPAIR OLD APPLICATIONS BEFORE CREATING SELLER
+        // ----------------------------------------------------
+
+        const legacyDescription =
+          String(
+            application.description || ''
+          )
+
+        if (
+          !application.storeName
+        ) {
+          application.storeName =
+            extractLegacyDescriptionField(
+              legacyDescription,
+              'Store Name'
+            )
+        }
+
+        if (
+          !application.storeDescription
+        ) {
+          application.storeDescription =
+            extractLegacyDescriptionField(
+              legacyDescription,
+              'Store Description'
+            )
+        }
+
+        if (
+          !application.productType
+        ) {
+          application.productType =
+            extractLegacyDescriptionField(
+              legacyDescription,
+              'Product Type'
+            )
+        }
+
+        if (
+          !application.productCategory
+        ) {
+          application.productCategory =
+            extractLegacyDescriptionField(
+              legacyDescription,
+              'Product Category'
+            )
+        }
+
+        if (
+          !application.productDescription
+        ) {
+          application.productDescription =
+            extractLegacyDescriptionField(
+              legacyDescription,
+              'Product Description'
+            )
+        }
+
+        if (
+          !application.productQuality
+        ) {
+          application.productQuality =
+            extractLegacyDescriptionField(
+              legacyDescription,
+              'Product Quality'
+            )
+        }
+
+        // ----------------------------------------------------
+        // REQUIRED DATA CHECK
+        // ----------------------------------------------------
+
+        if (
+          !application.storeName ||
+          !String(
+            application.storeName
+          ).trim()
+        ) {
+          return res.status(400).json({
+            success: false,
+            message:
+              'This seller application is missing the store name. Please ask the applicant to resubmit the application.',
+          })
+        }
+
+        if (
+          !application.productType ||
+          !String(
+            application.productType
+          ).trim()
+        ) {
+          return res.status(400).json({
+            success: false,
+            message:
+              'This seller application is missing the product type. Please ask the applicant to resubmit the application.',
+          })
+        }
+
+        if (
+          !application.productCategory ||
+          !String(
+            application.productCategory
+          ).trim()
+        ) {
+          return res.status(400).json({
+            success: false,
+            message:
+              'This seller application is missing the product category. Please ask the applicant to resubmit the application.',
+          })
+        }
+
+        // ----------------------------------------------------
+        // SAVE REPAIRED APPLICATION FIRST
+        // ----------------------------------------------------
+
+        await application.validate()
+
+        // ----------------------------------------------------
+        // CHECK IF SELLER ALREADY EXISTS
         // ----------------------------------------------------
 
         let seller =
@@ -1576,7 +1927,7 @@ export const updateSellerApplicationStatus =
           })
 
         // ----------------------------------------------------
-        // Create seller
+        // CREATE SELLER
         // ----------------------------------------------------
 
         if (!seller) {
@@ -1624,6 +1975,12 @@ export const updateSellerApplicationStatus =
                 'approved',
             })
         } else {
+          // --------------------------------------------------
+          // REUSE EXISTING SELLER
+          // This also fixes the partial seller created by
+          // the previous failed approval.
+          // --------------------------------------------------
+
           seller.businessName =
             application.businessName
 
@@ -1656,7 +2013,7 @@ export const updateSellerApplicationStatus =
         }
 
         // ----------------------------------------------------
-        // Create or find store
+        // CREATE OR FIND STORE
         // ----------------------------------------------------
 
         let store = null
@@ -1731,7 +2088,7 @@ export const updateSellerApplicationStatus =
         }
 
         // ----------------------------------------------------
-        // Update application
+        // UPDATE APPLICATION
         // ----------------------------------------------------
 
         application.status =
@@ -1749,7 +2106,7 @@ export const updateSellerApplicationStatus =
         await application.save()
 
         // ----------------------------------------------------
-        // Return complete data
+        // RETURN COMPLETE DATA
         // ----------------------------------------------------
 
         const populatedSeller =
