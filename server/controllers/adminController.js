@@ -1,4 +1,5 @@
 
+
 // import User from '../models/User.js'
 // import Seller from '../models/Seller.js'
 // import Product from '../models/Product.js'
@@ -300,12 +301,6 @@
 //     // ========================================================
 //     // TOTAL SALES
 //     // ========================================================
-//     //
-//     // Only delivered orders are counted as completed sales.
-//     //
-//     // Order schema uses "orderStatus", NOT "status".
-//     //
-//     // ========================================================
 
 //     const salesResult =
 //       await Order.aggregate([
@@ -317,7 +312,6 @@
 //         {
 //           $group: {
 //             _id: null,
-
 //             totalSales: {
 //               $sum: {
 //                 $ifNull: [
@@ -335,14 +329,6 @@
 
 //     // ========================================================
 //     // COMMISSION + SELLER EARNINGS
-//     // ========================================================
-//     //
-//     // Commission schema:
-//     // commissionAmount
-//     // sellerAmount
-//     //
-//     // Cancelled commissions are excluded.
-//     //
 //     // ========================================================
 
 //     const commissionResult =
@@ -389,11 +375,6 @@
 
 //     // ========================================================
 //     // DASHBOARD RESPONSE
-//     // ========================================================
-//     //
-//     // IMPORTANT:
-//     // These names match AdminDashboard.jsx
-//     //
 //     // ========================================================
 
 //     return res.status(200).json({
@@ -703,6 +684,8 @@
 // ) => {
 //   try {
 //     const {
+//       ownerType = 'platform',
+
 //       name,
 //       description,
 //       category,
@@ -717,15 +700,35 @@
 //       colors,
 //       features,
 //       tags,
+
 //       sellerId,
 //       storeId,
 //     } = req.body
 
-//     // --------------------------------------------------------
-//     // REQUIRED INFORMATION
-//     // --------------------------------------------------------
+//     // ========================================================
+//     // VALIDATE OWNER TYPE
+//     // ========================================================
 
-//     if (!name || !name.trim()) {
+//     if (
+//       !['platform', 'seller'].includes(
+//         ownerType
+//       )
+//     ) {
+//       return res.status(400).json({
+//         success: false,
+//         message:
+//           'Invalid product owner type.',
+//       })
+//     }
+
+//     // ========================================================
+//     // REQUIRED INFORMATION
+//     // ========================================================
+
+//     if (
+//       !name ||
+//       !String(name).trim()
+//     ) {
 //       return res.status(400).json({
 //         success: false,
 //         message:
@@ -746,7 +749,7 @@
 
 //     if (
 //       !category ||
-//       !category.trim()
+//       !String(category).trim()
 //     ) {
 //       return res.status(400).json({
 //         success: false,
@@ -768,103 +771,137 @@
 //       })
 //     }
 
-//     // --------------------------------------------------------
-//     // SELLER + STORE
-//     // --------------------------------------------------------
+//     // ========================================================
+//     // SELLER / STORE VARIABLES
+//     // ========================================================
 
-//     if (!sellerId) {
-//       return res.status(400).json({
-//         success: false,
-//         message:
-//           'A seller must be selected for this product.',
-//       })
+//     let seller = null
+//     let store = null
+
+//     // ========================================================
+//     // SELLER PRODUCT
+//     // ========================================================
+
+//     if (ownerType === 'seller') {
+//       // ------------------------------------------------------
+//       // SELLER ID
+//       // ------------------------------------------------------
+
+//       if (!sellerId) {
+//         return res.status(400).json({
+//           success: false,
+//           message:
+//             'A seller must be selected for this product.',
+//         })
+//       }
+
+//       // ------------------------------------------------------
+//       // STORE ID
+//       // ------------------------------------------------------
+
+//       if (!storeId) {
+//         return res.status(400).json({
+//           success: false,
+//           message:
+//             'A store must be selected for this product.',
+//         })
+//       }
+
+//       // ------------------------------------------------------
+//       // FIND SELLER
+//       // ------------------------------------------------------
+
+//       seller =
+//         await Seller.findById(
+//           sellerId
+//         )
+
+//       if (!seller) {
+//         return res.status(404).json({
+//           success: false,
+//           message:
+//             'Selected seller was not found.',
+//         })
+//       }
+
+//       // ------------------------------------------------------
+//       // CHECK SELLER APPROVAL
+//       // ------------------------------------------------------
+
+//       if (
+//         seller.status !==
+//         'approved'
+//       ) {
+//         return res.status(400).json({
+//           success: false,
+//           message:
+//             'The selected seller is not approved.',
+//         })
+//       }
+
+//       // ------------------------------------------------------
+//       // FIND STORE
+//       // ------------------------------------------------------
+
+//       store =
+//         await Store.findById(
+//           storeId
+//         )
+
+//       if (!store) {
+//         return res.status(404).json({
+//           success: false,
+//           message:
+//             'Selected store was not found.',
+//         })
+//       }
+
+//       // ------------------------------------------------------
+//       // CHECK STORE STATUS
+//       // ------------------------------------------------------
+
+//       if (
+//         ![
+//           'approved',
+//           'active',
+//         ].includes(store.status)
+//       ) {
+//         return res.status(400).json({
+//           success: false,
+//           message:
+//             'The selected store is not active.',
+//         })
+//       }
+
+//       // ------------------------------------------------------
+//       // VERIFY SELLER OWNS STORE
+//       // ------------------------------------------------------
+
+//       if (
+//         !seller.store ||
+//         String(seller.store) !==
+//           String(store._id)
+//       ) {
+//         return res.status(400).json({
+//           success: false,
+//           message:
+//             'The selected store does not belong to the selected seller.',
+//         })
+//       }
 //     }
 
-//     if (!storeId) {
-//       return res.status(400).json({
-//         success: false,
-//         message:
-//           'A store must be selected for this product.',
-//       })
+//     // ========================================================
+//     // PLATFORM PRODUCT
+//     // ========================================================
+
+//     if (ownerType === 'platform') {
+//       seller = null
+//       store = null
 //     }
 
-//     // --------------------------------------------------------
-//     // FIND SELLER
-//     // --------------------------------------------------------
-
-//     const seller =
-//       await Seller.findById(
-//         sellerId
-//       )
-
-//     if (!seller) {
-//       return res.status(404).json({
-//         success: false,
-//         message:
-//           'Selected seller was not found.',
-//       })
-//     }
-
-//     if (
-//       seller.status !==
-//       'approved'
-//     ) {
-//       return res.status(400).json({
-//         success: false,
-//         message:
-//           'The selected seller is not approved.',
-//       })
-//     }
-
-//     // --------------------------------------------------------
-//     // FIND STORE
-//     // --------------------------------------------------------
-
-//     const store =
-//       await Store.findById(
-//         storeId
-//       )
-
-//     if (!store) {
-//       return res.status(404).json({
-//         success: false,
-//         message:
-//           'Selected store was not found.',
-//       })
-//     }
-
-//     if (
-//       ![
-//         'approved',
-//         'active',
-//       ].includes(store.status)
-//     ) {
-//       return res.status(400).json({
-//         success: false,
-//         message:
-//           'The selected store is not active.',
-//       })
-//     }
-
-//     // --------------------------------------------------------
-//     // VERIFY SELLER OWNS STORE
-//     // --------------------------------------------------------
-
-//     if (
-//       !seller.store ||
-//       String(seller.store) !==
-//         String(store._id)
-//     ) {
-//       return res.status(400).json({
-//         success: false,
-//         message:
-//           'The selected store does not belong to the selected seller.',
-//       })
-//     }
-
-//     // --------------------------------------------------------
+//     // ========================================================
 //     // PRODUCT IMAGES
-//     // --------------------------------------------------------
+//     // ========================================================
 
 //     const images =
 //       (req.files || []).map(
@@ -874,6 +911,7 @@
 //             file.secure_url ||
 //             file.url ||
 //             '',
+
 //           publicId:
 //             file.filename ||
 //             file.public_id ||
@@ -897,9 +935,9 @@
 //       })
 //     }
 
-//     // --------------------------------------------------------
+//     // ========================================================
 //     // GENERATE UNIQUE SLUG
-//     // --------------------------------------------------------
+//     // ========================================================
 
 //     const baseSlug =
 //       generateSlug(name)
@@ -926,16 +964,16 @@
 //       slugNumber += 1
 //     }
 
-//     // --------------------------------------------------------
+//     // ========================================================
 //     // COMPARE AT PRICE
-//     // --------------------------------------------------------
+//     // ========================================================
 
 //     const finalCompareAtPrice =
 //       compareAtPrice !== undefined &&
 //       compareAtPrice !== ''
 //         ? Number(compareAtPrice)
 //         : oldPrice !== undefined &&
-//             oldPrice !== ''
+//           oldPrice !== ''
 //           ? Number(oldPrice)
 //           : 0
 
@@ -952,9 +990,9 @@
 //       })
 //     }
 
-//     // --------------------------------------------------------
+//     // ========================================================
 //     // STOCK
-//     // --------------------------------------------------------
+//     // ========================================================
 
 //     const finalStock =
 //       stock !== undefined &&
@@ -973,9 +1011,9 @@
 //       })
 //     }
 
-//     // --------------------------------------------------------
+//     // ========================================================
 //     // MATERIAL
-//     // --------------------------------------------------------
+//     // ========================================================
 
 //     const finalMaterial =
 //       material !== undefined &&
@@ -983,9 +1021,9 @@
 //         ? String(material).trim()
 //         : ''
 
-//     // --------------------------------------------------------
+//     // ========================================================
 //     // ARRAYS
-//     // --------------------------------------------------------
+//     // ========================================================
 
 //     const finalFeatures =
 //       toArray(features)
@@ -993,16 +1031,40 @@
 //     const finalTags =
 //       toArray(tags)
 
-//     // --------------------------------------------------------
+//     const finalSizes =
+//       toArray(sizes)
+
+//     const finalColors =
+//       toArray(colors)
+
+//     // ========================================================
 //     // CREATE PRODUCT
-//     // --------------------------------------------------------
+//     // ========================================================
 
 //     const product =
 //       await Product.create({
-//         seller: seller._id,
-//         store: store._id,
+//         // ----------------------------------------------------
+//         // OWNERSHIP
+//         // ----------------------------------------------------
 
-//         name: name.trim(),
+//         ownerType,
+
+//         seller:
+//           seller
+//             ? seller._id
+//             : null,
+
+//         store:
+//           store
+//             ? store._id
+//             : null,
+
+//         // ----------------------------------------------------
+//         // BASIC INFORMATION
+//         // ----------------------------------------------------
+
+//         name:
+//           String(name).trim(),
 
 //         slug,
 
@@ -1010,7 +1072,7 @@
 //           String(description).trim(),
 
 //         category:
-//           category.trim(),
+//           String(category).trim(),
 
 //         subcategory:
 //           subcategory
@@ -1019,14 +1081,26 @@
 //               ).trim()
 //             : '',
 
+//         // ----------------------------------------------------
+//         // MATERIAL
+//         // ----------------------------------------------------
+
 //         material:
 //           finalMaterial,
+
+//         // ----------------------------------------------------
+//         // PRICE
+//         // ----------------------------------------------------
 
 //         price:
 //           Number(price),
 
 //         compareAtPrice:
 //           finalCompareAtPrice,
+
+//         // ----------------------------------------------------
+//         // INVENTORY
+//         // ----------------------------------------------------
 
 //         stock:
 //           finalStock,
@@ -1036,19 +1110,35 @@
 //             ? String(sku).trim()
 //             : '',
 
+//         // ----------------------------------------------------
+//         // IMAGES
+//         // ----------------------------------------------------
+
 //         images,
 
+//         // ----------------------------------------------------
+//         // OPTIONS
+//         // ----------------------------------------------------
+
 //         sizes:
-//           toArray(sizes),
+//           finalSizes,
 
 //         colors:
-//           toArray(colors),
+//           finalColors,
+
+//         // ----------------------------------------------------
+//         // FEATURES / TAGS
+//         // ----------------------------------------------------
 
 //         features:
 //           finalFeatures,
 
 //         tags:
 //           finalTags,
+
+//         // ----------------------------------------------------
+//         // ADMIN APPROVAL
+//         // ----------------------------------------------------
 
 //         approvalStatus:
 //           'approved',
@@ -1060,9 +1150,9 @@
 //           '',
 //       })
 
-//     // --------------------------------------------------------
+//     // ========================================================
 //     // POPULATE
-//     // --------------------------------------------------------
+//     // ========================================================
 
 //     const populatedProduct =
 //       await Product.findById(
@@ -1077,10 +1167,18 @@
 //           'name slug description logo banner status'
 //         )
 
+//     // ========================================================
+//     // RESPONSE MESSAGE
+//     // ========================================================
+
+//     const message =
+//       ownerType === 'platform'
+//         ? 'Platform product created successfully and published.'
+//         : 'Seller product created successfully and published.'
+
 //     return res.status(201).json({
 //       success: true,
-//       message:
-//         'Product created successfully and published.',
+//       message,
 //       product:
 //         populatedProduct,
 //     })
@@ -1197,7 +1295,7 @@
 //       compareAtPrice !== ''
 //         ? Number(compareAtPrice)
 //         : oldPrice !== undefined &&
-//             oldPrice !== ''
+//           oldPrice !== ''
 //           ? Number(oldPrice)
 //           : 0
 
@@ -2199,7 +2297,8 @@ export const createInitialAdmin = async (
 
     if (
       !process.env.ADMIN_SETUP_SECRET ||
-      setupSecret !== process.env.ADMIN_SETUP_SECRET
+      setupSecret !==
+        process.env.ADMIN_SETUP_SECRET
     ) {
       return res.status(403).json({
         success: false,
@@ -2223,9 +2322,10 @@ export const createInitialAdmin = async (
     // NORMALIZE EMAIL
     // --------------------------------------------------------
 
-    const normalizedEmail = String(email)
-      .trim()
-      .toLowerCase()
+    const normalizedEmail =
+      String(email)
+        .trim()
+        .toLowerCase()
 
     // --------------------------------------------------------
     // VALIDATE EMAIL
@@ -2234,7 +2334,11 @@ export const createInitialAdmin = async (
     const emailRegex =
       /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
-    if (!emailRegex.test(normalizedEmail)) {
+    if (
+      !emailRegex.test(
+        normalizedEmail
+      )
+    ) {
       return res.status(400).json({
         success: false,
         message:
@@ -2249,7 +2353,9 @@ export const createInitialAdmin = async (
     const normalizedPassword =
       String(password)
 
-    if (normalizedPassword.length < 8) {
+    if (
+      normalizedPassword.length < 8
+    ) {
       return res.status(400).json({
         success: false,
         message:
@@ -2327,8 +2433,10 @@ export const createInitialAdmin = async (
         'Admin account created successfully.',
       user: {
         id: admin._id,
-        firstName: admin.firstName,
-        lastName: admin.lastName,
+        firstName:
+          admin.firstName,
+        lastName:
+          admin.lastName,
         name: admin.name,
         email: admin.email,
         role: admin.role,
@@ -2350,6 +2458,14 @@ export const getDashboard = async (
   next
 ) => {
   try {
+    // ========================================================
+    // CURRENT ADMIN ID
+    // ========================================================
+
+    const adminId =
+      req.user?._id ||
+      req.user?.id
+
     // ========================================================
     // BASIC COUNTS
     // ========================================================
@@ -2417,10 +2533,18 @@ export const getDashboard = async (
       // ------------------------------------------------------
       // UNREAD NOTIFICATIONS
       // ------------------------------------------------------
+      //
+      // IMPORTANT:
+      // Count only notifications belonging to
+      // the currently logged-in admin.
+      // ------------------------------------------------------
 
-      Notification.countDocuments({
-        isRead: false,
-      }),
+      adminId
+        ? Notification.countDocuments({
+            recipient: adminId,
+            isRead: false,
+          })
+        : 0,
     ])
 
     // ========================================================
@@ -2431,12 +2555,14 @@ export const getDashboard = async (
       await Order.aggregate([
         {
           $match: {
-            orderStatus: 'delivered',
+            orderStatus:
+              'delivered',
           },
         },
         {
           $group: {
             _id: null,
+
             totalSales: {
               $sum: {
                 $ifNull: [
@@ -2450,7 +2576,8 @@ export const getDashboard = async (
       ])
 
     const totalSales =
-      salesResult[0]?.totalSales || 0
+      salesResult[0]
+        ?.totalSales || 0
 
     // ========================================================
     // COMMISSION + SELLER EARNINGS
@@ -2578,10 +2705,13 @@ export const updateUserRole = async (
       'admin',
     ]
 
-    if (!allowedRoles.includes(role)) {
+    if (
+      !allowedRoles.includes(role)
+    ) {
       return res.status(400).json({
         success: false,
-        message: 'Invalid user role.',
+        message:
+          'Invalid user role.',
       })
     }
 
@@ -2616,7 +2746,8 @@ export const updateUserRole = async (
     if (!user) {
       return res.status(404).json({
         success: false,
-        message: 'User not found.',
+        message:
+          'User not found.',
       })
     }
 
@@ -2697,7 +2828,8 @@ export const approveSeller = async (
     if (!seller) {
       return res.status(404).json({
         success: false,
-        message: 'Seller not found.',
+        message:
+          'Seller not found.',
       })
     }
 
@@ -2749,7 +2881,8 @@ export const rejectSeller = async (
     if (!seller) {
       return res.status(404).json({
         success: false,
-        message: 'Seller not found.',
+        message:
+          'Seller not found.',
       })
     }
 
@@ -2835,9 +2968,10 @@ export const createProduct = async (
     // ========================================================
 
     if (
-      !['platform', 'seller'].includes(
-        ownerType
-      )
+      ![
+        'platform',
+        'seller',
+      ].includes(ownerType)
     ) {
       return res.status(400).json({
         success: false,
@@ -2886,7 +3020,9 @@ export const createProduct = async (
     if (
       price === undefined ||
       price === '' ||
-      Number.isNaN(Number(price)) ||
+      Number.isNaN(
+        Number(price)
+      ) ||
       Number(price) < 0
     ) {
       return res.status(400).json({
@@ -2907,7 +3043,9 @@ export const createProduct = async (
     // SELLER PRODUCT
     // ========================================================
 
-    if (ownerType === 'seller') {
+    if (
+      ownerType === 'seller'
+    ) {
       // ------------------------------------------------------
       // SELLER ID
       // ------------------------------------------------------
@@ -2989,7 +3127,9 @@ export const createProduct = async (
         ![
           'approved',
           'active',
-        ].includes(store.status)
+        ].includes(
+          store.status
+        )
       ) {
         return res.status(400).json({
           success: false,
@@ -3019,7 +3159,9 @@ export const createProduct = async (
     // PLATFORM PRODUCT
     // ========================================================
 
-    if (ownerType === 'platform') {
+    if (
+      ownerType === 'platform'
+    ) {
       seller = null
       store = null
     }
@@ -3075,7 +3217,9 @@ export const createProduct = async (
       })
     }
 
-    let slug = baseSlug
+    let slug =
+      baseSlug
+
     let slugNumber = 1
 
     while (
@@ -3094,13 +3238,17 @@ export const createProduct = async (
     // ========================================================
 
     const finalCompareAtPrice =
-      compareAtPrice !== undefined &&
+      compareAtPrice !==
+        undefined &&
       compareAtPrice !== ''
-        ? Number(compareAtPrice)
-        : oldPrice !== undefined &&
+        ? Number(
+            compareAtPrice
+          )
+        : oldPrice !==
+              undefined &&
           oldPrice !== ''
-          ? Number(oldPrice)
-          : 0
+        ? Number(oldPrice)
+        : 0
 
     if (
       Number.isNaN(
@@ -3141,9 +3289,12 @@ export const createProduct = async (
     // ========================================================
 
     const finalMaterial =
-      material !== undefined &&
+      material !==
+        undefined &&
       material !== null
-        ? String(material).trim()
+        ? String(
+            material
+          ).trim()
         : ''
 
     // ========================================================
@@ -3194,10 +3345,14 @@ export const createProduct = async (
         slug,
 
         description:
-          String(description).trim(),
+          String(
+            description
+          ).trim(),
 
         category:
-          String(category).trim(),
+          String(
+            category
+          ).trim(),
 
         subcategory:
           subcategory
@@ -3232,7 +3387,9 @@ export const createProduct = async (
 
         sku:
           sku
-            ? String(sku).trim()
+            ? String(
+                sku
+              ).trim()
             : '',
 
         // ----------------------------------------------------
@@ -3297,7 +3454,8 @@ export const createProduct = async (
     // ========================================================
 
     const message =
-      ownerType === 'platform'
+      ownerType ===
+      'platform'
         ? 'Platform product created successfully and published.'
         : 'Seller product created successfully and published.'
 
@@ -3373,7 +3531,8 @@ export const updateProduct = async (
     }
 
     if (
-      description === undefined ||
+      description ===
+        undefined ||
       !String(description).trim()
     ) {
       return res.status(400).json({
@@ -3401,7 +3560,9 @@ export const updateProduct = async (
     if (
       price === undefined ||
       price === '' ||
-      Number.isNaN(Number(price)) ||
+      Number.isNaN(
+        Number(price)
+      ) ||
       Number(price) < 0
     ) {
       return res.status(400).json({
@@ -3416,13 +3577,17 @@ export const updateProduct = async (
     // --------------------------------------------------------
 
     const finalCompareAtPrice =
-      compareAtPrice !== undefined &&
+      compareAtPrice !==
+        undefined &&
       compareAtPrice !== ''
-        ? Number(compareAtPrice)
-        : oldPrice !== undefined &&
+        ? Number(
+            compareAtPrice
+          )
+        : oldPrice !==
+              undefined &&
           oldPrice !== ''
-          ? Number(oldPrice)
-          : 0
+        ? Number(oldPrice)
+        : 0
 
     if (
       Number.isNaN(
@@ -3474,7 +3639,9 @@ export const updateProduct = async (
         return fallback
       }
 
-      if (Array.isArray(value)) {
+      if (
+        Array.isArray(value)
+      ) {
         return value
           .map((item) =>
             String(item).trim()
@@ -3534,7 +3701,8 @@ export const updateProduct = async (
     // EXISTING IMAGES
     // --------------------------------------------------------
 
-    let requestedExistingImages = []
+    let requestedExistingImages =
+      []
 
     if (
       existingImages !==
@@ -3554,7 +3722,9 @@ export const updateProduct = async (
           requestedExistingImages =
             parsed
               .map((image) =>
-                String(image).trim()
+                String(
+                  image
+                ).trim()
               )
               .filter(Boolean)
         }
@@ -3567,7 +3737,9 @@ export const updateProduct = async (
     }
 
     const currentImages =
-      Array.isArray(product.images)
+      Array.isArray(
+        product.images
+      )
         ? product.images
         : []
 
@@ -3681,9 +3853,12 @@ export const updateProduct = async (
     // --------------------------------------------------------
 
     const finalMaterial =
-      material !== undefined &&
+      material !==
+        undefined &&
       material !== null
-        ? String(material).trim()
+        ? String(
+            material
+          ).trim()
         : ''
 
     // --------------------------------------------------------
@@ -3697,13 +3872,18 @@ export const updateProduct = async (
       slug
 
     product.description =
-      String(description).trim()
+      String(
+        description
+      ).trim()
 
     product.category =
-      String(category).trim()
+      String(
+        category
+      ).trim()
 
     product.subcategory =
-      subcategory !== undefined &&
+      subcategory !==
+          undefined &&
       subcategory !== null
         ? String(
             subcategory
@@ -3713,7 +3893,9 @@ export const updateProduct = async (
     product.sku =
       sku !== undefined &&
       sku !== null
-        ? String(sku).trim()
+        ? String(
+            sku
+          ).trim()
         : ''
 
     product.price =
@@ -4017,6 +4199,10 @@ export const getOrders = async (
 // NOTIFICATIONS
 // ============================================================
 
+// ------------------------------------------------------------
+// GET ADMIN NOTIFICATIONS
+// ------------------------------------------------------------
+
 export const getNotifications =
   async (
     req,
@@ -4024,8 +4210,43 @@ export const getNotifications =
     next
   ) => {
     try {
+      // ======================================================
+      // CURRENT ADMIN
+      // ======================================================
+
+      const adminId =
+        req.user?._id ||
+        req.user?.id
+
+      if (!adminId) {
+        return res.status(401).json({
+          success: false,
+          message:
+            'Admin authentication is required.',
+        })
+      }
+
+      // ======================================================
+      // GET ONLY CURRENT ADMIN NOTIFICATIONS
+      // ======================================================
+
       const notifications =
-        await Notification.find()
+        await Notification.find({
+          recipient:
+            adminId,
+        })
+          .populate(
+            'order',
+            'orderNumber total orderStatus paymentStatus shippingAddress customer items createdAt'
+          )
+          .populate(
+            'product',
+            'name price approvalStatus isActive images'
+          )
+          .populate(
+            'store',
+            'name slug status logo'
+          )
           .sort({
             createdAt: -1,
           })
@@ -4050,12 +4271,39 @@ export const markNotificationAsRead =
     next
   ) => {
     try {
+      // ======================================================
+      // CURRENT ADMIN
+      // ======================================================
+
+      const adminId =
+        req.user?._id ||
+        req.user?.id
+
+      if (!adminId) {
+        return res.status(401).json({
+          success: false,
+          message:
+            'Admin authentication is required.',
+        })
+      }
+
+      // ======================================================
+      // MARK ONLY CURRENT ADMIN'S NOTIFICATION
+      // ======================================================
+
       const notification =
-        await Notification.findByIdAndUpdate(
-          req.params.id,
+        await Notification.findOneAndUpdate(
+          {
+            _id:
+              req.params.id,
+
+            recipient:
+              adminId,
+          },
           {
             isRead: true,
-            readAt: new Date(),
+            readAt:
+              new Date(),
           },
           {
             new: true,
@@ -4091,14 +4339,41 @@ export const markAllNotificationsAsRead =
     next
   ) => {
     try {
+      // ======================================================
+      // CURRENT ADMIN
+      // ======================================================
+
+      const adminId =
+        req.user?._id ||
+        req.user?.id
+
+      if (!adminId) {
+        return res.status(401).json({
+          success: false,
+          message:
+            'Admin authentication is required.',
+        })
+      }
+
+      // ======================================================
+      // MARK ONLY CURRENT ADMIN'S NOTIFICATIONS
+      // ======================================================
+
       await Notification.updateMany(
         {
-          isRead: false,
+          recipient:
+            adminId,
+
+          isRead:
+            false,
         },
         {
           $set: {
-            isRead: true,
-            readAt: new Date(),
+            isRead:
+              true,
+
+            readAt:
+              new Date(),
           },
         }
       )
@@ -4188,8 +4463,11 @@ export const updateAdminSettings =
       // ------------------------------------------------------
 
       if (
-        platformName === undefined ||
-        !String(platformName).trim()
+        platformName ===
+          undefined ||
+        !String(
+          platformName
+        ).trim()
       ) {
         return res.status(400).json({
           success: false,
@@ -4203,9 +4481,10 @@ export const updateAdminSettings =
       // ------------------------------------------------------
 
       if (
-        !['EUR', 'USD'].includes(
-          currency
-        )
+        ![
+          'EUR',
+          'USD',
+        ].includes(currency)
       ) {
         return res.status(400).json({
           success: false,
@@ -4219,7 +4498,9 @@ export const updateAdminSettings =
       // ------------------------------------------------------
 
       const finalCommissionRate =
-        Number(commissionRate)
+        Number(
+          commissionRate
+        )
 
       if (
         Number.isNaN(
@@ -4244,7 +4525,8 @@ export const updateAdminSettings =
         fieldName
       ) => {
         if (
-          typeof value === 'boolean'
+          typeof value ===
+          'boolean'
         ) {
           return value
         }
@@ -4288,7 +4570,9 @@ export const updateAdminSettings =
             requireSellerVerification,
             'requireSellerVerification'
           )
-      } catch (booleanError) {
+      } catch (
+        booleanError
+      ) {
         return res.status(400).json({
           success: false,
           message:

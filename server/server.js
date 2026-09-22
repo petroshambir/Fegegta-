@@ -24,6 +24,7 @@ import commissionRoutes from './routes/commissionRoutes.js'
 import addressRoutes from './routes/addressRoutes.js'
 import favoriteRoutes from './routes/favoriteRoutes.js'
 import sellerApplicationRoutes from './routes/sellerApplicationRoutes.js'
+import notificationRoutes from './routes/notificationRoutes.js'
 
 // ============================================================
 // ERROR MIDDLEWARE
@@ -196,7 +197,10 @@ app.use(
   '/api/seller-applications',
   sellerApplicationRoutes
 )
-
+app.use(
+  '/api/notifications',
+  notificationRoutes
+)
 // ============================================================
 // BASIC REQUEST LOG
 // ============================================================
