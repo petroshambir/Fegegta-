@@ -392,7 +392,7 @@ function ProductCard({ product }) {
       {/* Product Image */}
       <Link to={`/products/${id}`} className="block">
         <div className="relative w-full overflow-hidden bg-gray-100">
-          <div className="relative flex aspect-square w-full items-center justify-center">
+          <div className="relative flex aspect-square w-full">
             <img
               src={image}
               alt={name}
