@@ -438,6 +438,436 @@
 
 // export default Home
 
+// import { useEffect, useState } from 'react'
+// import { ArrowRight } from 'lucide-react'
+// import { Link } from 'react-router-dom'
+
+// import SearchBar from '../components/SearchBar'
+// import ProductGrid from '../components/ProductGrid'
+// import { useLanguage } from '../context/LanguageContext'
+
+// // ============================================================
+// // FEGEGTA API
+// // ============================================================
+
+// const API_URL = 'https://fegegta-server.onrender.com/api'
+
+// // ============================================================
+// // HOME
+// // ============================================================
+
+// function Home() {
+//   const { t } = useLanguage()
+
+//   const [products, setProducts] = useState([])
+//   const [isLoading, setIsLoading] = useState(true)
+//   const [error, setError] = useState('')
+
+//   // ==========================================================
+//   // LOAD ALL APPROVED PRODUCTS
+//   // ==========================================================
+
+//   useEffect(() => {
+//     const fetchProducts = async () => {
+//       try {
+//         setIsLoading(true)
+//         setError('')
+
+//         const response = await fetch(`${API_URL}/products`)
+
+//         const data = await response.json()
+
+//         if (!response.ok) {
+//           throw new Error(
+//             data?.message ||
+//               'Failed to load products.'
+//           )
+//         }
+
+//         // Backend can return:
+//         // [...]
+//         // OR
+//         // { products: [...] }
+
+//         const backendProducts =
+//           Array.isArray(data)
+//             ? data
+//             : Array.isArray(data?.products)
+//               ? data.products
+//               : []
+
+//         // ====================================================
+//         // FORMAT BACKEND PRODUCTS
+//         // ====================================================
+
+//         const formattedProducts =
+//           backendProducts
+//             .filter((product) => {
+//               return (
+//                 product?.approvalStatus === 'approved' &&
+//                 product?.isActive !== false &&
+//                 Number(product?.stock || 0) > 0
+//               )
+//             })
+//             .map((product) => {
+//               const images =
+//                 Array.isArray(product?.images)
+//                   ? product.images
+//                       .map((image) => {
+//                         if (
+//                           typeof image === 'string'
+//                         ) {
+//                           return image
+//                         }
+
+//                         return image?.url || ''
+//                       })
+//                       .filter(Boolean)
+//                   : []
+
+//               const sellerName =
+//                 product?.seller?.businessName ||
+//                 product?.seller?.name ||
+//                 'Fegegta Seller'
+
+//               return {
+//                 id:
+//                   product?._id ||
+//                   product?.id,
+
+//                 name:
+//                   product?.name || '',
+
+//                 description:
+//                   product?.description || '',
+
+//                 price:
+//                   Number(product?.price) || 0,
+
+//                 seller:
+//                   sellerName,
+
+//                 sellerRating:
+//                   Number(
+//                     product?.seller?.rating ||
+//                     product?.sellerRating ||
+//                     0
+//                   ),
+
+//                 rating:
+//                   Number(product?.rating) || 0,
+
+//                 reviewCount:
+//                   Number(
+//                     product?.totalReviews ||
+//                     product?.reviewCount ||
+//                     0
+//                   ),
+
+//                 available:
+//                   true,
+
+//                 stock:
+//                   Number(product?.stock) || 0,
+
+//                 category:
+//                   product?.category || '',
+
+//                 image:
+//                   images[0] || '',
+
+//                 images,
+
+//                 // Keep product date information
+//                 // if backend provides it.
+//                 createdAt:
+//                   product?.createdAt || null,
+
+//                 isFeatured:
+//                   product?.isFeatured === true,
+//               }
+//             })
+
+//         // ====================================================
+//         // FEATURED PRODUCTS FIRST
+//         // ====================================================
+
+//         const featuredProducts =
+//           formattedProducts.filter(
+//             (product) =>
+//               product.isFeatured === true
+//           )
+
+//         // ====================================================
+//         // ALL OTHER PRODUCTS
+//         // ====================================================
+
+//         const nonFeaturedProducts =
+//           formattedProducts.filter(
+//             (product) =>
+//               !product.isFeatured
+//           )
+
+//         // ====================================================
+//         // SHOW ALL PRODUCTS
+//         //
+//         // Featured products appear first.
+//         // Then all other approved products.
+//         //
+//         // IMPORTANT:
+//         // No slice(0, 4) here.
+//         // ====================================================
+
+//         const homeProducts = [
+//           ...featuredProducts,
+//           ...nonFeaturedProducts,
+//         ]
+
+//         setProducts(homeProducts)
+
+//       } catch (err) {
+//         console.error(
+//           'Failed to fetch home products:',
+//           err
+//         )
+
+//         setError(
+//           err?.message ||
+//             'Failed to load products.'
+//         )
+
+//         setProducts([])
+
+//       } finally {
+//         setIsLoading(false)
+//       }
+//     }
+
+//     fetchProducts()
+//   }, [])
+
+//   return (
+//     <div>
+
+//       {/* ====================================================
+//           SEARCH
+//       ==================================================== */}
+
+//       <section className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+//         <SearchBar />
+//       </section>
+
+//       {/* ====================================================
+//           HERO
+//       ==================================================== */}
+
+//       <section className="mx-auto max-w-7xl px-4 pb-10 sm:px-6 lg:px-8">
+
+//         <div className="overflow-hidden rounded-3xl bg-gray-950 px-6 py-14 text-white sm:px-10 lg:px-16 lg:py-20">
+
+//           <div className="max-w-2xl">
+
+//             <p className="text-sm font-medium tracking-wide text-gray-400">
+//               ፈገግታ Marketplace
+//             </p>
+
+//             <h1 className="mt-4 text-4xl font-bold tracking-tight sm:text-5xl lg:text-6xl">
+//               Discover products you’ll love.
+//             </h1>
+
+//             <p className="mt-5 max-w-xl text-base leading-7 text-gray-400 sm:text-lg">
+//               Shop quality products from trusted sellers in one simple,
+//               professional marketplace.
+//             </p>
+
+//             <Link
+//               to="/products"
+//               className="mt-8 inline-flex items-center gap-2 rounded-xl bg-white px-5 py-3 text-sm font-semibold text-gray-900 transition hover:bg-gray-100"
+//             >
+//               {t('viewAll')}
+
+//               <ArrowRight className="h-4 w-4" />
+//             </Link>
+
+//           </div>
+
+//         </div>
+
+//       </section>
+
+//       {/* ====================================================
+//           ALL PRODUCTS
+//       ==================================================== */}
+
+//       <section className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
+
+//         <div className="mb-7 flex items-end justify-between gap-4">
+
+//           <div>
+
+//             <p className="text-sm font-medium text-gray-500">
+//               Featured & New
+//             </p>
+
+//             <h2 className="mt-1 text-2xl font-bold text-gray-900 sm:text-3xl">
+//               {t('products')}
+//             </h2>
+
+//           </div>
+
+//           <Link
+//             to="/products"
+//             className="hidden items-center gap-2 text-sm font-semibold text-gray-700 transition hover:text-black sm:flex"
+//           >
+//             {t('viewAll')}
+
+//             <ArrowRight className="h-4 w-4" />
+//           </Link>
+
+//         </div>
+
+//         {/* ==================================================
+//             LOADING
+//         ================================================== */}
+
+//         {isLoading && (
+//           <div className="grid grid-cols-2 gap-4 sm:gap-5 md:grid-cols-3 lg:grid-cols-4 lg:gap-6">
+
+//             {[1, 2, 3, 4, 5, 6, 7, 8].map(
+//               (item) => (
+//                 <div
+//                   key={item}
+//                   className="overflow-hidden rounded-2xl border border-gray-200 bg-white"
+//                 >
+
+//                   <div className="aspect-[4/5] animate-pulse bg-gray-200" />
+
+//                   <div className="space-y-3 p-4">
+
+//                     <div className="h-3 w-1/3 animate-pulse rounded bg-gray-200" />
+
+//                     <div className="h-4 w-3/4 animate-pulse rounded bg-gray-200" />
+
+//                     <div className="h-3 w-full animate-pulse rounded bg-gray-200" />
+
+//                     <div className="h-5 w-1/3 animate-pulse rounded bg-gray-200" />
+
+//                   </div>
+
+//                 </div>
+//               )
+//             )}
+
+//           </div>
+//         )}
+
+//         {/* ==================================================
+//             ERROR
+//         ================================================== */}
+
+//         {!isLoading && error && (
+//           <div className="rounded-2xl border border-red-200 bg-red-50 px-6 py-12 text-center">
+
+//             <h3 className="text-lg font-semibold text-red-800">
+//               Unable to load products
+//             </h3>
+
+//             <p className="mx-auto mt-2 max-w-lg text-sm text-red-600">
+//               {error}
+//             </p>
+
+//             <button
+//               type="button"
+//               onClick={() => window.location.reload()}
+//               className="mt-5 rounded-xl bg-black px-5 py-2.5 text-sm font-medium text-white transition hover:bg-gray-800"
+//             >
+//               Try Again
+//             </button>
+
+//           </div>
+//         )}
+
+//         {/* ==================================================
+//             ALL PRODUCTS
+//         ================================================== */}
+
+//         {!isLoading &&
+//           !error &&
+//           products.length > 0 && (
+//             <ProductGrid
+//               products={products}
+//             />
+//           )}
+
+//         {/* ==================================================
+//             NO PRODUCTS
+//         ================================================== */}
+
+//         {!isLoading &&
+//           !error &&
+//           products.length === 0 && (
+//             <div className="rounded-2xl border border-gray-200 bg-gray-50 px-6 py-16 text-center">
+
+//               <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-gray-100">
+//                 <ShoppingBagIcon />
+//               </div>
+
+//               <h3 className="mt-4 text-lg font-semibold text-gray-900">
+//                 No products available yet
+//               </h3>
+
+//               <p className="mx-auto mt-2 max-w-md text-sm text-gray-500">
+//                 New products will appear here once sellers have products approved.
+//               </p>
+
+//               <Link
+//                 to="/products"
+//                 className="mt-5 inline-flex items-center gap-2 rounded-xl bg-black px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-gray-800"
+//               >
+//                 {t('viewAll')}
+
+//                 <ArrowRight className="h-4 w-4" />
+//               </Link>
+
+//             </div>
+//           )}
+
+//       </section>
+
+//     </div>
+//   )
+// }
+
+// // ============================================================
+// // SMALL EMPTY ICON
+// // ============================================================
+
+// function ShoppingBagIcon() {
+//   return (
+//     <svg
+//       viewBox="0 0 24 24"
+//       fill="none"
+//       stroke="currentColor"
+//       strokeWidth="1.8"
+//       className="h-7 w-7 text-gray-400"
+//       aria-hidden="true"
+//     >
+//       <path
+//         strokeLinecap="round"
+//         strokeLinejoin="round"
+//         d="M6 8h12l1 12H5L6 8Z"
+//       />
+
+//       <path
+//         strokeLinecap="round"
+//         strokeLinejoin="round"
+//         d="M9 8a3 3 0 0 1 6 0"
+//       />
+//     </svg>
+//   )
+// }
+
+// export default Home
 import { useEffect, useState } from 'react'
 import { ArrowRight } from 'lucide-react'
 import { Link } from 'react-router-dom'
@@ -451,6 +881,64 @@ import { useLanguage } from '../context/LanguageContext'
 // ============================================================
 
 const API_URL = 'https://fegegta-server.onrender.com/api'
+
+// ============================================================
+// PRODUCT AGE GROUP
+// ============================================================
+
+const getProductAgeGroup = (createdAt) => {
+  if (!createdAt) {
+    return 'older'
+  }
+
+  const createdDate = new Date(createdAt)
+
+  if (Number.isNaN(createdDate.getTime())) {
+    return 'older'
+  }
+
+  const now = new Date()
+
+  const differenceInMs =
+    now.getTime() - createdDate.getTime()
+
+  const differenceInDays =
+    differenceInMs / (1000 * 60 * 60 * 24)
+
+  // ==========================================================
+  // NEW ARRIVALS
+  // 0 - 3 DAYS
+  // ==========================================================
+
+  if (differenceInDays <= 3) {
+    return 'new'
+  }
+
+  // ==========================================================
+  // THIS WEEK
+  // 4 - 14 DAYS
+  // ==========================================================
+
+  if (differenceInDays <= 14) {
+    return 'week'
+  }
+
+  // ==========================================================
+  // THIS MONTH
+  // 15 - 30 DAYS
+  // ==========================================================
+
+  if (differenceInDays <= 30) {
+    return 'month'
+  }
+
+  // ==========================================================
+  // OLDER PRODUCTS
+  // 31+ DAYS
+  // ==========================================================
+
+  return 'older'
+}
 
 // ============================================================
 // HOME
@@ -473,7 +961,9 @@ function Home() {
         setIsLoading(true)
         setError('')
 
-        const response = await fetch(`${API_URL}/products`)
+        const response = await fetch(
+          `${API_URL}/products`
+        )
 
         const data = await response.json()
 
@@ -550,8 +1040,8 @@ function Home() {
                 sellerRating:
                   Number(
                     product?.seller?.rating ||
-                    product?.sellerRating ||
-                    0
+                      product?.sellerRating ||
+                      0
                   ),
 
                 rating:
@@ -560,8 +1050,8 @@ function Home() {
                 reviewCount:
                   Number(
                     product?.totalReviews ||
-                    product?.reviewCount ||
-                    0
+                      product?.reviewCount ||
+                      0
                   ),
 
                 available:
@@ -578,8 +1068,7 @@ function Home() {
 
                 images,
 
-                // Keep product date information
-                // if backend provides it.
+                // Keep backend creation date
                 createdAt:
                   product?.createdAt || null,
 
@@ -589,41 +1078,121 @@ function Home() {
             })
 
         // ====================================================
+        // SORT PRODUCTS BY NEWEST FIRST
+        // ====================================================
+
+        const sortedProducts =
+          [...formattedProducts].sort(
+            (a, b) => {
+              const dateA = a.createdAt
+                ? new Date(a.createdAt).getTime()
+                : 0
+
+              const dateB = b.createdAt
+                ? new Date(b.createdAt).getTime()
+                : 0
+
+              return dateB - dateA
+            }
+          )
+
+        // ====================================================
+        // NEW ARRIVALS
+        // 0 - 3 DAYS
+        // ====================================================
+
+        const newProducts =
+          sortedProducts.filter(
+            (product) =>
+              getProductAgeGroup(
+                product.createdAt
+              ) === 'new'
+          )
+
+        // ====================================================
+        // THIS WEEK
+        // 4 - 14 DAYS
+        // ====================================================
+
+        const weekProducts =
+          sortedProducts.filter(
+            (product) =>
+              getProductAgeGroup(
+                product.createdAt
+              ) === 'week'
+          )
+
+        // ====================================================
+        // THIS MONTH
+        // 15 - 30 DAYS
+        // ====================================================
+
+        const monthProducts =
+          sortedProducts.filter(
+            (product) =>
+              getProductAgeGroup(
+                product.createdAt
+              ) === 'month'
+          )
+
+        // ====================================================
+        // OLDER PRODUCTS
+        // 31+ DAYS
+        // ====================================================
+
+        const olderProducts =
+          sortedProducts.filter(
+            (product) =>
+              getProductAgeGroup(
+                product.createdAt
+              ) === 'older'
+          )
+
+        // ====================================================
         // FEATURED PRODUCTS FIRST
+        // WITHIN EACH SECTION
         // ====================================================
 
-        const featuredProducts =
-          formattedProducts.filter(
-            (product) =>
-              product.isFeatured === true
-          )
+        const sortFeaturedFirst = (
+          productList
+        ) => {
+          const featured =
+            productList.filter(
+              (product) =>
+                product.isFeatured === true
+            )
+
+          const nonFeatured =
+            productList.filter(
+              (product) =>
+                product.isFeatured !== true
+            )
+
+          return [
+            ...featured,
+            ...nonFeatured,
+          ]
+        }
 
         // ====================================================
-        // ALL OTHER PRODUCTS
+        // FINAL PRODUCT SECTIONS
         // ====================================================
 
-        const nonFeaturedProducts =
-          formattedProducts.filter(
-            (product) =>
-              !product.isFeatured
-          )
+        const finalProducts = {
+          newProducts:
+            sortFeaturedFirst(newProducts),
 
-        // ====================================================
-        // SHOW ALL PRODUCTS
-        //
-        // Featured products appear first.
-        // Then all other approved products.
-        //
-        // IMPORTANT:
-        // No slice(0, 4) here.
-        // ====================================================
+          weekProducts:
+            sortFeaturedFirst(weekProducts),
 
-        const homeProducts = [
-          ...featuredProducts,
-          ...nonFeaturedProducts,
-        ]
+          monthProducts:
+            sortFeaturedFirst(monthProducts),
 
-        setProducts(homeProducts)
+          olderProducts:
+            sortFeaturedFirst(olderProducts),
+        }
+
+        setProducts(finalProducts)
 
       } catch (err) {
         console.error(
@@ -636,7 +1205,12 @@ function Home() {
             'Failed to load products.'
         )
 
-        setProducts([])
+        setProducts({
+          newProducts: [],
+          weekProducts: [],
+          monthProducts: [],
+          olderProducts: [],
+        })
 
       } finally {
         setIsLoading(false)
@@ -645,6 +1219,78 @@ function Home() {
 
     fetchProducts()
   }, [])
+
+  // ==========================================================
+  // PRODUCT SECTIONS
+  // ==========================================================
+
+  const newProducts =
+    products?.newProducts || []
+
+  const weekProducts =
+    products?.weekProducts || []
+
+  const monthProducts =
+    products?.monthProducts || []
+
+  const olderProducts =
+    products?.olderProducts || []
+
+  const totalProducts =
+    newProducts.length +
+    weekProducts.length +
+    monthProducts.length +
+    olderProducts.length
+
+  // ==========================================================
+  // SECTION COMPONENT
+  // ==========================================================
+
+  const ProductSection = ({
+    label,
+    title,
+    productList,
+    showTopSpacing = false,
+  }) => {
+    if (!productList.length) {
+      return null
+    }
+
+    return (
+      <section
+        className={
+          showTopSpacing
+            ? 'mt-14'
+            : ''
+        }
+      >
+        <div className="mb-7 flex items-end justify-between gap-4">
+          <div>
+            <p className="text-sm font-medium text-gray-500">
+              {label}
+            </p>
+
+            <h2 className="mt-1 text-2xl font-bold text-gray-900 sm:text-3xl">
+              {title}
+            </h2>
+          </div>
+
+          <Link
+            to="/products"
+            className="hidden items-center gap-2 text-sm font-semibold text-gray-700 transition hover:text-black sm:flex"
+          >
+            {t('viewAll')}
+
+            <ArrowRight className="h-4 w-4" />
+          </Link>
+        </div>
+
+        <ProductGrid
+          products={productList}
+        />
+      </section>
+    )
+  }
 
   return (
     <div>
@@ -696,35 +1342,10 @@ function Home() {
       </section>
 
       {/* ====================================================
-          ALL PRODUCTS
+          PRODUCTS
       ==================================================== */}
 
       <section className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
-
-        <div className="mb-7 flex items-end justify-between gap-4">
-
-          <div>
-
-            <p className="text-sm font-medium text-gray-500">
-              Featured & New
-            </p>
-
-            <h2 className="mt-1 text-2xl font-bold text-gray-900 sm:text-3xl">
-              {t('products')}
-            </h2>
-
-          </div>
-
-          <Link
-            to="/products"
-            className="hidden items-center gap-2 text-sm font-semibold text-gray-700 transition hover:text-black sm:flex"
-          >
-            {t('viewAll')}
-
-            <ArrowRight className="h-4 w-4" />
-          </Link>
-
-        </div>
 
         {/* ==================================================
             LOADING
@@ -778,7 +1399,9 @@ function Home() {
 
             <button
               type="button"
-              onClick={() => window.location.reload()}
+              onClick={() =>
+                window.location.reload()
+              }
               className="mt-5 rounded-xl bg-black px-5 py-2.5 text-sm font-medium text-white transition hover:bg-gray-800"
             >
               Try Again
@@ -788,15 +1411,58 @@ function Home() {
         )}
 
         {/* ==================================================
-            ALL PRODUCTS
+            PRODUCT SECTIONS
         ================================================== */}
 
         {!isLoading &&
           !error &&
-          products.length > 0 && (
-            <ProductGrid
-              products={products}
-            />
+          totalProducts > 0 && (
+            <>
+
+              {/* ==========================================
+                  NEW ARRIVALS
+              =========================================== */}
+
+              <ProductSection
+                label="New Arrivals"
+                title="New Products"
+                productList={newProducts}
+              />
+
+              {/* ==========================================
+                  THIS WEEK
+              =========================================== */}
+
+              <ProductSection
+                label="This Week"
+                title="This Week's Products"
+                productList={weekProducts}
+                showTopSpacing
+              />
+
+              {/* ==========================================
+                  THIS MONTH
+              =========================================== */}
+
+              <ProductSection
+                label="This Month"
+                title="This Month's Products"
+                productList={monthProducts}
+                showTopSpacing
+              />
+
+              {/* ==========================================
+                  OLDER PRODUCTS
+              =========================================== */}
+
+              <ProductSection
+                label="More Products"
+                title="More Products"
+                productList={olderProducts}
+                showTopSpacing
+              />
+
+            </>
           )}
 
         {/* ==================================================
@@ -805,7 +1471,7 @@ function Home() {
 
         {!isLoading &&
           !error &&
-          products.length === 0 && (
+          totalProducts === 0 && (
             <div className="rounded-2xl border border-gray-200 bg-gray-50 px-6 py-16 text-center">
 
               <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-gray-100">
