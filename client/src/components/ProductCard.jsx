@@ -360,6 +360,7 @@
 // export default ProductCard
 
 
+
 import { Link } from 'react-router-dom'
 import { Heart, ShoppingCart, Star } from 'lucide-react'
 
@@ -391,11 +392,11 @@ function ProductCard({ product }) {
       {/* Product Image */}
       <Link to={`/products/${id}`} className="block">
         <div className="relative w-full overflow-hidden bg-gray-100">
-          <div className="flex aspect-square w-full items-center justify-center">
+          <div className="relative flex aspect-square w-full items-center justify-center">
             <img
               src={image}
               alt={name}
-              className="block h-full w-full object-contain transition duration-500 group-hover:scale-[1.03]"
+              className="absolute inset-0 h-full w-full object-contain transition duration-500 group-hover:scale-[1.03]"
             />
           </div>
 
