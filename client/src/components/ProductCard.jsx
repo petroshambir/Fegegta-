@@ -392,11 +392,11 @@ function ProductCard({ product }) {
       {/* Product Image */}
       <Link to={`/products/${id}`} className="block">
         <div className="relative w-full overflow-hidden bg-gray-100">
-          <div className="flex h-64 w-full items-center justify-center sm:h-72">
+          <div className="flex aspect-square w-full items-center justify-center">
             <img
               src={image}
               alt={name}
-              className="max-h-full max-w-full object-contain transition duration-500 group-hover:scale-105"
+              className="h-full w-full object-contain transition duration-500 group-hover:scale-[1.03]"
             />
           </div>
 
