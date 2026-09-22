@@ -360,7 +360,6 @@
 // export default ProductCard
 
 
-
 import { Link } from 'react-router-dom'
 import { Heart, ShoppingCart, Star } from 'lucide-react'
 
@@ -396,7 +395,7 @@ function ProductCard({ product }) {
             <img
               src={image}
               alt={name}
-              className="h-full w-full object-contain transition duration-500 group-hover:scale-[1.03]"
+              className="block h-full w-full object-contain transition duration-500 group-hover:scale-[1.03]"
             />
           </div>
 
