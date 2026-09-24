@@ -422,28 +422,15 @@ export function CartProvider({ children }) {
   }, [cartItems])
 
   // =========================================================
-  // SHIPPING
-  // =========================================================
-  // Shipping is NOT calculated inside the Cart.
-  //
-  // The real shipping price will be calculated at Checkout
-  // using:
-  // - Customer destination
-  // - Product weight
-  // - Seller/store origin
-  // - Selected carrier (DHL / FedEx)
-  // - Carrier service
-  //
-  // Therefore, there is NO fixed €10 shipping and
-  // NO €100 free-shipping rule here.
-
-  const shipping = 0
-
-  // =========================================================
   // TOTAL
   // =========================================================
-  // Cart total contains products only.
-  // Real shipping will be added at Checkout.
+  // CartContext does NOT calculate shipping.
+  //
+  // Shipping is calculated only at Checkout using the
+  // actual DHL or FedEx rate returned by the backend.
+  //
+  // Therefore:
+  // total = product subtotal only.
 
   const total = useMemo(() => {
     return subtotal
@@ -466,7 +453,6 @@ export function CartProvider({ children }) {
 
     totalItems,
     subtotal,
-    shipping,
     total,
   }
 
