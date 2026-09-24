@@ -1,6 +1,7 @@
 
-
 // import Product from '../models/Product.js'
+// import User from '../models/User.js'
+// import Notification from '../models/Notification.js'
 
 // // ============================================================
 // // HELPER: CREATE IMAGE DATA FROM CLOUDINARY FILES
@@ -8,8 +9,16 @@
 
 // const getUploadedImages = (files = []) => {
 //   return files.map((file) => ({
-//     url: file.path || file.secure_url || file.url || '',
-//     publicId: file.filename || file.public_id || '',
+//     url:
+//       file.path ||
+//       file.secure_url ||
+//       file.url ||
+//       '',
+
+//     publicId:
+//       file.filename ||
+//       file.public_id ||
+//       '',
 //   }))
 // }
 
@@ -51,10 +60,91 @@
 // }
 
 // // ============================================================
+// // HELPER: CREATE ADMIN PRODUCT NOTIFICATIONS
+// // ============================================================
+
+// const createAdminProductNotifications = async ({
+//   product,
+//   seller,
+// }) => {
+//   try {
+//     // ----------------------------------------------------------
+//     // GET ALL ADMIN USERS
+//     // ----------------------------------------------------------
+
+//     const admins = await User.find({
+//       role: 'admin',
+//     }).select('_id')
+
+//     if (!admins.length) {
+//       return
+//     }
+
+//     const sellerName =
+//       seller?.businessName ||
+//       'A seller'
+
+//     const productName =
+//       product?.name ||
+//       'New product'
+
+//     // ----------------------------------------------------------
+//     // CREATE NOTIFICATION FOR EVERY ADMIN
+//     // ----------------------------------------------------------
+
+//     const notifications =
+//       admins.map((admin) => ({
+//         recipient: admin._id,
+
+//         type: 'product',
+
+//         title:
+//           'New Product Pending Approval',
+
+//         message:
+//           `${sellerName} submitted "${productName}" for admin approval.`,
+
+//         product: product._id,
+
+//         store:
+//           product.store || null,
+
+//         isRead: false,
+
+//         readAt: null,
+
+//         link:
+//           `/admin/products/${product._id}`,
+//       }))
+
+//     if (notifications.length > 0) {
+//       await Notification.insertMany(
+//         notifications
+//       )
+//     }
+//   } catch (error) {
+//     // ----------------------------------------------------------
+//     // IMPORTANT:
+//     // Notification failure must NOT stop
+//     // the product creation process.
+//     // ----------------------------------------------------------
+
+//     console.error(
+//       'Failed to create admin product notification:',
+//       error
+//     )
+//   }
+// }
+
+// // ============================================================
 // // GET ALL PRODUCTS
 // // ============================================================
 
-// export const getProducts = async (req, res, next) => {
+// export const getProducts = async (
+//   req,
+//   res,
+//   next
+// ) => {
 //   try {
 //     const {
 //       search,
@@ -124,7 +214,10 @@
 //     )
 
 //     const limitNumber = Math.min(
-//       Math.max(Number(limit) || 20, 1),
+//       Math.max(
+//         Number(limit) || 20,
+//         1
+//       ),
 //       100
 //     )
 
@@ -430,6 +523,26 @@
 //         isActive: false,
 //       })
 
+//     // ----------------------------------------------------------
+//     // GET SELLER INFORMATION FOR NOTIFICATION
+//     // ----------------------------------------------------------
+
+//     const sellerForNotification =
+//       req.seller
+
+//     // ----------------------------------------------------------
+//     // CREATE ADMIN NOTIFICATION
+//     // ----------------------------------------------------------
+
+//     await createAdminProductNotifications({
+//       product,
+//       seller: sellerForNotification,
+//     })
+
+//     // ----------------------------------------------------------
+//     // POPULATE PRODUCT
+//     // ----------------------------------------------------------
+
 //     const populatedProduct =
 //       await Product.findById(
 //         product._id
@@ -600,6 +713,15 @@
 //     product.rejectionReason = ''
 
 //     await product.save()
+
+//     // ----------------------------------------------------------
+//     // PRODUCT UPDATE NOTIFICATION
+//     // ----------------------------------------------------------
+
+//     await createAdminProductNotifications({
+//       product,
+//       seller: req.seller,
+//     })
 
 //     const updatedProduct =
 //       await Product.findById(
@@ -1043,6 +1165,7 @@ export const createProduct = async (
       subcategory,
       sku,
       stock,
+      weight,
       sizes,
       colors,
       tags,
@@ -1090,6 +1213,32 @@ export const createProduct = async (
         success: false,
         message:
           'A valid product price is required.',
+      })
+    }
+
+    // ----------------------------------------------------------
+    // PRODUCT WEIGHT
+    // ----------------------------------------------------------
+    //
+    // Weight is required and stored in kilograms.
+    //
+    // Examples:
+    // 0.5  = 500 grams
+    // 1    = 1 kilogram
+    // 2.5  = 2.5 kilograms
+    //
+    // ----------------------------------------------------------
+
+    if (
+      weight === undefined ||
+      weight === '' ||
+      Number.isNaN(Number(weight)) ||
+      Number(weight) <= 0
+    ) {
+      return res.status(400).json({
+        success: false,
+        message:
+          'A valid product weight in kilograms is required.',
       })
     }
 
@@ -1142,7 +1291,9 @@ export const createProduct = async (
     while (
       await Product.exists({ slug })
     ) {
-      slug = `${baseSlug}-${slugNumber}`
+      slug =
+        `${baseSlug}-${slugNumber}`
+
       slugNumber += 1
     }
 
@@ -1152,6 +1303,8 @@ export const createProduct = async (
 
     const product =
       await Product.create({
+        ownerType: 'seller',
+
         seller: req.seller._id,
 
         store: req.seller.store,
@@ -1184,6 +1337,12 @@ export const createProduct = async (
           stock !== ''
             ? Number(stock)
             : 0,
+
+        // ------------------------------------------------------
+        // PRODUCT WEIGHT
+        // ------------------------------------------------------
+
+        weight: Number(weight),
 
         sku:
           sku
@@ -1295,6 +1454,28 @@ export const updateProduct = async (
     }
 
     // ----------------------------------------------------------
+    // WEIGHT VALIDATION
+    // ----------------------------------------------------------
+
+    if (
+      req.body.weight !== undefined
+    ) {
+      if (
+        req.body.weight === '' ||
+        Number.isNaN(
+          Number(req.body.weight)
+        ) ||
+        Number(req.body.weight) <= 0
+      ) {
+        return res.status(400).json({
+          success: false,
+          message:
+            'A valid product weight in kilograms is required.',
+        })
+      }
+    }
+
+    // ----------------------------------------------------------
     // ALLOWED FIELDS
     // ----------------------------------------------------------
 
@@ -1307,6 +1488,7 @@ export const updateProduct = async (
       'price',
       'compareAtPrice',
       'stock',
+      'weight',
       'sizes',
       'colors',
       'tags',
@@ -1325,7 +1507,14 @@ export const updateProduct = async (
               ? toArray(
                   req.body[field]
                 )
-              : req.body[field]
+              : field === 'weight' ||
+                field === 'price' ||
+                field === 'compareAtPrice' ||
+                field === 'stock'
+                ? Number(
+                    req.body[field]
+                  )
+                : req.body[field]
         }
       }
     )
@@ -1357,7 +1546,9 @@ export const updateProduct = async (
           },
         })
       ) {
-        slug = `${baseSlug}-${slugNumber}`
+        slug =
+          `${baseSlug}-${slugNumber}`
+
         slugNumber += 1
       }
 
