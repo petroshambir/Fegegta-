@@ -46,6 +46,7 @@
 //     price: '',
 //     oldPrice: '',
 //     stock: '',
+//     weight: '',
 //     material: '',
 //     sizes: '',
 //     colors: '',
@@ -217,6 +218,18 @@
 //       return 'Please enter a valid stock quantity.'
 //     }
 
+//     // ==========================================================
+//     // PRODUCT WEIGHT VALIDATION
+//     // ==========================================================
+
+//     if (
+//       form.weight === '' ||
+//       Number.isNaN(Number(form.weight)) ||
+//       Number(form.weight) <= 0
+//     ) {
+//       return 'Please enter a valid product weight.'
+//     }
+
 //     if (form.images.length < 1) {
 //       return 'Please upload at least one product image.'
 //     }
@@ -343,6 +356,15 @@
 //       formData.append(
 //         'stock',
 //         form.stock
+//       )
+
+//       // ========================================================
+//       // PRODUCT WEIGHT
+//       // ========================================================
+
+//       formData.append(
+//         'weight',
+//         form.weight
 //       )
 
 //       // ========================================================
@@ -831,6 +853,22 @@
 //                       required
 //                     />
 
+//                     {/* =================================================
+//                         PRODUCT WEIGHT
+//                     ================================================= */}
+
+//                     <Field
+//                       label="Product Weight (kg)"
+//                       name="weight"
+//                       type="number"
+//                       value={form.weight}
+//                       onChange={handleChange}
+//                       placeholder="e.g. 1.50"
+//                       min="0"
+//                       step="0.01"
+//                       required
+//                     />
+
 //                     <Field
 //                       label="Material / Quality"
 //                       name="material"
@@ -1127,6 +1165,7 @@
 // export default AdminAddProduct
 
 
+
 import React, { useEffect, useState } from 'react'
 import {
   ArrowLeft,
@@ -1146,7 +1185,8 @@ import AdminHeader from '../../components/admin/AdminHeader'
 // API
 // ============================================================
 
-const API_URL = 'https://fegegta-server.onrender.com/api'
+const API_URL =
+  'https://fegegta-server.onrender.com/api'
 
 // ============================================================
 // AUTH TOKEN
@@ -1243,7 +1283,10 @@ function AdminAddProduct() {
       return
     }
 
-    const filesToAdd = selectedFiles.slice(0, availableSlots)
+    const filesToAdd = selectedFiles.slice(
+      0,
+      availableSlots
+    )
 
     for (const file of filesToAdd) {
       if (!allowedTypes.includes(file.type)) {
@@ -1350,12 +1393,18 @@ function AdminAddProduct() {
     // PRODUCT WEIGHT VALIDATION
     // ==========================================================
 
+    const weight = Number(form.weight)
+
     if (
       form.weight === '' ||
-      Number.isNaN(Number(form.weight)) ||
-      Number(form.weight) <= 0
+      Number.isNaN(weight) ||
+      weight <= 0
     ) {
-      return 'Please enter a valid product weight.'
+      return 'Please enter a valid product weight in kilograms.'
+    }
+
+    if (weight < 0.01) {
+      return 'Product weight must be at least 0.01 kg (10 grams).'
     }
 
     if (form.images.length < 1) {
@@ -1489,10 +1538,24 @@ function AdminAddProduct() {
       // ========================================================
       // PRODUCT WEIGHT
       // ========================================================
+      // Weight is always sent in kilograms.
+      //
+      // Examples:
+      // 0.50 = 500 grams
+      // 1.00 = 1 kilogram
+      // 1.50 = 1.5 kilograms
+      // 2.00 = 2 kilograms
+      //
+      // This value will later be used by DHL/FedEx
+      // shipping-rate calculation.
+
+      const productWeightKg = Number(
+        form.weight
+      )
 
       formData.append(
         'weight',
-        form.weight
+        productWeightKg.toFixed(2)
       )
 
       // ========================================================
@@ -1570,7 +1633,9 @@ function AdminAddProduct() {
 
       if (response.status === 401) {
         localStorage.removeItem('token')
-        localStorage.removeItem('fegegta_auth_user')
+        localStorage.removeItem(
+          'fegegta_auth_user'
+        )
 
         setError(
           'Your session has expired. Please login again.'
@@ -1775,10 +1840,12 @@ function AdminAddProduct() {
                     <div className="flex items-start gap-3">
 
                       <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-slate-100">
+
                         <ImagePlus
                           size={20}
                           className="text-slate-700"
                         />
+
                       </div>
 
                       <div>
@@ -1887,10 +1954,12 @@ function AdminAddProduct() {
                     <div className="flex items-start gap-3">
 
                       <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-slate-100">
+
                         <PackagePlus
                           size={20}
                           className="text-slate-700"
                         />
+
                       </div>
 
                       <div>
@@ -1991,8 +2060,8 @@ function AdminAddProduct() {
                       type="number"
                       value={form.weight}
                       onChange={handleChange}
-                      placeholder="e.g. 1.50"
-                      min="0"
+                      placeholder="e.g. 0.50"
+                      min="0.01"
                       step="0.01"
                       required
                     />
@@ -2082,10 +2151,12 @@ function AdminAddProduct() {
                     <div className="flex items-start gap-3">
 
                       <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-slate-900">
+
                         <CheckCircle2
                           size={20}
                           className="text-white"
                         />
+
                       </div>
 
                       <div>
@@ -2156,7 +2227,9 @@ function AdminAddProduct() {
                       <div className="flex items-start gap-4">
 
                         <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-white/10">
+
                           <CheckCircle2 size={22} />
+
                         </div>
 
                         <div>
@@ -2285,6 +2358,12 @@ function Field({
         required={required}
         className="h-12 w-full rounded-xl border border-slate-200 bg-white px-4 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-slate-500 focus:ring-2 focus:ring-slate-100"
       />
+
+      {name === 'weight' && (
+        <p className="mt-1.5 text-xs text-slate-400">
+          Enter weight in kilograms. 0.50 kg = 500 g.
+        </p>
+      )}
 
     </div>
   )
