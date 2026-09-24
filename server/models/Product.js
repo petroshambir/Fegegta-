@@ -510,7 +510,6 @@ const productSchema = new mongoose.Schema(
       type: Number,
       required: true,
       min: 0.01,
-      default: 0.01,
     },
 
     // ========================================================
