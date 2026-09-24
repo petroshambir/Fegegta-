@@ -359,15 +359,22 @@ function App() {
 
         {/* ADMIN'S OWN PRODUCTS */}
 
-        <Route
+        {/* <Route
           path="/admin/products"
           element={
             <AdminProtectedRoute>
               <AdminMyProducts />
             </AdminProtectedRoute>
           }
-        />
-
+        /> */}
+<Route
+  path="/admin/my-products"
+  element={
+    <AdminProtectedRoute>
+      <AdminMyProducts />
+    </AdminProtectedRoute>
+  }
+/>
         <Route
           path="/admin/products/add"
           element={
@@ -376,7 +383,7 @@ function App() {
             </AdminProtectedRoute>
           }
         />
-
+{/* 
         <Route
           path="/admin/products/:id/edit"
           element={
@@ -384,7 +391,15 @@ function App() {
               <AdminEditProduct />
             </AdminProtectedRoute>
           }
-        />
+        /> */}
+        <Route
+  path="/admin/my-products/:id/edit"
+  element={
+    <AdminProtectedRoute>
+      <AdminEditProduct />
+    </AdminProtectedRoute>
+  }
+/>
 
         {/* SELLER MANAGEMENT */}
 
