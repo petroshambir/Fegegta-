@@ -1,5 +1,4 @@
 
-
 // import React, { useEffect, useState } from 'react'
 // import {
 //   ArrowLeft,
@@ -15,11 +14,23 @@
 // import AdminSidebar from '../../components/admin/AdminSidebar'
 // import AdminHeader from '../../components/admin/AdminHeader'
 
+// // ============================================================
+// // API
+// // ============================================================
+
 // const API_URL = 'https://fegegta-server.onrender.com/api'
 
+// // ============================================================
+// // AUTH TOKEN
+// // ============================================================
+
 // const getToken = () => {
-//   return localStorage.getItem('fegegta_auth_token')
+//   return localStorage.getItem('token')
 // }
+
+// // ============================================================
+// // ADMIN ADD PRODUCT
+// // ============================================================
 
 // function AdminAddProduct() {
 //   const navigate = useNavigate()
@@ -226,6 +237,10 @@
 
 //     setError('')
 
+//     // ----------------------------------------------------------
+//     // VALIDATE FORM
+//     // ----------------------------------------------------------
+
 //     const validationError = validateForm()
 
 //     if (validationError) {
@@ -238,6 +253,10 @@
 
 //       return
 //     }
+
+//     // ----------------------------------------------------------
+//     // GET AUTH TOKEN
+//     // ----------------------------------------------------------
 
 //     const token = getToken()
 
@@ -256,6 +275,10 @@
 
 //     try {
 //       setSaving(true)
+
+//       // --------------------------------------------------------
+//       // FORM DATA
+//       // --------------------------------------------------------
 
 //       const formData = new FormData()
 
@@ -379,7 +402,59 @@
 //         }
 //       )
 
-//       const data = await response.json()
+//       // --------------------------------------------------------
+//       // READ RESPONSE SAFELY
+//       // --------------------------------------------------------
+
+//       let data = {}
+
+//       try {
+//         data = await response.json()
+//       } catch {
+//         data = {}
+//       }
+
+//       // --------------------------------------------------------
+//       // AUTH ERROR
+//       // --------------------------------------------------------
+
+//       if (response.status === 401) {
+//         localStorage.removeItem('token')
+//         localStorage.removeItem('fegegta_auth_user')
+
+//         setError(
+//           'Your session has expired. Please login again.'
+//         )
+
+//         window.scrollTo({
+//           top: 0,
+//           behavior: 'smooth',
+//         })
+
+//         return
+//       }
+
+//       // --------------------------------------------------------
+//       // ADMIN PERMISSION ERROR
+//       // --------------------------------------------------------
+
+//       if (response.status === 403) {
+//         setError(
+//           data?.message ||
+//           'You do not have permission to create this product.'
+//         )
+
+//         window.scrollTo({
+//           top: 0,
+//           behavior: 'smooth',
+//         })
+
+//         return
+//       }
+
+//       // --------------------------------------------------------
+//       // OTHER API ERRORS
+//       // --------------------------------------------------------
 
 //       if (!response.ok) {
 //         throw new Error(
@@ -399,6 +474,11 @@
 //       navigate('/admin/my-products')
 
 //     } catch (err) {
+//       console.error(
+//         'Admin product creation error:',
+//         err
+//       )
+
 //       setError(
 //         err.message ||
 //         'Something went wrong while creating the product.'
@@ -1036,6 +1116,7 @@
 //         placeholder={placeholder}
 //         min={min}
 //         step={step}
+//         required={required}
 //         className="h-12 w-full rounded-xl border border-slate-200 bg-white px-4 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-slate-500 focus:ring-2 focus:ring-slate-100"
 //       />
 
@@ -1093,6 +1174,7 @@ function AdminAddProduct() {
     price: '',
     oldPrice: '',
     stock: '',
+    weight: '',
     material: '',
     sizes: '',
     colors: '',
@@ -1264,6 +1346,18 @@ function AdminAddProduct() {
       return 'Please enter a valid stock quantity.'
     }
 
+    // ==========================================================
+    // PRODUCT WEIGHT VALIDATION
+    // ==========================================================
+
+    if (
+      form.weight === '' ||
+      Number.isNaN(Number(form.weight)) ||
+      Number(form.weight) <= 0
+    ) {
+      return 'Please enter a valid product weight.'
+    }
+
     if (form.images.length < 1) {
       return 'Please upload at least one product image.'
     }
@@ -1390,6 +1484,15 @@ function AdminAddProduct() {
       formData.append(
         'stock',
         form.stock
+      )
+
+      // ========================================================
+      // PRODUCT WEIGHT
+      // ========================================================
+
+      formData.append(
+        'weight',
+        form.weight
       )
 
       // ========================================================
@@ -1875,6 +1978,22 @@ function AdminAddProduct() {
                       placeholder="0"
                       min="0"
                       step="1"
+                      required
+                    />
+
+                    {/* =================================================
+                        PRODUCT WEIGHT
+                    ================================================= */}
+
+                    <Field
+                      label="Product Weight (kg)"
+                      name="weight"
+                      type="number"
+                      value={form.weight}
+                      onChange={handleChange}
+                      placeholder="e.g. 1.50"
+                      min="0"
+                      step="0.01"
                       required
                     />
 
