@@ -31,23 +31,51 @@
 // const productSchema = new mongoose.Schema(
 //   {
 //     // ========================================================
+//     // PRODUCT OWNERSHIP TYPE
+//     // ========================================================
+
+//     ownerType: {
+//       type: String,
+//       enum: ['platform', 'seller'],
+//       default: 'seller',
+//       required: true,
+//       index: true,
+//     },
+
+//     // ========================================================
 //     // SELLER
+//     // ========================================================
+//     //
+//     // Seller products:
+//     //   seller = Seller ID
+//     //
+//     // Platform products:
+//     //   seller = null
+//     //
 //     // ========================================================
 
 //     seller: {
 //       type: mongoose.Schema.Types.ObjectId,
 //       ref: 'Seller',
-//       required: true,
+//       default: null,
 //     },
 
 //     // ========================================================
 //     // STORE
 //     // ========================================================
+//     //
+//     // Seller products:
+//     //   store = Store ID
+//     //
+//     // Platform products:
+//     //   store = null
+//     //
+//     // ========================================================
 
 //     store: {
 //       type: mongoose.Schema.Types.ObjectId,
 //       ref: 'Store',
-//       required: true,
+//       default: null,
 //     },
 
 //     // ========================================================
@@ -276,6 +304,10 @@
 // })
 
 // productSchema.index({
+//   ownerType: 1,
+// })
+
+// productSchema.index({
 //   approvalStatus: 1,
 // })
 
@@ -456,6 +488,29 @@ const productSchema = new mongoose.Schema(
       type: String,
       trim: true,
       default: '',
+    },
+
+    // ========================================================
+    // PRODUCT WEIGHT
+    // ========================================================
+    //
+    // Weight is stored in kilograms (kg).
+    //
+    // This value is used by the shipping system
+    // to calculate DHL / FedEx shipping rates.
+    //
+    // Example:
+    //   0.50 = 500 grams
+    //   1.00 = 1 kilogram
+    //   2.50 = 2.5 kilograms
+    //
+    // ========================================================
+
+    weight: {
+      type: Number,
+      required: true,
+      min: 0.01,
+      default: 0.01,
     },
 
     // ========================================================
