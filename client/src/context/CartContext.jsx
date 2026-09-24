@@ -247,6 +247,7 @@
 // export default CartContext
 
 
+
 import {
   createContext,
   useContext,
@@ -424,13 +425,13 @@ export function CartProvider({ children }) {
   // =========================================================
   // TOTAL
   // =========================================================
-  // CartContext does NOT calculate shipping.
+  // Shipping is NOT calculated here.
   //
-  // Shipping is calculated only at Checkout using the
-  // actual DHL or FedEx rate returned by the backend.
+  // The real shipping price will come from the backend
+  // after Checkout sends the destination, product IDs,
+  // quantities and selected carrier (DHL / FedEx).
   //
-  // Therefore:
-  // total = product subtotal only.
+  // Therefore Cart total = product subtotal only.
 
   const total = useMemo(() => {
     return subtotal
