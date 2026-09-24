@@ -308,7 +308,10 @@ export function CartProvider({ children }) {
       return
     }
 
-    const safeQuantity = Math.max(1, Number(quantity) || 1)
+    const safeQuantity = Math.max(
+      1,
+      Number(quantity) || 1
+    )
 
     setCartItems((currentItems) => {
       const existingItem = currentItems.find(
@@ -324,7 +327,9 @@ export function CartProvider({ children }) {
           item.id === product.id
             ? {
                 ...item,
-                quantity: item.quantity + safeQuantity,
+                quantity:
+                  (Number(item.quantity) || 0) +
+                  safeQuantity,
               }
             : item
         )
@@ -354,7 +359,8 @@ export function CartProvider({ children }) {
         item.id === productId
           ? {
               ...item,
-              quantity: item.quantity + 1,
+              quantity:
+                (Number(item.quantity) || 0) + 1,
             }
           : item
       )
@@ -372,11 +378,14 @@ export function CartProvider({ children }) {
           item.id === productId
             ? {
                 ...item,
-                quantity: item.quantity - 1,
+                quantity:
+                  (Number(item.quantity) || 0) - 1,
               }
             : item
         )
-        .filter((item) => item.quantity > 0)
+        .filter(
+          (item) => Number(item.quantity) > 0
+        )
     )
   }
 
@@ -386,7 +395,9 @@ export function CartProvider({ children }) {
 
   const removeFromCart = (productId) => {
     setCartItems((currentItems) =>
-      currentItems.filter((item) => item.id !== productId)
+      currentItems.filter(
+        (item) => item.id !== productId
+      )
     )
   }
 
@@ -404,7 +415,8 @@ export function CartProvider({ children }) {
 
   const totalItems = useMemo(() => {
     return cartItems.reduce(
-      (total, item) => total + item.quantity,
+      (total, item) =>
+        total + (Number(item.quantity) || 0),
       0
     )
   }, [cartItems])
@@ -423,15 +435,33 @@ export function CartProvider({ children }) {
   }, [cartItems])
 
   // =========================================================
+  // SHIPPING
+  // =========================================================
+  // IMPORTANT:
+  //
+  // CartContext does NOT calculate shipping.
+  //
+  // There is:
+  // - No €10 fixed shipping
+  // - No €25 express shipping
+  // - No €100 free shipping rule
+  //
+  // The real shipping price will be calculated at Checkout
+  // from DHL or FedEx through the backend.
+  //
+  // This 0 value only keeps compatibility with existing
+  // Cart components that may call shipping.toFixed(2).
+  //
+  // It is NOT the actual shipping price.
+
+  const shipping = 0
+
+  // =========================================================
   // TOTAL
   // =========================================================
-  // Shipping is NOT calculated here.
+  // Cart total = products only.
   //
-  // The real shipping price will come from the backend
-  // after Checkout sends the destination, product IDs,
-  // quantities and selected carrier (DHL / FedEx).
-  //
-  // Therefore Cart total = product subtotal only.
+  // Real DHL/FedEx shipping is added later in Checkout.
 
   const total = useMemo(() => {
     return subtotal
@@ -454,6 +484,11 @@ export function CartProvider({ children }) {
 
     totalItems,
     subtotal,
+
+    // Compatibility fallback only.
+    // Real shipping comes from DHL/FedEx at Checkout.
+    shipping,
+
     total,
   }
 
