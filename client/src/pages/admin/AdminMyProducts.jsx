@@ -2093,7 +2093,8 @@ function AdminMyProducts() {
                                 ================================================= */}
 
                                 <Link
-                                  to={`/admin/my-products/edit/${productId}`}
+                                  // to={`/admin/my-products/edit/${productId}`}
+                                    to={`/admin/my-products/${productId}/edit`}
                                   className="rounded-lg border border-gray-200 bg-white p-2 text-gray-600 transition hover:bg-gray-50 hover:text-gray-900"
                                   title="View / Edit Product"
                                 >
@@ -2107,7 +2108,8 @@ function AdminMyProducts() {
                                 ================================================= */}
 
                                 <Link
-                                  to={`/admin/my-products/edit/${productId}`}
+                                  // to={`/admin/my-products/edit/${productId}`}
+                                    to={`/admin/my-products/${productId}/edit`}
                                   className="rounded-lg border border-gray-200 bg-white p-2 text-gray-600 transition hover:bg-gray-50 hover:text-gray-900"
                                   title="Edit Product"
                                 >
