@@ -74,7 +74,8 @@
 
 //     if (
 //       !process.env.ADMIN_SETUP_SECRET ||
-//       setupSecret !== process.env.ADMIN_SETUP_SECRET
+//       setupSecret !==
+//         process.env.ADMIN_SETUP_SECRET
 //     ) {
 //       return res.status(403).json({
 //         success: false,
@@ -98,9 +99,10 @@
 //     // NORMALIZE EMAIL
 //     // --------------------------------------------------------
 
-//     const normalizedEmail = String(email)
-//       .trim()
-//       .toLowerCase()
+//     const normalizedEmail =
+//       String(email)
+//         .trim()
+//         .toLowerCase()
 
 //     // --------------------------------------------------------
 //     // VALIDATE EMAIL
@@ -109,7 +111,11 @@
 //     const emailRegex =
 //       /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
-//     if (!emailRegex.test(normalizedEmail)) {
+//     if (
+//       !emailRegex.test(
+//         normalizedEmail
+//       )
+//     ) {
 //       return res.status(400).json({
 //         success: false,
 //         message:
@@ -124,7 +130,9 @@
 //     const normalizedPassword =
 //       String(password)
 
-//     if (normalizedPassword.length < 8) {
+//     if (
+//       normalizedPassword.length < 8
+//     ) {
 //       return res.status(400).json({
 //         success: false,
 //         message:
@@ -202,8 +210,10 @@
 //         'Admin account created successfully.',
 //       user: {
 //         id: admin._id,
-//         firstName: admin.firstName,
-//         lastName: admin.lastName,
+//         firstName:
+//           admin.firstName,
+//         lastName:
+//           admin.lastName,
 //         name: admin.name,
 //         email: admin.email,
 //         role: admin.role,
@@ -225,6 +235,14 @@
 //   next
 // ) => {
 //   try {
+//     // ========================================================
+//     // CURRENT ADMIN ID
+//     // ========================================================
+
+//     const adminId =
+//       req.user?._id ||
+//       req.user?.id
+
 //     // ========================================================
 //     // BASIC COUNTS
 //     // ========================================================
@@ -292,10 +310,18 @@
 //       // ------------------------------------------------------
 //       // UNREAD NOTIFICATIONS
 //       // ------------------------------------------------------
+//       //
+//       // IMPORTANT:
+//       // Count only notifications belonging to
+//       // the currently logged-in admin.
+//       // ------------------------------------------------------
 
-//       Notification.countDocuments({
-//         isRead: false,
-//       }),
+//       adminId
+//         ? Notification.countDocuments({
+//             recipient: adminId,
+//             isRead: false,
+//           })
+//         : 0,
 //     ])
 
 //     // ========================================================
@@ -306,12 +332,14 @@
 //       await Order.aggregate([
 //         {
 //           $match: {
-//             orderStatus: 'delivered',
+//             orderStatus:
+//               'delivered',
 //           },
 //         },
 //         {
 //           $group: {
 //             _id: null,
+
 //             totalSales: {
 //               $sum: {
 //                 $ifNull: [
@@ -325,7 +353,8 @@
 //       ])
 
 //     const totalSales =
-//       salesResult[0]?.totalSales || 0
+//       salesResult[0]
+//         ?.totalSales || 0
 
 //     // ========================================================
 //     // COMMISSION + SELLER EARNINGS
@@ -453,10 +482,13 @@
 //       'admin',
 //     ]
 
-//     if (!allowedRoles.includes(role)) {
+//     if (
+//       !allowedRoles.includes(role)
+//     ) {
 //       return res.status(400).json({
 //         success: false,
-//         message: 'Invalid user role.',
+//         message:
+//           'Invalid user role.',
 //       })
 //     }
 
@@ -491,7 +523,8 @@
 //     if (!user) {
 //       return res.status(404).json({
 //         success: false,
-//         message: 'User not found.',
+//         message:
+//           'User not found.',
 //       })
 //     }
 
@@ -572,7 +605,8 @@
 //     if (!seller) {
 //       return res.status(404).json({
 //         success: false,
-//         message: 'Seller not found.',
+//         message:
+//           'Seller not found.',
 //       })
 //     }
 
@@ -624,7 +658,8 @@
 //     if (!seller) {
 //       return res.status(404).json({
 //         success: false,
-//         message: 'Seller not found.',
+//         message:
+//           'Seller not found.',
 //       })
 //     }
 
@@ -710,9 +745,10 @@
 //     // ========================================================
 
 //     if (
-//       !['platform', 'seller'].includes(
-//         ownerType
-//       )
+//       ![
+//         'platform',
+//         'seller',
+//       ].includes(ownerType)
 //     ) {
 //       return res.status(400).json({
 //         success: false,
@@ -761,7 +797,9 @@
 //     if (
 //       price === undefined ||
 //       price === '' ||
-//       Number.isNaN(Number(price)) ||
+//       Number.isNaN(
+//         Number(price)
+//       ) ||
 //       Number(price) < 0
 //     ) {
 //       return res.status(400).json({
@@ -782,7 +820,9 @@
 //     // SELLER PRODUCT
 //     // ========================================================
 
-//     if (ownerType === 'seller') {
+//     if (
+//       ownerType === 'seller'
+//     ) {
 //       // ------------------------------------------------------
 //       // SELLER ID
 //       // ------------------------------------------------------
@@ -864,7 +904,9 @@
 //         ![
 //           'approved',
 //           'active',
-//         ].includes(store.status)
+//         ].includes(
+//           store.status
+//         )
 //       ) {
 //         return res.status(400).json({
 //           success: false,
@@ -894,7 +936,9 @@
 //     // PLATFORM PRODUCT
 //     // ========================================================
 
-//     if (ownerType === 'platform') {
+//     if (
+//       ownerType === 'platform'
+//     ) {
 //       seller = null
 //       store = null
 //     }
@@ -950,7 +994,9 @@
 //       })
 //     }
 
-//     let slug = baseSlug
+//     let slug =
+//       baseSlug
+
 //     let slugNumber = 1
 
 //     while (
@@ -969,13 +1015,17 @@
 //     // ========================================================
 
 //     const finalCompareAtPrice =
-//       compareAtPrice !== undefined &&
+//       compareAtPrice !==
+//         undefined &&
 //       compareAtPrice !== ''
-//         ? Number(compareAtPrice)
-//         : oldPrice !== undefined &&
+//         ? Number(
+//             compareAtPrice
+//           )
+//         : oldPrice !==
+//               undefined &&
 //           oldPrice !== ''
-//           ? Number(oldPrice)
-//           : 0
+//         ? Number(oldPrice)
+//         : 0
 
 //     if (
 //       Number.isNaN(
@@ -1016,9 +1066,12 @@
 //     // ========================================================
 
 //     const finalMaterial =
-//       material !== undefined &&
+//       material !==
+//         undefined &&
 //       material !== null
-//         ? String(material).trim()
+//         ? String(
+//             material
+//           ).trim()
 //         : ''
 
 //     // ========================================================
@@ -1069,10 +1122,14 @@
 //         slug,
 
 //         description:
-//           String(description).trim(),
+//           String(
+//             description
+//           ).trim(),
 
 //         category:
-//           String(category).trim(),
+//           String(
+//             category
+//           ).trim(),
 
 //         subcategory:
 //           subcategory
@@ -1107,7 +1164,9 @@
 
 //         sku:
 //           sku
-//             ? String(sku).trim()
+//             ? String(
+//                 sku
+//               ).trim()
 //             : '',
 
 //         // ----------------------------------------------------
@@ -1172,7 +1231,8 @@
 //     // ========================================================
 
 //     const message =
-//       ownerType === 'platform'
+//       ownerType ===
+//       'platform'
 //         ? 'Platform product created successfully and published.'
 //         : 'Seller product created successfully and published.'
 
@@ -1248,7 +1308,8 @@
 //     }
 
 //     if (
-//       description === undefined ||
+//       description ===
+//         undefined ||
 //       !String(description).trim()
 //     ) {
 //       return res.status(400).json({
@@ -1276,7 +1337,9 @@
 //     if (
 //       price === undefined ||
 //       price === '' ||
-//       Number.isNaN(Number(price)) ||
+//       Number.isNaN(
+//         Number(price)
+//       ) ||
 //       Number(price) < 0
 //     ) {
 //       return res.status(400).json({
@@ -1291,13 +1354,17 @@
 //     // --------------------------------------------------------
 
 //     const finalCompareAtPrice =
-//       compareAtPrice !== undefined &&
+//       compareAtPrice !==
+//         undefined &&
 //       compareAtPrice !== ''
-//         ? Number(compareAtPrice)
-//         : oldPrice !== undefined &&
+//         ? Number(
+//             compareAtPrice
+//           )
+//         : oldPrice !==
+//               undefined &&
 //           oldPrice !== ''
-//           ? Number(oldPrice)
-//           : 0
+//         ? Number(oldPrice)
+//         : 0
 
 //     if (
 //       Number.isNaN(
@@ -1349,7 +1416,9 @@
 //         return fallback
 //       }
 
-//       if (Array.isArray(value)) {
+//       if (
+//         Array.isArray(value)
+//       ) {
 //         return value
 //           .map((item) =>
 //             String(item).trim()
@@ -1409,7 +1478,8 @@
 //     // EXISTING IMAGES
 //     // --------------------------------------------------------
 
-//     let requestedExistingImages = []
+//     let requestedExistingImages =
+//       []
 
 //     if (
 //       existingImages !==
@@ -1429,7 +1499,9 @@
 //           requestedExistingImages =
 //             parsed
 //               .map((image) =>
-//                 String(image).trim()
+//                 String(
+//                   image
+//                 ).trim()
 //               )
 //               .filter(Boolean)
 //         }
@@ -1442,7 +1514,9 @@
 //     }
 
 //     const currentImages =
-//       Array.isArray(product.images)
+//       Array.isArray(
+//         product.images
+//       )
 //         ? product.images
 //         : []
 
@@ -1556,9 +1630,12 @@
 //     // --------------------------------------------------------
 
 //     const finalMaterial =
-//       material !== undefined &&
+//       material !==
+//         undefined &&
 //       material !== null
-//         ? String(material).trim()
+//         ? String(
+//             material
+//           ).trim()
 //         : ''
 
 //     // --------------------------------------------------------
@@ -1572,13 +1649,18 @@
 //       slug
 
 //     product.description =
-//       String(description).trim()
+//       String(
+//         description
+//       ).trim()
 
 //     product.category =
-//       String(category).trim()
+//       String(
+//         category
+//       ).trim()
 
 //     product.subcategory =
-//       subcategory !== undefined &&
+//       subcategory !==
+//           undefined &&
 //       subcategory !== null
 //         ? String(
 //             subcategory
@@ -1588,7 +1670,9 @@
 //     product.sku =
 //       sku !== undefined &&
 //       sku !== null
-//         ? String(sku).trim()
+//         ? String(
+//             sku
+//           ).trim()
 //         : ''
 
 //     product.price =
@@ -1892,6 +1976,10 @@
 // // NOTIFICATIONS
 // // ============================================================
 
+// // ------------------------------------------------------------
+// // GET ADMIN NOTIFICATIONS
+// // ------------------------------------------------------------
+
 // export const getNotifications =
 //   async (
 //     req,
@@ -1899,8 +1987,43 @@
 //     next
 //   ) => {
 //     try {
+//       // ======================================================
+//       // CURRENT ADMIN
+//       // ======================================================
+
+//       const adminId =
+//         req.user?._id ||
+//         req.user?.id
+
+//       if (!adminId) {
+//         return res.status(401).json({
+//           success: false,
+//           message:
+//             'Admin authentication is required.',
+//         })
+//       }
+
+//       // ======================================================
+//       // GET ONLY CURRENT ADMIN NOTIFICATIONS
+//       // ======================================================
+
 //       const notifications =
-//         await Notification.find()
+//         await Notification.find({
+//           recipient:
+//             adminId,
+//         })
+//           .populate(
+//             'order',
+//             'orderNumber total orderStatus paymentStatus shippingAddress customer items createdAt'
+//           )
+//           .populate(
+//             'product',
+//             'name price approvalStatus isActive images'
+//           )
+//           .populate(
+//             'store',
+//             'name slug status logo'
+//           )
 //           .sort({
 //             createdAt: -1,
 //           })
@@ -1925,12 +2048,39 @@
 //     next
 //   ) => {
 //     try {
+//       // ======================================================
+//       // CURRENT ADMIN
+//       // ======================================================
+
+//       const adminId =
+//         req.user?._id ||
+//         req.user?.id
+
+//       if (!adminId) {
+//         return res.status(401).json({
+//           success: false,
+//           message:
+//             'Admin authentication is required.',
+//         })
+//       }
+
+//       // ======================================================
+//       // MARK ONLY CURRENT ADMIN'S NOTIFICATION
+//       // ======================================================
+
 //       const notification =
-//         await Notification.findByIdAndUpdate(
-//           req.params.id,
+//         await Notification.findOneAndUpdate(
+//           {
+//             _id:
+//               req.params.id,
+
+//             recipient:
+//               adminId,
+//           },
 //           {
 //             isRead: true,
-//             readAt: new Date(),
+//             readAt:
+//               new Date(),
 //           },
 //           {
 //             new: true,
@@ -1966,14 +2116,41 @@
 //     next
 //   ) => {
 //     try {
+//       // ======================================================
+//       // CURRENT ADMIN
+//       // ======================================================
+
+//       const adminId =
+//         req.user?._id ||
+//         req.user?.id
+
+//       if (!adminId) {
+//         return res.status(401).json({
+//           success: false,
+//           message:
+//             'Admin authentication is required.',
+//         })
+//       }
+
+//       // ======================================================
+//       // MARK ONLY CURRENT ADMIN'S NOTIFICATIONS
+//       // ======================================================
+
 //       await Notification.updateMany(
 //         {
-//           isRead: false,
+//           recipient:
+//             adminId,
+
+//           isRead:
+//             false,
 //         },
 //         {
 //           $set: {
-//             isRead: true,
-//             readAt: new Date(),
+//             isRead:
+//               true,
+
+//             readAt:
+//               new Date(),
 //           },
 //         }
 //       )
@@ -2063,8 +2240,11 @@
 //       // ------------------------------------------------------
 
 //       if (
-//         platformName === undefined ||
-//         !String(platformName).trim()
+//         platformName ===
+//           undefined ||
+//         !String(
+//           platformName
+//         ).trim()
 //       ) {
 //         return res.status(400).json({
 //           success: false,
@@ -2078,9 +2258,10 @@
 //       // ------------------------------------------------------
 
 //       if (
-//         !['EUR', 'USD'].includes(
-//           currency
-//         )
+//         ![
+//           'EUR',
+//           'USD',
+//         ].includes(currency)
 //       ) {
 //         return res.status(400).json({
 //           success: false,
@@ -2094,7 +2275,9 @@
 //       // ------------------------------------------------------
 
 //       const finalCommissionRate =
-//         Number(commissionRate)
+//         Number(
+//           commissionRate
+//         )
 
 //       if (
 //         Number.isNaN(
@@ -2119,7 +2302,8 @@
 //         fieldName
 //       ) => {
 //         if (
-//           typeof value === 'boolean'
+//           typeof value ===
+//           'boolean'
 //         ) {
 //           return value
 //         }
@@ -2163,7 +2347,9 @@
 //             requireSellerVerification,
 //             'requireSellerVerification'
 //           )
-//       } catch (booleanError) {
+//       } catch (
+//         booleanError
+//       ) {
 //         return res.status(400).json({
 //           success: false,
 //           message:
@@ -2222,6 +2408,8 @@
 //       next(error)
 //     }
 //   }
+
+
 
 import User from '../models/User.js'
 import Seller from '../models/Seller.js'
@@ -2532,11 +2720,6 @@ export const getDashboard = async (
 
       // ------------------------------------------------------
       // UNREAD NOTIFICATIONS
-      // ------------------------------------------------------
-      //
-      // IMPORTANT:
-      // Count only notifications belonging to
-      // the currently logged-in admin.
       // ------------------------------------------------------
 
       adminId
@@ -2953,6 +3136,7 @@ export const createProduct = async (
       oldPrice,
       compareAtPrice,
       stock,
+      weight,
       material,
       sizes,
       colors,
@@ -3285,6 +3469,27 @@ export const createProduct = async (
     }
 
     // ========================================================
+    // WEIGHT
+    // ========================================================
+
+    const finalWeight =
+      weight !== undefined &&
+      weight !== ''
+        ? Number(weight)
+        : NaN
+
+    if (
+      Number.isNaN(finalWeight) ||
+      finalWeight < 0.01
+    ) {
+      return res.status(400).json({
+        success: false,
+        message:
+          'Product weight must be at least 0.01 kg (10 grams).',
+      })
+    }
+
+    // ========================================================
     // MATERIAL
     // ========================================================
 
@@ -3384,6 +3589,9 @@ export const createProduct = async (
 
         stock:
           finalStock,
+
+        weight:
+          finalWeight,
 
         sku:
           sku
@@ -3490,6 +3698,7 @@ export const updateProduct = async (
       oldPrice,
       compareAtPrice,
       stock,
+      weight,
       material,
       sizes,
       colors,
@@ -3620,6 +3829,27 @@ export const updateProduct = async (
         success: false,
         message:
           'Invalid stock quantity.',
+      })
+    }
+
+    // --------------------------------------------------------
+    // WEIGHT
+    // --------------------------------------------------------
+
+    const finalWeight =
+      weight !== undefined &&
+      weight !== ''
+        ? Number(weight)
+        : Number(product.weight)
+
+    if (
+      Number.isNaN(finalWeight) ||
+      finalWeight < 0.01
+    ) {
+      return res.status(400).json({
+        success: false,
+        message:
+          'Product weight must be at least 0.01 kg (10 grams).',
       })
     }
 
@@ -3906,6 +4136,9 @@ export const updateProduct = async (
 
     product.stock =
       finalStock
+
+    product.weight =
+      finalWeight
 
     product.material =
       finalMaterial
