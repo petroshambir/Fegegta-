@@ -21,7 +21,7 @@ const menuItems = [
   },
   {
     label: 'My Products',
-    path: '/admin/my-products/add',
+    path: '/admin/my-products',
     icon: ShoppingBag,
   },
   {
