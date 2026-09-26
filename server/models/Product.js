@@ -1,4 +1,5 @@
 
+
 // import mongoose from 'mongoose'
 
 // // ============================================================
@@ -157,6 +158,28 @@
 //       type: String,
 //       trim: true,
 //       default: '',
+//     },
+
+//     // ========================================================
+//     // PRODUCT WEIGHT
+//     // ========================================================
+//     //
+//     // Weight is stored in kilograms (kg).
+//     //
+//     // This value is used by the shipping system
+//     // to calculate DHL / FedEx shipping rates.
+//     //
+//     // Example:
+//     //   0.50 = 500 grams
+//     //   1.00 = 1 kilogram
+//     //   2.50 = 2.5 kilograms
+//     //
+//     // ========================================================
+
+//     weight: {
+//       type: Number,
+//       required: true,
+//       min: 0.01,
 //     },
 
 //     // ========================================================
@@ -328,7 +351,6 @@
 //   mongoose.model('Product', productSchema)
 
 // export default Product
-
 
 import mongoose from 'mongoose'
 
@@ -510,6 +532,42 @@ const productSchema = new mongoose.Schema(
       type: Number,
       required: true,
       min: 0.01,
+    },
+
+    // ========================================================
+    // SHIPPING ORIGIN
+    // ========================================================
+    //
+    // Country where the product is shipped from.
+    //
+    // Example:
+    //   Ethiopia
+    //
+    // ========================================================
+
+    originCountry: {
+      type: String,
+      required: true,
+      trim: true,
+      maxlength: 100,
+    },
+
+    // ========================================================
+    // SHIPPING ORIGIN CITY
+    // ========================================================
+    //
+    // City where the product is shipped from.
+    //
+    // Example:
+    //   Addis Ababa
+    //
+    // ========================================================
+
+    originCity: {
+      type: String,
+      required: true,
+      trim: true,
+      maxlength: 100,
     },
 
     // ========================================================

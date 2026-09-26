@@ -1,5 +1,4 @@
 
-
 // import User from '../models/User.js'
 // import Seller from '../models/Seller.js'
 // import Product from '../models/Product.js'
@@ -309,11 +308,6 @@
 
 //       // ------------------------------------------------------
 //       // UNREAD NOTIFICATIONS
-//       // ------------------------------------------------------
-//       //
-//       // IMPORTANT:
-//       // Count only notifications belonging to
-//       // the currently logged-in admin.
 //       // ------------------------------------------------------
 
 //       adminId
@@ -730,6 +724,7 @@
 //       oldPrice,
 //       compareAtPrice,
 //       stock,
+//       weight,
 //       material,
 //       sizes,
 //       colors,
@@ -1062,6 +1057,27 @@
 //     }
 
 //     // ========================================================
+//     // WEIGHT
+//     // ========================================================
+
+//     const finalWeight =
+//       weight !== undefined &&
+//       weight !== ''
+//         ? Number(weight)
+//         : NaN
+
+//     if (
+//       Number.isNaN(finalWeight) ||
+//       finalWeight < 0.01
+//     ) {
+//       return res.status(400).json({
+//         success: false,
+//         message:
+//           'Product weight must be at least 0.01 kg (10 grams).',
+//       })
+//     }
+
+//     // ========================================================
 //     // MATERIAL
 //     // ========================================================
 
@@ -1161,6 +1177,9 @@
 
 //         stock:
 //           finalStock,
+
+//         weight:
+//           finalWeight,
 
 //         sku:
 //           sku
@@ -1267,6 +1286,7 @@
 //       oldPrice,
 //       compareAtPrice,
 //       stock,
+//       weight,
 //       material,
 //       sizes,
 //       colors,
@@ -1397,6 +1417,27 @@
 //         success: false,
 //         message:
 //           'Invalid stock quantity.',
+//       })
+//     }
+
+//     // --------------------------------------------------------
+//     // WEIGHT
+//     // --------------------------------------------------------
+
+//     const finalWeight =
+//       weight !== undefined &&
+//       weight !== ''
+//         ? Number(weight)
+//         : Number(product.weight)
+
+//     if (
+//       Number.isNaN(finalWeight) ||
+//       finalWeight < 0.01
+//     ) {
+//       return res.status(400).json({
+//         success: false,
+//         message:
+//           'Product weight must be at least 0.01 kg (10 grams).',
 //       })
 //     }
 
@@ -1683,6 +1724,9 @@
 
 //     product.stock =
 //       finalStock
+
+//     product.weight =
+//       finalWeight
 
 //     product.material =
 //       finalMaterial
@@ -2408,8 +2452,6 @@
 //       next(error)
 //     }
 //   }
-
-
 
 import User from '../models/User.js'
 import Seller from '../models/Seller.js'
@@ -3137,6 +3179,14 @@ export const createProduct = async (
       compareAtPrice,
       stock,
       weight,
+
+      // ======================================================
+      // SHIPPING ORIGIN
+      // ======================================================
+
+      originCountry,
+      originCity,
+
       material,
       sizes,
       colors,
@@ -3490,6 +3540,42 @@ export const createProduct = async (
     }
 
     // ========================================================
+    // SHIPPING ORIGIN
+    // ========================================================
+
+    const finalOriginCountry =
+      originCountry !== undefined &&
+      originCountry !== null
+        ? String(
+            originCountry
+          ).trim()
+        : ''
+
+    const finalOriginCity =
+      originCity !== undefined &&
+      originCity !== null
+        ? String(
+            originCity
+          ).trim()
+        : ''
+
+    if (!finalOriginCountry) {
+      return res.status(400).json({
+        success: false,
+        message:
+          'Product origin country is required.',
+      })
+    }
+
+    if (!finalOriginCity) {
+      return res.status(400).json({
+        success: false,
+        message:
+          'Product origin city is required.',
+      })
+    }
+
+    // ========================================================
     // MATERIAL
     // ========================================================
 
@@ -3592,6 +3678,16 @@ export const createProduct = async (
 
         weight:
           finalWeight,
+
+        // ----------------------------------------------------
+        // SHIPPING ORIGIN
+        // ----------------------------------------------------
+
+        originCountry:
+          finalOriginCountry,
+
+        originCity:
+          finalOriginCity,
 
         sku:
           sku
@@ -3699,6 +3795,14 @@ export const updateProduct = async (
       compareAtPrice,
       stock,
       weight,
+
+      // ======================================================
+      // SHIPPING ORIGIN
+      // ======================================================
+
+      originCountry,
+      originCity,
+
       material,
       sizes,
       colors,
@@ -3850,6 +3954,48 @@ export const updateProduct = async (
         success: false,
         message:
           'Product weight must be at least 0.01 kg (10 grams).',
+      })
+    }
+
+    // --------------------------------------------------------
+    // SHIPPING ORIGIN
+    // --------------------------------------------------------
+
+    const finalOriginCountry =
+      originCountry !== undefined &&
+      originCountry !== null &&
+      String(originCountry).trim()
+        ? String(
+            originCountry
+          ).trim()
+        : String(
+            product.originCountry || ''
+          ).trim()
+
+    const finalOriginCity =
+      originCity !== undefined &&
+      originCity !== null &&
+      String(originCity).trim()
+        ? String(
+            originCity
+          ).trim()
+        : String(
+            product.originCity || ''
+          ).trim()
+
+    if (!finalOriginCountry) {
+      return res.status(400).json({
+        success: false,
+        message:
+          'Product origin country is required.',
+      })
+    }
+
+    if (!finalOriginCity) {
+      return res.status(400).json({
+        success: false,
+        message:
+          'Product origin city is required.',
       })
     }
 
@@ -4139,6 +4285,16 @@ export const updateProduct = async (
 
     product.weight =
       finalWeight
+
+    // --------------------------------------------------------
+    // SHIPPING ORIGIN
+    // --------------------------------------------------------
+
+    product.originCountry =
+      finalOriginCountry
+
+    product.originCity =
+      finalOriginCity
 
     product.material =
       finalMaterial
