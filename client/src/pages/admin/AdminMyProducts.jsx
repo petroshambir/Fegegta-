@@ -1808,7 +1808,7 @@ function AdminMyProducts() {
             {/* ADD PRODUCT */}
 
             <Link
-              to="/admin/my-products"
+              to="/admin/products/add"
               className="inline-flex items-center justify-center gap-2 rounded-xl bg-gray-900 px-5 py-3 text-sm font-semibold text-white transition hover:bg-black"
             >
               <Plus size={18} />
