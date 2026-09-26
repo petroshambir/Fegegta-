@@ -30,11 +30,9 @@
 // // ============================================================
 
 // function AdminEditProduct() {
-//   const { id } =
-//     useParams()
+//   const { id } = useParams()
 
-//   const navigate =
-//     useNavigate()
+//   const navigate = useNavigate()
 
 //   // ==========================================================
 //   // MOBILE SIDEBAR
@@ -74,6 +72,7 @@
 //       price: '',
 //       oldPrice: '',
 //       stock: '',
+//       weight: '',
 //       material: '',
 //       sizes: '',
 //       colors: '',
@@ -255,6 +254,14 @@
 
 //             stock:
 //               product.stock ??
+//               '',
+
+//             // ------------------------------------------------
+//             // PRODUCT WEIGHT
+//             // ------------------------------------------------
+
+//             weight:
+//               product.weight ??
 //               '',
 
 //             material:
@@ -602,6 +609,35 @@
 //           )
 //         }
 
+//         // ====================================================
+//         // PRODUCT WEIGHT VALIDATION
+//         // ====================================================
+
+//         const productWeight =
+//           Number(
+//             form.weight
+//           )
+
+//         if (
+//           form.weight === '' ||
+//           !Number.isFinite(
+//             productWeight
+//           ) ||
+//           productWeight <= 0
+//         ) {
+//           throw new Error(
+//             'Please enter a valid product weight in kilograms.'
+//           )
+//         }
+
+//         if (
+//           productWeight < 0.01
+//         ) {
+//           throw new Error(
+//             'Product weight must be at least 0.01 kg (10 grams).'
+//           )
+//         }
+
 //         if (
 //           form.images.length ===
 //           0
@@ -693,6 +729,15 @@
 //                   form.stock
 //                 )
 //               )
+//         )
+
+//         // ----------------------------------------------------
+//         // PRODUCT WEIGHT
+//         // ----------------------------------------------------
+
+//         formData.append(
+//           'weight',
+//           productWeight.toFixed(2)
 //         )
 
 //         // ----------------------------------------------------
@@ -1313,6 +1358,33 @@
 //                   }
 //                 />
 
+//                 {/* =================================================
+//                     PRODUCT WEIGHT
+//                 ================================================= */}
+
+//                 <Field
+//                   label="Product Weight (kg)"
+//                   type="number"
+//                   min="0.01"
+//                   step="0.01"
+//                   value={
+//                     form.weight
+//                   }
+//                   onChange={(
+//                     value
+//                   ) =>
+//                     update(
+//                       'weight',
+//                       value
+//                     )
+//                   }
+//                   placeholder="e.g. 0.50"
+//                   required
+//                   disabled={
+//                     saving
+//                   }
+//                 />
+
 //                 {/* MATERIAL */}
 
 //                 <Field
@@ -1527,6 +1599,13 @@
 //         className="mt-2 w-full rounded-xl border border-gray-200 px-4 py-3 text-sm text-gray-900 outline-none transition placeholder:text-gray-400 focus:border-gray-400 focus:ring-2 focus:ring-gray-100 disabled:cursor-not-allowed disabled:bg-gray-50"
 //       />
 
+//       {label ===
+//         'Product Weight (kg)' && (
+//         <p className="mt-1.5 text-xs text-gray-400">
+//           Enter weight in kilograms. 0.50 kg = 500 g.
+//         </p>
+//       )}
+
 //     </div>
 //   )
 // }
@@ -1554,8 +1633,6 @@
 // // ============================================================
 
 // export default AdminEditProduct
-
-
 
 import React, { useEffect, useState } from 'react'
 
@@ -1631,6 +1708,14 @@ function AdminEditProduct() {
       oldPrice: '',
       stock: '',
       weight: '',
+
+      // ======================================================
+      // PRODUCT ORIGIN
+      // ======================================================
+
+      originCountry: '',
+      originCity: '',
+
       material: '',
       sizes: '',
       colors: '',
@@ -1820,6 +1905,18 @@ function AdminEditProduct() {
 
             weight:
               product.weight ??
+              '',
+
+            // =================================================
+            // PRODUCT ORIGIN
+            // =================================================
+
+            originCountry:
+              product.originCountry ||
+              '',
+
+            originCity:
+              product.originCity ||
               '',
 
             material:
@@ -2196,6 +2293,26 @@ function AdminEditProduct() {
           )
         }
 
+        // ====================================================
+        // PRODUCT ORIGIN VALIDATION
+        // ====================================================
+
+        if (
+          !form.originCountry.trim()
+        ) {
+          throw new Error(
+            'Product origin country is required.'
+          )
+        }
+
+        if (
+          !form.originCity.trim()
+        ) {
+          throw new Error(
+            'Product origin city is required.'
+          )
+        }
+
         if (
           form.images.length ===
           0
@@ -2296,6 +2413,20 @@ function AdminEditProduct() {
         formData.append(
           'weight',
           productWeight.toFixed(2)
+        )
+
+        // ====================================================
+        // PRODUCT ORIGIN
+        // ====================================================
+
+        formData.append(
+          'originCountry',
+          form.originCountry.trim()
+        )
+
+        formData.append(
+          'originCity',
+          form.originCity.trim()
         )
 
         // ----------------------------------------------------
@@ -2937,6 +3068,54 @@ function AdminEditProduct() {
                     )
                   }
                   placeholder="e.g. 0.50"
+                  required
+                  disabled={
+                    saving
+                  }
+                />
+
+                {/* =================================================
+                    ORIGIN COUNTRY
+                ================================================= */}
+
+                <Field
+                  label="Origin Country"
+                  value={
+                    form.originCountry
+                  }
+                  onChange={(
+                    value
+                  ) =>
+                    update(
+                      'originCountry',
+                      value
+                    )
+                  }
+                  placeholder="e.g. Ethiopia"
+                  required
+                  disabled={
+                    saving
+                  }
+                />
+
+                {/* =================================================
+                    ORIGIN CITY
+                ================================================= */}
+
+                <Field
+                  label="Origin City"
+                  value={
+                    form.originCity
+                  }
+                  onChange={(
+                    value
+                  ) =>
+                    update(
+                      'originCity',
+                      value
+                    )
+                  }
+                  placeholder="e.g. Addis Ababa"
                   required
                   disabled={
                     saving

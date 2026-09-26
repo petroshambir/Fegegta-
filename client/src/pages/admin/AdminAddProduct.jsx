@@ -18,7 +18,8 @@
 // // API
 // // ============================================================
 
-// const API_URL = 'https://fegegta-server.onrender.com/api'
+// const API_URL =
+//   'https://fegegta-server.onrender.com/api'
 
 // // ============================================================
 // // AUTH TOKEN
@@ -115,7 +116,10 @@
 //       return
 //     }
 
-//     const filesToAdd = selectedFiles.slice(0, availableSlots)
+//     const filesToAdd = selectedFiles.slice(
+//       0,
+//       availableSlots
+//     )
 
 //     for (const file of filesToAdd) {
 //       if (!allowedTypes.includes(file.type)) {
@@ -222,12 +226,18 @@
 //     // PRODUCT WEIGHT VALIDATION
 //     // ==========================================================
 
+//     const weight = Number(form.weight)
+
 //     if (
 //       form.weight === '' ||
-//       Number.isNaN(Number(form.weight)) ||
-//       Number(form.weight) <= 0
+//       Number.isNaN(weight) ||
+//       weight <= 0
 //     ) {
-//       return 'Please enter a valid product weight.'
+//       return 'Please enter a valid product weight in kilograms.'
+//     }
+
+//     if (weight < 0.01) {
+//       return 'Product weight must be at least 0.01 kg (10 grams).'
 //     }
 
 //     if (form.images.length < 1) {
@@ -361,10 +371,24 @@
 //       // ========================================================
 //       // PRODUCT WEIGHT
 //       // ========================================================
+//       // Weight is always sent in kilograms.
+//       //
+//       // Examples:
+//       // 0.50 = 500 grams
+//       // 1.00 = 1 kilogram
+//       // 1.50 = 1.5 kilograms
+//       // 2.00 = 2 kilograms
+//       //
+//       // This value will later be used by DHL/FedEx
+//       // shipping-rate calculation.
+
+//       const productWeightKg = Number(
+//         form.weight
+//       )
 
 //       formData.append(
 //         'weight',
-//         form.weight
+//         productWeightKg.toFixed(2)
 //       )
 
 //       // ========================================================
@@ -442,7 +466,9 @@
 
 //       if (response.status === 401) {
 //         localStorage.removeItem('token')
-//         localStorage.removeItem('fegegta_auth_user')
+//         localStorage.removeItem(
+//           'fegegta_auth_user'
+//         )
 
 //         setError(
 //           'Your session has expired. Please login again.'
@@ -647,10 +673,12 @@
 //                     <div className="flex items-start gap-3">
 
 //                       <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-slate-100">
+
 //                         <ImagePlus
 //                           size={20}
 //                           className="text-slate-700"
 //                         />
+
 //                       </div>
 
 //                       <div>
@@ -759,10 +787,12 @@
 //                     <div className="flex items-start gap-3">
 
 //                       <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-slate-100">
+
 //                         <PackagePlus
 //                           size={20}
 //                           className="text-slate-700"
 //                         />
+
 //                       </div>
 
 //                       <div>
@@ -863,8 +893,8 @@
 //                       type="number"
 //                       value={form.weight}
 //                       onChange={handleChange}
-//                       placeholder="e.g. 1.50"
-//                       min="0"
+//                       placeholder="e.g. 0.50"
+//                       min="0.01"
 //                       step="0.01"
 //                       required
 //                     />
@@ -954,10 +984,12 @@
 //                     <div className="flex items-start gap-3">
 
 //                       <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-slate-900">
+
 //                         <CheckCircle2
 //                           size={20}
 //                           className="text-white"
 //                         />
+
 //                       </div>
 
 //                       <div>
@@ -1028,7 +1060,9 @@
 //                       <div className="flex items-start gap-4">
 
 //                         <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-white/10">
+
 //                           <CheckCircle2 size={22} />
+
 //                         </div>
 
 //                         <div>
@@ -1158,13 +1192,17 @@
 //         className="h-12 w-full rounded-xl border border-slate-200 bg-white px-4 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-slate-500 focus:ring-2 focus:ring-slate-100"
 //       />
 
+//       {name === 'weight' && (
+//         <p className="mt-1.5 text-xs text-slate-400">
+//           Enter weight in kilograms. 0.50 kg = 500 g.
+//         </p>
+//       )}
+
 //     </div>
 //   )
 // }
 
 // export default AdminAddProduct
-
-
 
 import React, { useEffect, useState } from 'react'
 import {
@@ -1215,6 +1253,8 @@ function AdminAddProduct() {
     oldPrice: '',
     stock: '',
     weight: '',
+    originCountry: '',
+    originCity: '',
     material: '',
     sizes: '',
     colors: '',
@@ -1407,6 +1447,18 @@ function AdminAddProduct() {
       return 'Product weight must be at least 0.01 kg (10 grams).'
     }
 
+    // ==========================================================
+    // PRODUCT ORIGIN VALIDATION
+    // ==========================================================
+
+    if (!form.originCountry.trim()) {
+      return 'Product origin country is required.'
+    }
+
+    if (!form.originCity.trim()) {
+      return 'Product origin city is required.'
+    }
+
     if (form.images.length < 1) {
       return 'Please upload at least one product image.'
     }
@@ -1556,6 +1608,20 @@ function AdminAddProduct() {
       formData.append(
         'weight',
         productWeightKg.toFixed(2)
+      )
+
+      // ========================================================
+      // PRODUCT ORIGIN
+      // ========================================================
+
+      formData.append(
+        'originCountry',
+        form.originCountry.trim()
+      )
+
+      formData.append(
+        'originCity',
+        form.originCity.trim()
       )
 
       // ========================================================
@@ -2063,6 +2129,28 @@ function AdminAddProduct() {
                       placeholder="e.g. 0.50"
                       min="0.01"
                       step="0.01"
+                      required
+                    />
+
+                    {/* =================================================
+                        PRODUCT ORIGIN
+                    ================================================= */}
+
+                    <Field
+                      label="Origin Country"
+                      name="originCountry"
+                      value={form.originCountry}
+                      onChange={handleChange}
+                      placeholder="e.g. Ethiopia"
+                      required
+                    />
+
+                    <Field
+                      label="Origin City"
+                      name="originCity"
+                      value={form.originCity}
+                      onChange={handleChange}
+                      placeholder="e.g. Addis Ababa"
                       required
                     />
 
