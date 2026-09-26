@@ -660,6 +660,17 @@ function Navbar() {
   }
 
   // ============================================================
+  // VIEW ALL PRODUCTS
+  // ============================================================
+
+  const handleViewAllProducts = () => {
+    setIsCategoriesOpen(false)
+    closeMenu()
+
+    navigate('/products')
+  }
+
+  // ============================================================
   // LOGOUT
   // ============================================================
 
@@ -778,6 +789,7 @@ function Navbar() {
                     {isCategoriesLoading ? (
                       <div className="flex items-center justify-center gap-2 px-4 py-6 text-sm text-gray-500">
                         <Loader2 className="h-4 w-4 animate-spin" />
+
                         <span>
                           Loading categories...
                         </span>
@@ -812,14 +824,9 @@ function Navbar() {
                     <div className="border-t border-gray-100 p-2">
                       <button
                         type="button"
-                        onClick={() => {
-                          setIsCategoriesOpen(
-                            false
-                          )
-                          navigate(
-                            '/products'
-                          )
-                        }}
+                        onClick={
+                          handleViewAllProducts
+                        }
                         className="flex w-full items-center rounded-lg px-3 py-2.5 text-left text-sm font-semibold text-gray-900 transition hover:bg-gray-100"
                       >
                         View All Products
@@ -1082,6 +1089,7 @@ function Navbar() {
                     {isCategoriesLoading ? (
                       <div className="flex items-center justify-center gap-2 px-3 py-4 text-sm text-gray-500">
                         <Loader2 className="h-4 w-4 animate-spin" />
+
                         <span>
                           Loading categories...
                         </span>
@@ -1112,15 +1120,9 @@ function Navbar() {
 
                         <button
                           type="button"
-                          onClick={() => {
-                            setIsCategoriesOpen(
-                              false
-                            )
-                            closeMenu()
-                            navigate(
-                              '/products'
-                            )
-                          }}
+                          onClick={
+                            handleViewAllProducts
+                          }
                           className="mt-1 flex w-full rounded-lg border-t border-gray-200 px-3 py-2.5 pt-3 text-left text-sm font-semibold text-gray-900 transition hover:text-black"
                         >
                           View All Products
