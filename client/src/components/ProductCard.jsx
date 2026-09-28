@@ -141,8 +141,6 @@
 
 // export default ProductCard
 
-
-import { useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { Heart, ShoppingCart, Star } from 'lucide-react'
 
@@ -166,398 +164,205 @@ function ProductCard({ product }) {
     available = true,
   } = product
 
-  // ============================================================
-  // 3D IMAGE SETUP
-  // ============================================================
-
-  const cardRef = useRef(null)
-
-  const animationFrameRef = useRef(null)
-  const lastTimeRef = useRef(0)
-
-  const rotationRef = useRef({
-    x: -2,
-    y: 0,
-  })
-
-  const [rotation, setRotation] = useState({
-    x: -2,
-    y: 0,
-  })
-
-  const [isHovered, setIsHovered] = useState(false)
-
-  // ============================================================
-  // PREPARE 4 PRODUCT IMAGES
-  // ============================================================
-
-  const productImages = [
-    ...(Array.isArray(images) ? images : []),
-  ].filter(Boolean)
-
-  // Fallback to the existing image if images[] is empty.
-  if (
-    productImages.length === 0 &&
-    image
-  ) {
-    productImages.push(image)
-  }
-
-  // Maximum 4 images for the 3D viewer.
-  const fourImages =
-    productImages.slice(0, 4)
-
-  // ============================================================
-  // CONTINUOUS 3D AUTO ROTATION
-  // ============================================================
-
-  useEffect(() => {
-    const animate = (time) => {
-      if (!lastTimeRef.current) {
-        lastTimeRef.current = time
-      }
-
-      const delta =
-        time - lastTimeRef.current
-
-      lastTimeRef.current = time
-
-      // --------------------------------------------------------
-      // Only auto rotate when mouse is NOT over the card.
-      // --------------------------------------------------------
-
-      if (!isHovered) {
-        rotationRef.current.y +=
-          delta * 0.025
-
-        rotationRef.current.x =
-          -4 +
-          Math.sin(time * 0.0012) * 3
-
-        setRotation({
-          x: rotationRef.current.x,
-          y: rotationRef.current.y,
-        })
-      }
-
-      animationFrameRef.current =
-        requestAnimationFrame(animate)
-    }
-
-    animationFrameRef.current =
-      requestAnimationFrame(animate)
-
-    return () => {
-      if (animationFrameRef.current) {
-        cancelAnimationFrame(
-          animationFrameRef.current
-        )
-      }
-
-      lastTimeRef.current = 0
-    }
-  }, [isHovered])
-
-  // ============================================================
-  // MOUSE MOVE → INTERACTIVE 3D
-  // ============================================================
-
-  const handleMouseMove = (event) => {
-    if (!cardRef.current) {
-      return
-    }
-
-    const rect =
-      cardRef.current.getBoundingClientRect()
-
-    const mouseX =
-      event.clientX -
-      rect.left
-
-    const mouseY =
-      event.clientY -
-      rect.top
-
-    const centerX =
-      rect.width / 2
-
-    const centerY =
-      rect.height / 2
-
-    const percentX =
-      (mouseX - centerX) /
-      centerX
-
-    const percentY =
-      (mouseY - centerY) /
-      centerY
-
-    // --------------------------------------------------------
-    // Horizontal rotation
-    // --------------------------------------------------------
-
-    const rotateY =
-      percentX * 32
-
-    // --------------------------------------------------------
-    // Vertical rotation
-    // --------------------------------------------------------
-
-    const rotateX =
-      percentY * -24
-
-    rotationRef.current = {
-      x: rotateX,
-      y: rotateY,
-    }
-
-    setRotation({
-      x: rotateX,
-      y: rotateY,
-    })
-  }
-
-  // ============================================================
-  // MOUSE ENTER
-  // ============================================================
-
-  const handleMouseEnter = () => {
-    setIsHovered(true)
-
-    // Start from current position.
-    lastTimeRef.current = 0
-  }
-
-  // ============================================================
-  // MOUSE LEAVE
-  // ============================================================
-
-  const handleMouseLeave = () => {
-    setIsHovered(false)
-
-    // Return gently toward the default angle.
-    rotationRef.current = {
-      x: -4,
-      y: rotationRef.current.y,
-    }
-
-    setRotation({
-      x: -4,
-      y: rotationRef.current.y,
-    })
-  }
-
-  // ============================================================
-  // ADD TO CART
-  // ============================================================
-
   const handleAddToCart = () => {
     addToCart(product)
   }
 
   // ============================================================
-  // 3D TRANSFORM
+  // GET PRODUCT IMAGES
   // ============================================================
 
-  const productTransform = {
-    transform: `
-      perspective(1100px)
-      rotateX(${rotation.x}deg)
-      rotateY(${rotation.y}deg)
-      translateZ(18px)
-    `,
+  const getImageUrl = (item) => {
+    if (!item) return ''
+
+    if (typeof item === 'string') {
+      return item
+    }
+
+    if (typeof item === 'object' && item.url) {
+      return item.url
+    }
+
+    return ''
   }
 
+  const productImages = [
+    ...images.map(getImageUrl),
+    getImageUrl(image),
+  ].filter(Boolean)
+
+  const uniqueImages = [...new Set(productImages)]
+
+  const image1 = uniqueImages[0] || ''
+  const image2 = uniqueImages[1] || image1
+  const image3 = uniqueImages[2] || image1
+  const image4 = uniqueImages[3] || image1
+
   return (
-    <article
-      className="group relative overflow-hidden rounded-2xl border border-gray-200 bg-white transition-all duration-300 hover:-translate-y-1 hover:border-gray-300 hover:shadow-xl"
-    >
+    <article className="group relative overflow-hidden rounded-2xl border border-gray-200 bg-white transition-all duration-300 hover:-translate-y-1 hover:border-gray-300 hover:shadow-xl">
+
       {/* =====================================================
           PRODUCT IMAGE
       ====================================================== */}
 
-      <Link
-        to={`/products/${id}`}
-        className="block"
-      >
-        <div
-          ref={cardRef}
-          onMouseEnter={handleMouseEnter}
-          onMouseMove={handleMouseMove}
-          onMouseLeave={handleMouseLeave}
-          className="relative aspect-[4/5] w-full overflow-hidden bg-gray-50"
-          style={{
-            perspective: '1100px',
-            perspectiveOrigin: '50% 50%',
-          }}
-        >
+      <Link to={`/products/${id}`} className="block">
+        <div className="relative aspect-[4/5] w-full overflow-hidden bg-gradient-to-br from-gray-50 via-white to-gray-100">
+
           {/* =================================================
-              3D STAGE
+              STATIC 3D SCENE
           ================================================== */}
 
           <div
             className="absolute inset-0 flex items-center justify-center"
             style={{
-              perspective: '1100px',
-              transformStyle: 'preserve-3d',
+              perspective: '1600px',
+              perspectiveOrigin: '50% 48%',
             }}
           >
+
             {/* =================================================
-                3D PRODUCT OBJECT
+                3D PRODUCT
             ================================================== */}
 
             <div
-              className="relative h-[88%] w-[88%]"
+              className="relative h-[78%] w-[78%]"
               style={{
-                ...productTransform,
-                transformStyle:
-                  'preserve-3d',
-                transition: isHovered
-                  ? 'transform 80ms linear'
-                  : 'none',
-                willChange: 'transform',
+                transformStyle: 'preserve-3d',
+                transform: 'rotateX(-6deg) rotateY(-15deg)',
               }}
             >
+
               {/* =================================================
-                  FRONT
+                  FLOOR / DROP SHADOW
               ================================================== */}
 
               <div
-                className="absolute inset-0 flex items-center justify-center"
+                className="absolute bottom-[-8%] left-[10%] h-[12%] w-[80%] rounded-full bg-black/20 blur-xl"
+                style={{
+                  transform: 'translateZ(-40px) rotateX(72deg)',
+                }}
+              />
+
+              {/* =================================================
+                  BACK IMAGE
+              ================================================== */}
+
+              <div
+                className="absolute left-[8%] top-[8%] h-[84%] w-[84%] overflow-hidden rounded-[20px] border border-gray-200 bg-white shadow-[0_25px_55px_rgba(0,0,0,0.12)]"
                 style={{
                   transform:
-                    'translateZ(22px)',
-                  backfaceVisibility:
-                    'hidden',
+                    'translate3d(-18px, 8px, -42px) rotateY(-10deg)',
+                  transformStyle: 'preserve-3d',
                 }}
               >
-                {fourImages[0] && (
-                  <img
-                    src={fourImages[0]}
-                    alt={name}
-                    className="h-full w-full object-contain object-center drop-shadow-[0_22px_22px_rgba(0,0,0,0.16)]"
-                    draggable="false"
-                  />
-                )}
+                <img
+                  src={image4}
+                  alt={`${name} view 4`}
+                  className="h-full w-full object-contain object-center"
+                  draggable="false"
+                />
+
+                <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-white/20 via-transparent to-black/10" />
               </div>
 
               {/* =================================================
-                  RIGHT SIDE
-              ================================================== */}
-
-              {fourImages[1] && (
-                <div
-                  className="absolute inset-0 flex items-center justify-center"
-                  style={{
-                    transform:
-                      'rotateY(90deg) translateZ(22px)',
-                    transformOrigin:
-                      'center center',
-                    backfaceVisibility:
-                      'hidden',
-                  }}
-                >
-                  <img
-                    src={fourImages[1]}
-                    alt={`${name} view 2`}
-                    className="h-full w-full object-contain object-center drop-shadow-[0_22px_22px_rgba(0,0,0,0.14)]"
-                    draggable="false"
-                  />
-                </div>
-              )}
-
-              {/* =================================================
-                  BACK / THIRD IMAGE
-              ================================================== */}
-
-              {fourImages[2] && (
-                <div
-                  className="absolute inset-0 flex items-center justify-center"
-                  style={{
-                    transform:
-                      'rotateY(180deg) translateZ(22px)',
-                    transformOrigin:
-                      'center center',
-                    backfaceVisibility:
-                      'hidden',
-                  }}
-                >
-                  <img
-                    src={fourImages[2]}
-                    alt={`${name} view 3`}
-                    className="h-full w-full object-contain object-center drop-shadow-[0_22px_22px_rgba(0,0,0,0.14)]"
-                    draggable="false"
-                  />
-                </div>
-              )}
-
-              {/* =================================================
-                  LEFT SIDE / FOURTH IMAGE
-              ================================================== */}
-
-              {fourImages[3] && (
-                <div
-                  className="absolute inset-0 flex items-center justify-center"
-                  style={{
-                    transform:
-                      'rotateY(-90deg) translateZ(22px)',
-                    transformOrigin:
-                      'center center',
-                    backfaceVisibility:
-                      'hidden',
-                  }}
-                >
-                  <img
-                    src={fourImages[3]}
-                    alt={`${name} view 4`}
-                    className="h-full w-full object-contain object-center drop-shadow-[0_22px_22px_rgba(0,0,0,0.14)]"
-                    draggable="false"
-                  />
-                </div>
-              )}
-
-              {/* =================================================
-                  TOP DEPTH
+                  LEFT SIDE IMAGE
               ================================================== */}
 
               <div
-                className="pointer-events-none absolute inset-0 rounded-xl border border-white/10"
+                className="absolute left-[-2%] top-[6%] h-[88%] w-[86%] overflow-hidden rounded-[20px] border border-gray-200 bg-white shadow-[0_25px_55px_rgba(0,0,0,0.15)]"
                 style={{
                   transform:
-                    'translateZ(24px)',
-                  backfaceVisibility:
-                    'hidden',
+                    'translate3d(-28px, 7px, 8px) rotateY(-13deg)',
+                  transformStyle: 'preserve-3d',
+                }}
+              >
+                <img
+                  src={image2}
+                  alt={`${name} view 2`}
+                  className="h-full w-full object-contain object-center"
+                  draggable="false"
+                />
+
+                <div className="pointer-events-none absolute inset-0 bg-gradient-to-r from-black/10 via-transparent to-white/20" />
+              </div>
+
+              {/* =================================================
+                  RIGHT SIDE IMAGE
+              ================================================== */}
+
+              <div
+                className="absolute right-[-2%] top-[6%] h-[88%] w-[86%] overflow-hidden rounded-[20px] border border-gray-200 bg-white shadow-[0_25px_55px_rgba(0,0,0,0.15)]"
+                style={{
+                  transform:
+                    'translate3d(28px, 7px, 8px) rotateY(13deg)',
+                  transformStyle: 'preserve-3d',
+                }}
+              >
+                <img
+                  src={image3}
+                  alt={`${name} view 3`}
+                  className="h-full w-full object-contain object-center"
+                  draggable="false"
+                />
+
+                <div className="pointer-events-none absolute inset-0 bg-gradient-to-l from-black/10 via-transparent to-white/20" />
+              </div>
+
+              {/* =================================================
+                  FRONT / MAIN IMAGE
+              ================================================== */}
+
+              <div
+                className="absolute inset-[3%] overflow-hidden rounded-[22px] border border-white bg-white shadow-[0_30px_65px_rgba(0,0,0,0.20)]"
+                style={{
+                  transform: 'translateZ(50px)',
+                  transformStyle: 'preserve-3d',
+                }}
+              >
+                <img
+                  src={image1}
+                  alt={name}
+                  className="h-full w-full object-contain object-center"
+                  draggable="false"
+                />
+
+                {/* Glass reflection */}
+                <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-white/40 via-transparent to-black/10" />
+
+                {/* Top highlight */}
+                <div className="pointer-events-none absolute left-[8%] right-[8%] top-[4%] h-[16%] rounded-full bg-white/30 blur-2xl" />
+              </div>
+
+              {/* =================================================
+                  FRONT BOTTOM EDGE
+              ================================================== */}
+
+              <div
+                className="absolute bottom-[1%] left-[15%] h-[10px] w-[70%] rounded-full bg-black/15 blur-md"
+                style={{
+                  transform: 'translateZ(30px) rotateX(75deg)',
                 }}
               />
+
             </div>
           </div>
 
-          {/* =================================================
-              3D FLOOR SHADOW
-          ================================================== */}
+          {/* =====================================================
+              SOFT LIGHT
+          ====================================================== */}
 
-          <div
-            className="pointer-events-none absolute bottom-[7%] left-1/2 h-7 w-[55%] -translate-x-1/2 rounded-[50%] bg-black/15 blur-xl"
-            style={{
-              transform: isHovered
-                ? 'translateX(-50%) scale(0.85)'
-                : 'translateX(-50%) scale(1)',
-              transition:
-                'transform 300ms ease, opacity 300ms ease',
-              opacity:
-                isHovered ? 0.45 : 0.7,
-            }}
-          />
+          <div className="pointer-events-none absolute left-1/2 top-[8%] h-40 w-40 -translate-x-1/2 rounded-full bg-white/70 blur-3xl" />
 
-          {/* =================================================
-              SOFT BOTTOM GRADIENT
-          ================================================== */}
+          {/* =====================================================
+              BOTTOM SHADOW
+          ====================================================== */}
 
-          <div className="pointer-events-none absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-black/10 to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
+          <div className="pointer-events-none absolute inset-x-0 bottom-0 h-28 bg-gradient-to-t from-black/[0.08] via-transparent to-transparent" />
 
-          {/* =================================================
+          {/* =====================================================
               FAVORITE
-          ================================================== */}
+          ====================================================== */}
 
           <button
             type="button"
@@ -571,9 +376,9 @@ function ProductCard({ product }) {
             <Heart className="h-4.5 w-4.5 transition-transform duration-300 hover:scale-110" />
           </button>
 
-          {/* =================================================
+          {/* =====================================================
               AVAILABILITY
-          ================================================== */}
+          ====================================================== */}
 
           {!available && (
             <div className="absolute inset-0 z-40 flex items-center justify-center bg-black/45 backdrop-blur-[1px]">
@@ -590,6 +395,7 @@ function ProductCard({ product }) {
       ====================================================== */}
 
       <div className="p-4">
+
         {/* Seller */}
         <p className="truncate text-[10px] font-semibold uppercase tracking-[0.14em] text-gray-400 sm:text-[11px]">
           {seller}
@@ -627,6 +433,7 @@ function ProductCard({ product }) {
 
         {/* Price + Cart */}
         <div className="flex items-center justify-between gap-2">
+
           {/* Price */}
           <div>
             <p className="text-[9px] font-medium uppercase tracking-wide text-gray-400">
