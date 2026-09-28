@@ -4,6 +4,7 @@
 // import Seller from '../models/Seller.js'
 // import Store from '../models/Store.js'
 // import User from '../models/User.js'
+// import Notification from '../models/Notification.js'
 
 // // ============================================================
 // // HELPER — CREATE STORE SLUG
@@ -60,6 +61,119 @@
 //   const match = text.match(regex)
 
 //   return match?.[1]?.trim() || ''
+// }
+
+// // ============================================================
+// // NOTIFICATION HELPER — NOTIFY ALL ADMINS
+// // ============================================================
+
+// const notifyAdminsAboutSellerApplication = async ({
+//   application,
+//   title = 'New Seller Application',
+//   message,
+// }) => {
+//   try {
+//     const admins = await User.find({
+//       role: 'admin',
+//     }).select('_id')
+
+//     if (!admins.length) {
+//       return
+//     }
+
+//     const applicantName =
+//       application?.businessName ||
+//       'A user'
+
+//     const notificationMessage =
+//       message ||
+//       `${applicantName} submitted a seller application for admin review.`
+
+//     const notifications =
+//       admins.map((admin) => ({
+//         recipient: admin._id,
+
+//         type: 'seller',
+
+//         title,
+
+//         message:
+//           notificationMessage,
+
+//         store: null,
+
+//         order: null,
+
+//         product: null,
+
+//         isRead: false,
+
+//         readAt: null,
+
+//         link:
+//           `/admin/seller-applications/${application._id}`,
+//       }))
+
+//     if (notifications.length > 0) {
+//       await Notification.insertMany(
+//         notifications
+//       )
+//     }
+//   } catch (error) {
+//     // Notification failure must not stop
+//     // seller application processing.
+//     console.error(
+//       'Failed to create admin seller application notification:',
+//       error
+//     )
+//   }
+// }
+
+// // ============================================================
+// // NOTIFICATION HELPER — NOTIFY APPLICANT
+// // ============================================================
+
+// const notifySellerApplicationUser = async ({
+//   userId,
+//   applicationId,
+//   title,
+//   message,
+// }) => {
+//   try {
+//     if (!userId) {
+//       return
+//     }
+
+//     await Notification.create({
+//       recipient: userId,
+
+//       type: 'seller',
+
+//       title,
+
+//       message,
+
+//       order: null,
+
+//       product: null,
+
+//       store: null,
+
+//       isRead: false,
+
+//       readAt: null,
+
+//       link:
+//         '/seller/application',
+//     })
+//   } catch (error) {
+//     // Notification failure must not stop
+//     // seller application processing.
+//     console.error(
+//       'Failed to create seller application notification:',
+//       error
+//     )
+//   }
 // }
 
 // // ============================================================
@@ -352,6 +466,21 @@
 
 //         await existingApplication.save()
 
+//         // ======================================================
+//         // NOTIFICATION — ADMIN
+//         // ======================================================
+
+//         await notifyAdminsAboutSellerApplication({
+//           application:
+//             existingApplication,
+
+//           title:
+//             'Seller Application Resubmitted',
+
+//           message:
+//             `${existingApplication.businessName} resubmitted a seller application for admin review.`,
+//         })
+
 //         const populatedApplication =
 //           await SellerApplication.findById(
 //             existingApplication._id
@@ -522,6 +651,20 @@
 
 //         reviewedAt: null,
 //       })
+
+//     // ========================================================
+//     // NOTIFICATION — ADMIN
+//     // ========================================================
+
+//     await notifyAdminsAboutSellerApplication({
+//       application,
+
+//       title:
+//         'New Seller Application',
+
+//       message:
+//         `${application.businessName} submitted a new seller application for admin review.`,
+//     })
 
 //     const populatedApplication =
 //       await SellerApplication.findById(
@@ -795,6 +938,26 @@
 
 //         await application.save()
 
+//         // ====================================================
+//         // NOTIFICATION — APPLICANT
+//         // ====================================================
+
+//         await notifySellerApplicationUser({
+//           userId:
+//             application.user,
+
+//           applicationId:
+//             application._id,
+
+//           title:
+//             'Seller Application Rejected',
+
+//           message:
+//             application.rejectionReason
+//               ? `Your seller application has been rejected. Reason: ${application.rejectionReason}`
+//               : 'Your seller application has been rejected. You may review the application and resubmit it.',
+//         })
+
 //         return res.status(200).json({
 //           success: true,
 //           message:
@@ -823,6 +986,24 @@
 //           null
 
 //         await application.save()
+
+//         // ====================================================
+//         // NOTIFICATION — APPLICANT
+//         // ====================================================
+
+//         await notifySellerApplicationUser({
+//           userId:
+//             application.user,
+
+//           applicationId:
+//             application._id,
+
+//           title:
+//             'Seller Application Pending',
+
+//           message:
+//             'Your seller application has been moved back to pending and is waiting for admin review.',
+//         })
 
 //         return res.status(200).json({
 //           success: true,
@@ -1162,7 +1343,10 @@
 
 //           // If the account was inactive, make sure it is active.
 //           if (
-//             ['inactive', 'suspended'].includes(
+//             [
+//               'inactive',
+//               'suspended',
+//             ].includes(
 //               user.status
 //             )
 //           ) {
@@ -1189,6 +1373,24 @@
 //           new Date()
 
 //         await application.save()
+
+//         // ====================================================
+//         // NOTIFICATION — APPLICANT
+//         // ====================================================
+
+//         await notifySellerApplicationUser({
+//           userId:
+//             application.user,
+
+//           applicationId:
+//             application._id,
+
+//           title:
+//             'Seller Application Approved',
+
+//           message:
+//             'Congratulations! Your seller application has been approved. Your seller account and store are now ready.',
+//         })
 
 //         // ----------------------------------------------------
 //         // RETURN COMPLETE SELLER DATA
@@ -1277,7 +1479,6 @@
 //       next(error)
 //     }
 //   }
-
 
 import SellerApplication from '../models/SellerApplication.js'
 import Seller from '../models/Seller.js'
@@ -1371,24 +1572,15 @@ const notifyAdminsAboutSellerApplication = async ({
     const notifications =
       admins.map((admin) => ({
         recipient: admin._id,
-
         type: 'seller',
-
         title,
-
         message:
           notificationMessage,
-
         store: null,
-
         order: null,
-
         product: null,
-
         isRead: false,
-
         readAt: null,
-
         link:
           `/admin/seller-applications/${application._id}`,
       }))
@@ -1425,23 +1617,14 @@ const notifySellerApplicationUser = async ({
 
     await Notification.create({
       recipient: userId,
-
       type: 'seller',
-
       title,
-
       message,
-
       order: null,
-
       product: null,
-
       store: null,
-
       isRead: false,
-
       readAt: null,
-
       link:
         '/seller/application',
     })
@@ -1503,7 +1686,6 @@ export const createSellerApplication = async (
 
       // Compatibility / old field
       description,
-
       logo,
       documents,
     } = req.body
@@ -1575,6 +1757,7 @@ export const createSellerApplication = async (
     // ========================================================
     // CHECK EXISTING APPLICATION FIRST
     // ========================================================
+
     //
     // IMPORTANT:
     // Always check SellerApplication BEFORE Seller.
@@ -1583,7 +1766,7 @@ export const createSellerApplication = async (
     // Seller record. That Seller must NOT block a new
     // application if the application itself is missing,
     // pending, or rejected.
-    // ========================================================
+    //
 
     const existingApplication =
       await SellerApplication.findOne({
@@ -1597,6 +1780,7 @@ export const createSellerApplication = async (
     // ========================================================
 
     if (existingApplication) {
+
       // ------------------------------------------------------
       // PENDING
       // ------------------------------------------------------
@@ -1781,6 +1965,7 @@ export const createSellerApplication = async (
     // ========================================================
     // CHECK EXISTING SELLER
     // ========================================================
+
     //
     // IMPORTANT FIX:
     //
@@ -1791,7 +1976,7 @@ export const createSellerApplication = async (
     //
     // Only an APPROVED seller account should block a new
     // application.
-    // ========================================================
+    //
 
     const existingSeller =
       await Seller.findOne({
@@ -2299,6 +2484,7 @@ export const updateSellerApplicationStatus =
       if (
         status === 'approved'
       ) {
+
         // ----------------------------------------------------
         // REPAIR OLD APPLICATIONS
         // ----------------------------------------------------
@@ -2476,6 +2662,7 @@ export const updateSellerApplicationStatus =
                 'approved',
             })
         } else {
+
           // --------------------------------------------------
           // REUSE EXISTING SELLER
           //
@@ -2534,17 +2721,27 @@ export const updateSellerApplicationStatus =
         // ----------------------------------------------------
 
         if (!store) {
+
+          // IMPORTANT:
+          // The store name MUST come from the
+          // seller application's storeName field.
+          //
+          // Do NOT use businessName as a fallback.
+
+          const storeName =
+            String(
+              application.storeName
+            ).trim()
+
           const slug =
             await createUniqueStoreSlug(
-              application.storeName ||
-              application.businessName
+              storeName
             )
 
           store =
             await Store.create({
               name:
-                application.storeName ||
-                application.businessName,
+                storeName,
 
               slug,
 
@@ -2570,14 +2767,21 @@ export const updateSellerApplicationStatus =
             store._id
 
           await seller.save()
+
         } else {
+
           // --------------------------------------------------
           // UPDATE EXISTING STORE
           // --------------------------------------------------
 
+          // IMPORTANT:
+          // Existing store name also comes from
+          // application.storeName.
+
           store.name =
-            application.storeName ||
-            application.businessName
+            String(
+              application.storeName
+            ).trim()
 
           store.description =
             application.storeDescription ||
@@ -2618,9 +2822,11 @@ export const updateSellerApplicationStatus =
           )
 
         if (user) {
-          user.role = 'seller'
+          user.role =
+            'seller'
 
-          // If the account was inactive, make sure it is active.
+          // If the account was inactive,
+          // make sure it is active.
           if (
             [
               'inactive',
@@ -2629,7 +2835,8 @@ export const updateSellerApplicationStatus =
               user.status
             )
           ) {
-            user.status = 'active'
+            user.status =
+              'active'
           }
 
           await user.save()
@@ -2707,13 +2914,10 @@ export const updateSellerApplicationStatus =
 
         return res.status(200).json({
           success: true,
-
           message:
             'Seller application approved successfully. Seller account and store are ready.',
-
           application:
             populatedApplication,
-
           seller:
             populatedSeller,
         })
