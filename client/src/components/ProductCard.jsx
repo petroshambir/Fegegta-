@@ -141,7 +141,6 @@
 
 // export default ProductCard
 
-
 import { Link } from 'react-router-dom'
 import { Heart, ShoppingCart, Star } from 'lucide-react'
 
@@ -174,12 +173,14 @@ function ProductCard({ product }) {
       {/* =====================================================
           PRODUCT IMAGE
       ====================================================== */}
+
       <Link to={`/products/${id}`} className="block">
         <div className="relative aspect-[4/5] w-full overflow-hidden bg-gray-50">
 
           {/* =================================================
               ONLY PRODUCT IMAGE IS 3D
           ================================================== */}
+
           <ProductImage3D
             image={image}
             alt={name}
@@ -215,6 +216,7 @@ function ProductCard({ product }) {
       {/* =====================================================
           PRODUCT INFORMATION
       ====================================================== */}
+
       <div className="p-4">
 
         {/* Seller */}
