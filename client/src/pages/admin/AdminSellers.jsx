@@ -107,13 +107,6 @@
 //         )
 //       }
 
-//       // Backend:
-//       //
-//       // {
-//       //   success: true,
-//       //   applications: [...]
-//       // }
-
 //       const applicationList =
 //         Array.isArray(data?.applications)
 //           ? data.applications
@@ -845,6 +838,7 @@
 //                                 <Mail
 //                                   size={13}
 //                                 />
+
 //                                 <span>
 //                                   {email}
 //                                 </span>
@@ -854,6 +848,7 @@
 //                                 <Phone
 //                                   size={13}
 //                                 />
+
 //                                 <span>
 //                                   {phone}
 //                                 </span>
@@ -1620,12 +1615,27 @@ function AdminSellers() {
       return
     }
 
+    /*
+      IMPORTANT:
+      The store name MUST come from the seller application.
+
+      We do not use businessName as the store name.
+    */
+    const storeName = String(
+      application?.storeName || ''
+    ).trim()
+
+    if (!storeName) {
+      setError(
+        'Store name is missing from this seller application. The seller application cannot be approved until a store name is available.'
+      )
+      return
+    }
+
     const confirmed = window.confirm(
-      `Approve the seller application for "${
-        application?.storeName ||
-        application?.businessName ||
-        'this seller'
-      }"?\n\nThis will create/activate the seller and their store.`
+      `Approve the seller application for "${storeName}"?\n\n` +
+        `Store name: ${storeName}\n\n` +
+        `This will create/activate the seller and their store using this exact store name.`
     )
 
     if (!confirmed) {
@@ -1645,6 +1655,12 @@ function AdminSellers() {
         )
       }
 
+      /*
+        Send the exact storeName from the application.
+
+        The backend approval controller should use this value
+        when creating/updating Store.name.
+      */
       const response = await fetch(
         `${API_URL}/seller-applications/${applicationId}/status`,
         {
@@ -1655,6 +1671,7 @@ function AdminSellers() {
           },
           body: JSON.stringify({
             status: 'approved',
+            storeName: storeName,
           }),
         }
       )
@@ -1683,7 +1700,7 @@ function AdminSellers() {
 
       setSuccessMessage(
         data?.message ||
-          'Seller application approved successfully. Seller and store have been created.'
+          `Seller application approved successfully. Store "${storeName}" has been created/updated.`
       )
 
       setSelectedApplication(null)
@@ -2198,9 +2215,15 @@ function AdminSellers() {
                         application?.businessName ||
                         '—'
 
+                      /*
+                        IMPORTANT:
+                        Store column always displays the
+                        seller's submitted storeName.
+
+                        It does NOT fall back to businessName.
+                      */
                       const storeName =
                         application?.storeName ||
-                        application?.businessName ||
                         '—'
 
                       const productType =
