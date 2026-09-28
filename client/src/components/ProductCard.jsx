@@ -141,6 +141,7 @@
 
 // export default ProductCard
 
+
 import { Link } from 'react-router-dom'
 import { Heart, ShoppingCart, Star } from 'lucide-react'
 
@@ -157,7 +158,6 @@ function ProductCard({ product }) {
     description,
     price,
     image,
-    images = [],
     seller,
     rating = 0,
     reviewCount = 0,
@@ -167,36 +167,6 @@ function ProductCard({ product }) {
   const handleAddToCart = () => {
     addToCart(product)
   }
-
-  // ============================================================
-  // GET PRODUCT IMAGES
-  // ============================================================
-
-  const getImageUrl = (item) => {
-    if (!item) return ''
-
-    if (typeof item === 'string') {
-      return item
-    }
-
-    if (typeof item === 'object' && item.url) {
-      return item.url
-    }
-
-    return ''
-  }
-
-  const productImages = [
-    ...images.map(getImageUrl),
-    getImageUrl(image),
-  ].filter(Boolean)
-
-  const uniqueImages = [...new Set(productImages)]
-
-  const image1 = uniqueImages[0] || ''
-  const image2 = uniqueImages[1] || image1
-  const image3 = uniqueImages[2] || image1
-  const image4 = uniqueImages[3] || image1
 
   return (
     <article className="group relative overflow-hidden rounded-2xl border border-gray-200 bg-white transition-all duration-300 hover:-translate-y-1 hover:border-gray-300 hover:shadow-xl">
@@ -209,139 +179,147 @@ function ProductCard({ product }) {
         <div className="relative aspect-[4/5] w-full overflow-hidden bg-gradient-to-br from-gray-50 via-white to-gray-100">
 
           {/* =================================================
-              STATIC 3D SCENE
+              SOFT BACK LIGHT
+          ================================================== */}
+
+          <div className="pointer-events-none absolute left-1/2 top-[12%] h-52 w-52 -translate-x-1/2 rounded-full bg-white blur-3xl" />
+
+          {/* =================================================
+              STATIC 3D PRODUCT STAGE
           ================================================== */}
 
           <div
             className="absolute inset-0 flex items-center justify-center"
             style={{
-              perspective: '1600px',
-              perspectiveOrigin: '50% 48%',
+              perspective: '1400px',
+              perspectiveOrigin: '50% 45%',
             }}
           >
 
             {/* =================================================
-                3D PRODUCT
+                PRODUCT 3D OBJECT
             ================================================== */}
 
             <div
-              className="relative h-[78%] w-[78%]"
+              className="relative h-[84%] w-[84%]"
               style={{
                 transformStyle: 'preserve-3d',
-                transform: 'rotateX(-6deg) rotateY(-15deg)',
+                transform: 'rotateX(-5deg) rotateY(-8deg)',
               }}
             >
 
               {/* =================================================
-                  FLOOR / DROP SHADOW
+                  DEEP FLOOR SHADOW
               ================================================== */}
 
               <div
-                className="absolute bottom-[-8%] left-[10%] h-[12%] w-[80%] rounded-full bg-black/20 blur-xl"
+                className="absolute bottom-[2%] left-[12%] h-[13%] w-[76%] rounded-full bg-black/25 blur-2xl"
                 style={{
-                  transform: 'translateZ(-40px) rotateX(72deg)',
+                  transform:
+                    'translateZ(-60px) rotateX(72deg)',
                 }}
               />
 
               {/* =================================================
-                  BACK IMAGE
+                  SECONDARY DEPTH SHADOW
               ================================================== */}
 
               <div
-                className="absolute left-[8%] top-[8%] h-[84%] w-[84%] overflow-hidden rounded-[20px] border border-gray-200 bg-white shadow-[0_25px_55px_rgba(0,0,0,0.12)]"
+                className="absolute left-[8%] top-[7%] h-[86%] w-[84%] rounded-[24px] bg-black/10 blur-xl"
                 style={{
                   transform:
-                    'translate3d(-18px, 8px, -42px) rotateY(-10deg)',
+                    'translate3d(18px, 18px, -35px)',
+                }}
+              />
+
+              {/* =================================================
+                  BACK 3D PANEL
+                  Same image, only used to create thickness
+              ================================================== */}
+
+              <div
+                className="absolute left-[7%] top-[5%] h-[90%] w-[86%] overflow-hidden rounded-[24px] bg-gray-200"
+                style={{
+                  transform:
+                    'translate3d(12px, 15px, -18px)',
                   transformStyle: 'preserve-3d',
                 }}
               >
                 <img
-                  src={image4}
-                  alt={`${name} view 4`}
-                  className="h-full w-full object-contain object-center"
+                  src={image}
+                  alt=""
+                  aria-hidden="true"
+                  className="h-full w-full object-contain object-center opacity-30 blur-[0.3px]"
                   draggable="false"
                 />
-
-                <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-white/20 via-transparent to-black/10" />
               </div>
 
               {/* =================================================
-                  LEFT SIDE IMAGE
+                  MAIN PRODUCT PANEL
               ================================================== */}
 
               <div
-                className="absolute left-[-2%] top-[6%] h-[88%] w-[86%] overflow-hidden rounded-[20px] border border-gray-200 bg-white shadow-[0_25px_55px_rgba(0,0,0,0.15)]"
+                className="absolute inset-[2%] overflow-hidden rounded-[26px] border border-white/90 bg-white"
                 style={{
-                  transform:
-                    'translate3d(-28px, 7px, 8px) rotateY(-13deg)',
+                  transform: 'translateZ(38px)',
                   transformStyle: 'preserve-3d',
+                  boxShadow:
+                    '0 35px 70px rgba(0,0,0,0.18), 0 10px 25px rgba(0,0,0,0.10)',
                 }}
               >
+
+                {/* PRODUCT IMAGE */}
+
                 <img
-                  src={image2}
-                  alt={`${name} view 2`}
-                  className="h-full w-full object-contain object-center"
-                  draggable="false"
-                />
-
-                <div className="pointer-events-none absolute inset-0 bg-gradient-to-r from-black/10 via-transparent to-white/20" />
-              </div>
-
-              {/* =================================================
-                  RIGHT SIDE IMAGE
-              ================================================== */}
-
-              <div
-                className="absolute right-[-2%] top-[6%] h-[88%] w-[86%] overflow-hidden rounded-[20px] border border-gray-200 bg-white shadow-[0_25px_55px_rgba(0,0,0,0.15)]"
-                style={{
-                  transform:
-                    'translate3d(28px, 7px, 8px) rotateY(13deg)',
-                  transformStyle: 'preserve-3d',
-                }}
-              >
-                <img
-                  src={image3}
-                  alt={`${name} view 3`}
-                  className="h-full w-full object-contain object-center"
-                  draggable="false"
-                />
-
-                <div className="pointer-events-none absolute inset-0 bg-gradient-to-l from-black/10 via-transparent to-white/20" />
-              </div>
-
-              {/* =================================================
-                  FRONT / MAIN IMAGE
-              ================================================== */}
-
-              <div
-                className="absolute inset-[3%] overflow-hidden rounded-[22px] border border-white bg-white shadow-[0_30px_65px_rgba(0,0,0,0.20)]"
-                style={{
-                  transform: 'translateZ(50px)',
-                  transformStyle: 'preserve-3d',
-                }}
-              >
-                <img
-                  src={image1}
+                  src={image}
                   alt={name}
-                  className="h-full w-full object-contain object-center"
+                  className="h-full w-full object-contain object-top"
                   draggable="false"
                 />
 
-                {/* Glass reflection */}
-                <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-white/40 via-transparent to-black/10" />
+                {/* =================================================
+                    3D TOP LIGHT
+                ================================================== */}
 
-                {/* Top highlight */}
-                <div className="pointer-events-none absolute left-[8%] right-[8%] top-[4%] h-[16%] rounded-full bg-white/30 blur-2xl" />
+                <div
+                  className="pointer-events-none absolute inset-0"
+                  style={{
+                    background:
+                      'linear-gradient(135deg, rgba(255,255,255,0.42) 0%, rgba(255,255,255,0.12) 28%, transparent 52%, rgba(0,0,0,0.08) 100%)',
+                  }}
+                />
+
+                {/* =================================================
+                    GLASS HIGHLIGHT
+                ================================================== */}
+
+                <div
+                  className="pointer-events-none absolute left-[8%] top-[4%] h-[28%] w-[65%] rounded-full opacity-40 blur-2xl"
+                  style={{
+                    background:
+                      'linear-gradient(120deg, white, transparent)',
+                    transform: 'rotate(-12deg)',
+                  }}
+                />
+
+                {/* =================================================
+                    EDGE LIGHT
+                ================================================== */}
+
+                <div className="pointer-events-none absolute inset-0 rounded-[26px] ring-1 ring-inset ring-white/70" />
+
               </div>
 
               {/* =================================================
-                  FRONT BOTTOM EDGE
+                  BOTTOM 3D THICKNESS
               ================================================== */}
 
               <div
-                className="absolute bottom-[1%] left-[15%] h-[10px] w-[70%] rounded-full bg-black/15 blur-md"
+                className="absolute bottom-[2%] left-[9%] h-[18px] w-[82%] rounded-b-[22px] bg-gray-200/80"
                 style={{
-                  transform: 'translateZ(30px) rotateX(75deg)',
+                  transform:
+                    'translateZ(5px) rotateX(70deg)',
+                  filter: 'blur(1px)',
                 }}
               />
 
@@ -349,16 +327,10 @@ function ProductCard({ product }) {
           </div>
 
           {/* =====================================================
-              SOFT LIGHT
+              BOTTOM ATMOSPHERIC SHADOW
           ====================================================== */}
 
-          <div className="pointer-events-none absolute left-1/2 top-[8%] h-40 w-40 -translate-x-1/2 rounded-full bg-white/70 blur-3xl" />
-
-          {/* =====================================================
-              BOTTOM SHADOW
-          ====================================================== */}
-
-          <div className="pointer-events-none absolute inset-x-0 bottom-0 h-28 bg-gradient-to-t from-black/[0.08] via-transparent to-transparent" />
+          <div className="pointer-events-none absolute inset-x-0 bottom-0 h-32 bg-gradient-to-t from-black/[0.10] via-black/[0.02] to-transparent" />
 
           {/* =====================================================
               FAVORITE
