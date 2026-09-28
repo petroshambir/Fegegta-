@@ -1,62 +1,54 @@
-import React, { Suspense, useEffect } from 'react'
-import { Canvas, useThree } from '@react-three/fiber'
-import { useTexture } from '@react-three/drei'
-import * as THREE from 'three'
+import React, { Suspense } from 'react'
+import { Canvas } from '@react-three/fiber'
+import {
+  Center,
+  Environment,
+  OrbitControls,
+  useGLTF,
+} from '@react-three/drei'
 
-function ProductImageMesh({ image }) {
-  const texture = useTexture(image)
-  const { viewport } = useThree()
+// ============================================================
+// 3D MODEL
+// ============================================================
 
-  useEffect(() => {
-    if (!texture) return
-
-    texture.colorSpace = THREE.SRGBColorSpace
-    texture.minFilter = THREE.LinearFilter
-    texture.magFilter = THREE.LinearFilter
-    texture.needsUpdate = true
-  }, [texture])
-
-  const imageWidth =
-    texture.image?.naturalWidth ||
-    texture.image?.width ||
-    1
-
-  const imageHeight =
-    texture.image?.naturalHeight ||
-    texture.image?.height ||
-    1
-
-  const imageRatio = imageWidth / imageHeight
-
-  let width = viewport.width * 0.88
-  let height = width / imageRatio
-
-  if (height > viewport.height * 0.92) {
-    height = viewport.height * 0.92
-    width = height * imageRatio
-  }
+function ProductModel({ modelUrl }) {
+  const { scene } = useGLTF(modelUrl)
 
   return (
-    <mesh
-      position={[0, 0, 0]}
-      rotation={[0.015, -0.025, 0]}
-      scale={[width, height, 1]}
+    <Center
+      position={[0, -0.8, 0]}
+      rotation={[0, 0, 0]}
     >
-      <planeGeometry args={[1, 1, 32, 32]} />
-
-      <meshBasicMaterial
-        map={texture}
-        side={THREE.DoubleSide}
-        transparent={false}
-        opacity={1}
-        toneMapped={false}
+      <primitive
+        object={scene}
+        scale={1.8}
       />
+    </Center>
+  )
+}
+
+// ============================================================
+// LOADING FALLBACK
+// ============================================================
+
+function ModelLoading() {
+  return (
+    <mesh>
+      <sphereGeometry args={[0.08, 16, 16]} />
+      <meshStandardMaterial />
     </mesh>
   )
 }
 
-function ProductImage3D({ image, alt }) {
-  if (!image) {
+// ============================================================
+// PRODUCT IMAGE 3D
+// ============================================================
+
+function ProductImage3D({
+  modelUrl,
+  alt,
+}) {
+  if (!modelUrl) {
     return null
   }
 
@@ -68,8 +60,8 @@ function ProductImage3D({ image, alt }) {
     >
       <Canvas
         camera={{
-          position: [0, 0, 5],
-          fov: 45,
+          position: [0, 0.8, 4.5],
+          fov: 40,
           near: 0.1,
           far: 100,
         }}
@@ -84,12 +76,49 @@ function ProductImage3D({ image, alt }) {
           height: '100%',
           display: 'block',
           background: 'transparent',
-          pointerEvents: 'none',
         }}
       >
-        <Suspense fallback={null}>
-          <ProductImageMesh image={image} />
+        {/* ------------------------------------------------ */}
+        {/* LIGHTING */}
+        {/* ------------------------------------------------ */}
+
+        <ambientLight intensity={1.8} />
+
+        <directionalLight
+          position={[3, 5, 4]}
+          intensity={2.5}
+        />
+
+        <directionalLight
+          position={[-3, 2, 2]}
+          intensity={1.2}
+        />
+
+        <Environment preset="studio" />
+
+        {/* ------------------------------------------------ */}
+        {/* MODEL */}
+        {/* ------------------------------------------------ */}
+
+        <Suspense fallback={<ModelLoading />}>
+          <ProductModel modelUrl={modelUrl} />
         </Suspense>
+
+        {/* ------------------------------------------------ */}
+        {/* 3D CONTROLS */}
+        {/* ------------------------------------------------ */}
+
+        <OrbitControls
+          enablePan={false}
+          enableZoom={true}
+          enableRotate={true}
+          minDistance={2.5}
+          maxDistance={7}
+          minPolarAngle={Math.PI * 0.25}
+          maxPolarAngle={Math.PI * 0.75}
+          autoRotate={false}
+          autoRotateSpeed={1.5}
+        />
       </Canvas>
     </div>
   )
