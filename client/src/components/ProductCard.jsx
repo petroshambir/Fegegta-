@@ -175,13 +175,7 @@ function ProductCard({ product }) {
       ====================================================== */}
 
       <Link to={`/products/${id}`} className="block">
-        <div className="relative aspect-[4/5] w-full overflow-hidden bg-gradient-to-br from-gray-50 via-white to-gray-100">
-
-          {/* =================================================
-              3D LIGHT
-          ================================================== */}
-
-          <div className="pointer-events-none absolute left-1/2 top-[8%] z-0 h-56 w-56 -translate-x-1/2 rounded-full bg-white blur-3xl" />
+        <div className="relative aspect-[4/5] w-full overflow-hidden bg-gray-50">
 
           {/* =================================================
               3D PRODUCT STAGE
@@ -190,193 +184,120 @@ function ProductCard({ product }) {
           <div
             className="absolute inset-0 flex items-center justify-center"
             style={{
-              perspective: '1800px',
-              perspectiveOrigin: '50% 42%',
+              perspective: '1400px',
+              perspectiveOrigin: '50% 45%',
             }}
           >
 
             {/* =================================================
-                PRODUCT OBJECT
+                3D PRODUCT
             ================================================== */}
 
             <div
-              className="relative h-[88%] w-[88%]"
+              className="relative h-[90%] w-[90%]"
               style={{
                 transformStyle: 'preserve-3d',
-                transform: 'rotateX(-4deg) rotateY(-7deg)',
+                transform: 'rotateX(2deg) rotateY(-5deg)',
+                transition:
+                  'transform 700ms cubic-bezier(0.22, 1, 0.36, 1)',
               }}
             >
 
               {/* =================================================
-                  DEEP FLOOR SHADOW
+                  3D FLOOR SHADOW
               ================================================== */}
 
               <div
-                className="absolute bottom-[3%] left-[9%] h-[12%] w-[82%] rounded-full bg-black/25 blur-2xl"
+                className="pointer-events-none absolute bottom-[2%] left-[8%] h-[9%] w-[84%] rounded-full bg-black/20 blur-xl transition-all duration-700 group-hover:translate-y-1 group-hover:scale-95"
                 style={{
                   transform:
-                    'translateZ(-100px) rotateX(75deg)',
+                    'translateZ(-40px) rotateX(78deg)',
                 }}
               />
 
               {/* =================================================
-                  SOFT PRODUCT SHADOW
+                  PRODUCT DEPTH / BACK EDGE
+
+                  NOTE:
+                  No opacity is applied to the product image.
               ================================================== */}
 
               <div
-                className="absolute left-[6%] top-[5%] h-[90%] w-[88%] rounded-[28px] bg-black/15 blur-2xl"
+                className="absolute inset-[3%] rounded-[22px] bg-gray-300"
                 style={{
-                  transform:
-                    'translate3d(18px, 22px, -50px)',
-                }}
-              />
-
-              {/* =================================================
-                  3D BACK THICKNESS
-              ================================================== */}
-
-              <div
-                className="absolute left-[5%] top-[4%] h-[92%] w-[90%] overflow-hidden rounded-[28px] bg-gray-300"
-                style={{
-                  transform:
-                    'translate3d(12px, 18px, -28px)',
+                  transform: 'translate3d(12px, 14px, -8px)',
                   transformStyle: 'preserve-3d',
                 }}
-              >
-                <img
-                  src={image}
-                  alt=""
-                  aria-hidden="true"
-                  className="h-full w-full object-contain object-top opacity-20"
-                  draggable="false"
-                />
-              </div>
+              />
 
               {/* =================================================
-                  3D LEFT EDGE
+                  RIGHT 3D SIDE
               ================================================== */}
 
               <div
-                className="absolute left-[3%] top-[5%] h-[90%] w-[5px] rounded-l-[20px] bg-gradient-to-b from-gray-300 via-gray-200 to-gray-400"
+                className="absolute right-[2.5%] top-[4%] h-[92%] w-[10px] rounded-r-[20px] bg-gradient-to-b from-gray-200 via-gray-400 to-gray-300"
                 style={{
                   transform:
-                    'translateZ(5px) translateX(-3px)',
+                    'translateZ(4px) translateX(4px) rotateY(-8deg)',
+                  transformOrigin: 'left center',
                 }}
               />
 
               {/* =================================================
-                  3D RIGHT EDGE
+                  BOTTOM 3D SIDE
               ================================================== */}
 
               <div
-                className="absolute right-[3%] top-[5%] h-[90%] w-[7px] rounded-r-[20px] bg-gradient-to-b from-gray-200 via-gray-400 to-gray-300"
+                className="absolute bottom-[2.5%] left-[4%] h-[11px] w-[92%] rounded-b-[20px] bg-gradient-to-r from-gray-300 via-gray-200 to-gray-400"
                 style={{
                   transform:
-                    'translateZ(5px) translateX(3px)',
+                    'translateZ(4px) translateY(5px) rotateX(-8deg)',
+                  transformOrigin: 'top center',
                 }}
               />
 
               {/* =================================================
-                  MAIN 3D FACE
+                  MAIN IMAGE FACE
               ================================================== */}
 
               <div
-                className="absolute inset-[3%] overflow-hidden rounded-[24px] border border-white/90 bg-white"
+                className="absolute inset-[3%] overflow-hidden rounded-[22px] border border-gray-100 bg-white"
                 style={{
-                  transform: 'translateZ(55px)',
+                  transform: 'translateZ(35px)',
                   transformStyle: 'preserve-3d',
                   boxShadow:
-                    '0 35px 70px rgba(0,0,0,0.20), 0 12px 28px rgba(0,0,0,0.10)',
+                    '0 24px 45px rgba(0,0,0,0.16), 0 8px 18px rgba(0,0,0,0.10)',
+                  transition:
+                    'transform 700ms cubic-bezier(0.22, 1, 0.36, 1), box-shadow 700ms ease',
                 }}
               >
 
                 {/* =================================================
-                    PRODUCT IMAGE
+                    ORIGINAL PRODUCT IMAGE
+
+                    NO OPACITY
+                    NO WHITE OVERLAY
+                    NO DUPLICATE IMAGE
                 ================================================== */}
 
                 <img
                   src={image}
                   alt={name}
-                  className="absolute inset-0 h-full w-full object-contain object-top"
-                  draggable="false"
+                  className="absolute inset-0 h-full w-full object-contain object-top transition-transform duration-700 ease-out group-hover:scale-[1.025]"
                 />
-
-                {/* =================================================
-                    3D LIGHTING
-                ================================================== */}
-
-                <div
-                  className="pointer-events-none absolute inset-0"
-                  style={{
-                    background:
-                      'linear-gradient(135deg, rgba(255,255,255,0.48) 0%, rgba(255,255,255,0.12) 24%, transparent 48%, rgba(0,0,0,0.10) 100%)',
-                  }}
-                />
-
-                {/* =================================================
-                    TOP REFLECTION
-                ================================================== */}
-
-                <div
-                  className="pointer-events-none absolute left-[6%] top-[3%] h-[25%] w-[65%] rounded-full bg-white/35 blur-2xl"
-                  style={{
-                    transform: 'rotate(-14deg)',
-                  }}
-                />
-
-                {/* =================================================
-                    SIDE DARKNESS
-                ================================================== */}
-
-                <div
-                  className="pointer-events-none absolute right-0 top-0 h-full w-[18%]"
-                  style={{
-                    background:
-                      'linear-gradient(to left, rgba(0,0,0,0.12), transparent)',
-                  }}
-                />
-
-                {/* =================================================
-                    BOTTOM DEPTH
-                ================================================== */}
-
-                <div
-                  className="pointer-events-none absolute bottom-0 left-0 h-[18%] w-full"
-                  style={{
-                    background:
-                      'linear-gradient(to top, rgba(0,0,0,0.10), transparent)',
-                  }}
-                />
-
-                {/* =================================================
-                    3D GLASS BORDER
-                ================================================== */}
-
-                <div className="pointer-events-none absolute inset-0 rounded-[24px] ring-1 ring-inset ring-white/80" />
 
               </div>
 
               {/* =================================================
-                  BOTTOM EXTRUSION
+                  3D BOTTOM EDGE
               ================================================== */}
 
               <div
-                className="absolute bottom-[3%] left-[7%] h-[13px] w-[86%] rounded-b-[22px] bg-gradient-to-b from-gray-200 to-gray-400"
+                className="absolute bottom-[1.5%] left-[6%] h-[8px] w-[88%] rounded-full bg-gray-300"
                 style={{
                   transform:
-                    'translateZ(18px) rotateX(72deg)',
-                }}
-              />
-
-              {/* =================================================
-                  FRONT FLOOR REFLECTION
-              ================================================== */}
-
-              <div
-                className="absolute bottom-[1%] left-[18%] h-[6%] w-[64%] rounded-full bg-black/10 blur-lg"
-                style={{
-                  transform:
-                    'translateZ(15px) rotateX(78deg)',
+                    'translateZ(12px) rotateX(70deg)',
+                  transformOrigin: 'center top',
                 }}
               />
 
@@ -384,10 +305,13 @@ function ProductCard({ product }) {
           </div>
 
           {/* =====================================================
-              BOTTOM ATMOSPHERIC GRADIENT
+              SOFT BOTTOM GRADIENT
+
+              This is only the card background effect.
+              Product image opacity is NOT changed.
           ====================================================== */}
 
-          <div className="pointer-events-none absolute inset-x-0 bottom-0 z-10 h-32 bg-gradient-to-t from-black/[0.08] via-transparent to-transparent" />
+          <div className="pointer-events-none absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-black/10 to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
 
           {/* =====================================================
               FAVORITE
