@@ -1,4 +1,37 @@
-import express from 'express';
+// import express from 'express';
+
+// import {
+//   getSellerDashboard,
+//   getSellerProfile,
+//   updateSellerProfile,
+//   getSellerOrders,
+//   getSellerSales,
+// } from '../controllers/sellerController.js';
+
+// import { protect } from '../middleware/authMiddleware.js';
+// import { sellerOnly } from '../middleware/sellerMiddleware.js';
+
+// const router = express.Router();
+
+// // All seller routes require authentication + seller role
+// router.use(protect, sellerOnly);
+
+// // Dashboard
+// router.get('/dashboard', getSellerDashboard);
+
+// // Seller profile
+// router.get('/profile', getSellerProfile);
+// router.put('/profile', updateSellerProfile);
+
+// // Orders
+// router.get('/orders', getSellerOrders);
+
+// // Sales
+// router.get('/sales', getSellerSales);
+
+// export default router;
+
+import express from 'express'
 
 import {
   getSellerDashboard,
@@ -6,27 +39,68 @@ import {
   updateSellerProfile,
   getSellerOrders,
   getSellerSales,
-} from '../controllers/sellerController.js';
+  getMyStore,
+} from '../controllers/sellerController.js'
 
-import { protect } from '../middleware/authMiddleware.js';
-import { sellerOnly } from '../middleware/sellerMiddleware.js';
+import { protect } from '../middleware/authMiddleware.js'
+import { sellerOnly } from '../middleware/sellerMiddleware.js'
 
-const router = express.Router();
+const router = express.Router()
 
-// All seller routes require authentication + seller role
-router.use(protect, sellerOnly);
+// ============================================================
+// ALL SELLER ROUTES
+// ============================================================
 
-// Dashboard
-router.get('/dashboard', getSellerDashboard);
+router.use(protect, sellerOnly)
 
-// Seller profile
-router.get('/profile', getSellerProfile);
-router.put('/profile', updateSellerProfile);
+// ============================================================
+// DASHBOARD
+// ============================================================
 
-// Orders
-router.get('/orders', getSellerOrders);
+router.get(
+  '/dashboard',
+  getSellerDashboard
+)
 
-// Sales
-router.get('/sales', getSellerSales);
+// ============================================================
+// SELLER PROFILE
+// ============================================================
 
-export default router;
+router.get(
+  '/profile',
+  getSellerProfile
+)
+
+router.put(
+  '/profile',
+  updateSellerProfile
+)
+
+// ============================================================
+// SELLER STORE
+// ============================================================
+
+router.get(
+  '/store',
+  getMyStore
+)
+
+// ============================================================
+// SELLER ORDERS
+// ============================================================
+
+router.get(
+  '/orders',
+  getSellerOrders
+)
+
+// ============================================================
+// SELLER SALES
+// ============================================================
+
+router.get(
+  '/sales',
+  getSellerSales
+)
+
+export default router
