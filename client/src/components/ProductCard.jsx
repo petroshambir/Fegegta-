@@ -146,7 +146,7 @@ import { Canvas, useFrame } from '@react-three/fiber'
 import { useTexture } from '@react-three/drei'
 import * as THREE from 'three'
 
-function ProductMesh({ image }) {
+function ProductCard({ image }) {
   const texture = useTexture(image)
 
   const dimensions = useMemo(() => {
@@ -244,4 +244,4 @@ function ProductImage3D({ image, alt }) {
   )
 }
 
-export default ProductImage3D
+export default ProductCard
