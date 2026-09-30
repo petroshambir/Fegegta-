@@ -1,5 +1,4 @@
 
-
 // import Order from '../models/Order.js'
 // import Product from '../models/Product.js'
 // import Store from '../models/Store.js'
@@ -628,6 +627,76 @@
 //   }
 // }
 
+// // ============================================================
+// // UPDATE SELLER STORE SETTINGS
+// // ============================================================
+
+// export const updateMyStore = async (
+//   req,
+//   res,
+//   next
+// ) => {
+//   try {
+//     const sellerId = req.seller?._id
+
+//     if (!sellerId) {
+//       return res.status(403).json({
+//         success: false,
+//         message: 'Seller account not found.',
+//       })
+//     }
+
+//     const store = await Store.findOne({ seller: sellerId })
+
+//     if (!store) {
+//       return res.status(404).json({
+//         success: false,
+//         message: 'Store not found.',
+//       })
+//     }
+
+//     const { storeName, storeDescription } = req.body
+
+//     if (storeName !== undefined) {
+//       const name = String(storeName).trim()
+//       if (!name) {
+//         return res.status(400).json({
+//           success: false,
+//           message: 'Store name is required.',
+//         })
+//       }
+//       store.name = name
+//     }
+
+//     if (storeDescription !== undefined) {
+//       store.description = String(storeDescription).trim()
+//     }
+
+//     const logoFile = req.files?.logo?.[0]
+//     const coverFile = req.files?.coverImage?.[0]
+
+//     if (logoFile?.path) {
+//       store.logo = logoFile.path
+//     }
+
+//     if (coverFile?.path) {
+//       store.banner = coverFile.path
+//     }
+
+//     // Keep the existing public URL stable when the store name changes.
+//     await store.save()
+
+//     return res.status(200).json({
+//       success: true,
+//       message: 'Store settings updated successfully.',
+//       store,
+//     })
+//   } catch (error) {
+//     next(error)
+//   }
+// }
+
+
 
 
 import Order from '../models/Order.js'
@@ -958,9 +1027,22 @@ export const getSellerOrders = async (
           'name slug status'
         )
 
+    const sellerOrders = orders.map((order) => {
+      const orderData = order.toObject()
+      orderData.items = (orderData.items || []).filter((item) => {
+        const itemSellerId =
+          item.seller && typeof item.seller === 'object'
+            ? item.seller._id || item.seller.id
+            : item.seller
+
+        return String(itemSellerId || '') === String(sellerId)
+      })
+      return orderData
+    })
+
     return res.status(200).json({
       success: true,
-      orders,
+      orders: sellerOrders,
     })
   } catch (error) {
     next(error)
