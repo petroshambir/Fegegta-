@@ -5243,7 +5243,6 @@
 // export default SellerStore
 
 
-
 import React, {
   useEffect,
   useMemo,
@@ -5496,7 +5495,7 @@ const productBelongsToStore = (
 function SellerStore() {
   const { slug } = useParams()
 
-  const { addToCart } = useCart()
+  const { addToCart, totalItems } = useCart()
 
   const [store, setStore] =
     useState(null)
@@ -5523,13 +5522,25 @@ function SellerStore() {
     useState(null)
 
   const openImageViewer = (
-    productName,
+    product,
+    productId,
     images
   ) => {
     if (!images.length) return
 
     setImageViewer({
-      productName,
+      productName: product.name || 'Product',
+      product: {
+        ...product,
+        id: productId,
+        sellerId,
+        storeId,
+        storeSlug:
+          store.slug ||
+          store.storeSlug ||
+          slug,
+        storeName,
+      },
       images,
       index: 0,
     })
@@ -6184,7 +6195,14 @@ function SellerStore() {
             aria-label="Open cart"
             className="inline-flex shrink-0 items-center gap-2 rounded-xl border border-gray-200 px-3 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-50"
           >
-            <ShoppingCart className="h-4 w-4" />
+            <span className="relative inline-flex">
+              <ShoppingCart className="h-4 w-4" />
+              {totalItems > 0 && (
+                <span className="absolute -right-2 -top-2 flex h-4 min-w-4 items-center justify-center rounded-full bg-red-600 px-1 text-[9px] font-bold leading-none text-white">
+                  {totalItems > 99 ? '99+' : totalItems}
+                </span>
+              )}
+            </span>
             <span className="hidden sm:inline">Cart</span>
           </Link>
         </div>
@@ -6489,7 +6507,8 @@ function SellerStore() {
                           type="button"
                           onClick={() =>
                             openImageViewer(
-                              product.name || 'Product',
+                              product,
+                              productId,
                               productImages
                             )
                           }
@@ -6713,6 +6732,23 @@ function SellerStore() {
                 ))}
               </div>
             )}
+
+            <div className="mt-4 flex items-center justify-between gap-4 rounded-2xl bg-white p-3 sm:p-4">
+              <div>
+                <p className="text-xs text-gray-500">Price</p>
+                <p className="mt-1 text-lg font-bold text-gray-900">
+                  €{Number(imageViewer.product.price || 0).toFixed(2)}
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => addToCart(imageViewer.product)}
+                className="inline-flex items-center justify-center gap-2 rounded-xl bg-black px-5 py-3 text-sm font-semibold text-white hover:bg-gray-800"
+              >
+                <ShoppingCart className="h-4 w-4" />
+                Add to Cart
+              </button>
+            </div>
           </div>
         </div>
       )}
