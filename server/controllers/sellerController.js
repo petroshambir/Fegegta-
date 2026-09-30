@@ -327,9 +327,22 @@
 //           'name slug status'
 //         )
 
+//     const sellerOrders = orders.map((order) => {
+//       const orderData = order.toObject()
+//       orderData.items = (orderData.items || []).filter((item) => {
+//         const itemSellerId =
+//           item.seller && typeof item.seller === 'object'
+//             ? item.seller._id || item.seller.id
+//             : item.seller
+
+//         return String(itemSellerId || '') === String(sellerId)
+//       })
+//       return orderData
+//     })
+
 //     return res.status(200).json({
 //       success: true,
-//       orders,
+//       orders: sellerOrders,
 //     })
 //   } catch (error) {
 //     next(error)
@@ -703,6 +716,7 @@ import Order from '../models/Order.js'
 import Product from '../models/Product.js'
 import Store from '../models/Store.js'
 import Seller from '../models/Seller.js'
+import Notification from '../models/Notification.js'
 import {
   createOrderNotificationService,
 } from '../services/notificationService.js'
@@ -1404,6 +1418,77 @@ export const updateMyStore = async (
       message: 'Store settings updated successfully.',
       store,
     })
+  } catch (error) {
+    next(error)
+  }
+}
+
+// ============================================================
+// SELLER NOTIFICATIONS
+// ============================================================
+
+const getSellerUserId = async (req) => {
+  const sellerId = req.seller?._id
+  if (!sellerId) return null
+  const seller = await Seller.findById(sellerId).select('user')
+  return seller?.user || null
+}
+
+export const getSellerNotifications = async (req, res, next) => {
+  try {
+    const userId = await getSellerUserId(req)
+    if (!userId) {
+      return res.status(403).json({ success: false, message: 'Seller account not found.' })
+    }
+
+    const notifications = await Notification.find({ recipient: userId })
+      .populate('order', 'orderNumber orderStatus total shippingAddress createdAt')
+      .populate('product', 'name approvalStatus rejectionReason')
+      .populate('store', 'name slug')
+      .sort({ createdAt: -1 })
+
+    return res.status(200).json({ success: true, notifications })
+  } catch (error) {
+    next(error)
+  }
+}
+
+export const markSellerNotificationAsRead = async (req, res, next) => {
+  try {
+    const userId = await getSellerUserId(req)
+    if (!userId) {
+      return res.status(403).json({ success: false, message: 'Seller account not found.' })
+    }
+
+    const notification = await Notification.findOneAndUpdate(
+      { _id: req.params.id, recipient: userId },
+      { $set: { isRead: true, readAt: new Date() } },
+      { new: true, runValidators: true }
+    )
+
+    if (!notification) {
+      return res.status(404).json({ success: false, message: 'Notification not found.' })
+    }
+
+    return res.status(200).json({ success: true, notification })
+  } catch (error) {
+    next(error)
+  }
+}
+
+export const markAllSellerNotificationsAsRead = async (req, res, next) => {
+  try {
+    const userId = await getSellerUserId(req)
+    if (!userId) {
+      return res.status(403).json({ success: false, message: 'Seller account not found.' })
+    }
+
+    await Notification.updateMany(
+      { recipient: userId, isRead: false },
+      { $set: { isRead: true, readAt: new Date() } }
+    )
+
+    return res.status(200).json({ success: true, message: 'All notifications marked as read.' })
   } catch (error) {
     next(error)
   }

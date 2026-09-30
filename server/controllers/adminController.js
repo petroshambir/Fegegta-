@@ -725,6 +725,14 @@
 //       compareAtPrice,
 //       stock,
 //       weight,
+
+//       // ======================================================
+//       // SHIPPING ORIGIN
+//       // ======================================================
+
+//       originCountry,
+//       originCity,
+
 //       material,
 //       sizes,
 //       colors,
@@ -1078,6 +1086,42 @@
 //     }
 
 //     // ========================================================
+//     // SHIPPING ORIGIN
+//     // ========================================================
+
+//     const finalOriginCountry =
+//       originCountry !== undefined &&
+//       originCountry !== null
+//         ? String(
+//             originCountry
+//           ).trim()
+//         : ''
+
+//     const finalOriginCity =
+//       originCity !== undefined &&
+//       originCity !== null
+//         ? String(
+//             originCity
+//           ).trim()
+//         : ''
+
+//     if (!finalOriginCountry) {
+//       return res.status(400).json({
+//         success: false,
+//         message:
+//           'Product origin country is required.',
+//       })
+//     }
+
+//     if (!finalOriginCity) {
+//       return res.status(400).json({
+//         success: false,
+//         message:
+//           'Product origin city is required.',
+//       })
+//     }
+
+//     // ========================================================
 //     // MATERIAL
 //     // ========================================================
 
@@ -1180,6 +1224,16 @@
 
 //         weight:
 //           finalWeight,
+
+//         // ----------------------------------------------------
+//         // SHIPPING ORIGIN
+//         // ----------------------------------------------------
+
+//         originCountry:
+//           finalOriginCountry,
+
+//         originCity:
+//           finalOriginCity,
 
 //         sku:
 //           sku
@@ -1287,6 +1341,14 @@
 //       compareAtPrice,
 //       stock,
 //       weight,
+
+//       // ======================================================
+//       // SHIPPING ORIGIN
+//       // ======================================================
+
+//       originCountry,
+//       originCity,
+
 //       material,
 //       sizes,
 //       colors,
@@ -1438,6 +1500,48 @@
 //         success: false,
 //         message:
 //           'Product weight must be at least 0.01 kg (10 grams).',
+//       })
+//     }
+
+//     // --------------------------------------------------------
+//     // SHIPPING ORIGIN
+//     // --------------------------------------------------------
+
+//     const finalOriginCountry =
+//       originCountry !== undefined &&
+//       originCountry !== null &&
+//       String(originCountry).trim()
+//         ? String(
+//             originCountry
+//           ).trim()
+//         : String(
+//             product.originCountry || ''
+//           ).trim()
+
+//     const finalOriginCity =
+//       originCity !== undefined &&
+//       originCity !== null &&
+//       String(originCity).trim()
+//         ? String(
+//             originCity
+//           ).trim()
+//         : String(
+//             product.originCity || ''
+//           ).trim()
+
+//     if (!finalOriginCountry) {
+//       return res.status(400).json({
+//         success: false,
+//         message:
+//           'Product origin country is required.',
+//       })
+//     }
+
+//     if (!finalOriginCity) {
+//       return res.status(400).json({
+//         success: false,
+//         message:
+//           'Product origin city is required.',
 //       })
 //     }
 
@@ -1727,6 +1831,16 @@
 
 //     product.weight =
 //       finalWeight
+
+//     // --------------------------------------------------------
+//     // SHIPPING ORIGIN
+//     // --------------------------------------------------------
+
+//     product.originCountry =
+//       finalOriginCountry
+
+//     product.originCity =
+//       finalOriginCity
 
 //     product.material =
 //       finalMaterial
@@ -2453,6 +2567,7 @@
 //     }
 //   }
 
+
 import User from '../models/User.js'
 import Seller from '../models/Seller.js'
 import Product from '../models/Product.js'
@@ -2462,6 +2577,7 @@ import Notification from '../models/Notification.js'
 import Commission from '../models/Commission.js'
 import AdminSettings from '../models/AdminSettings.js'
 import bcrypt from 'bcryptjs'
+import { createNotificationService } from '../services/notificationService.js'
 
 // ============================================================
 // HELPERS
@@ -4427,6 +4543,27 @@ export const approveProduct = async (
       })
     }
 
+    // Notify the product owner. Notification errors must not undo approval.
+    try {
+      const sellerId = product.seller?._id || product.seller
+      const seller = sellerId
+        ? await Seller.findById(sellerId).select('user')
+        : null
+      if (seller?.user) {
+        await createNotificationService({
+          recipient: seller.user,
+          type: 'product',
+          title: 'Product Approved',
+          message: `${product.name} has been approved and is now available in your store.`,
+          product: product._id,
+          store: product.store?._id || product.store || undefined,
+          link: `/seller/products/${product._id}/edit`,
+        })
+      }
+    } catch (notificationError) {
+      console.error('Failed to create product approval notification:', notificationError)
+    }
+
     return res.status(200).json({
       success: true,
       message:
@@ -4485,6 +4622,30 @@ export const rejectProduct = async (
         message:
           'Product not found.',
       })
+    }
+
+    // Notify the product owner. Notification errors must not undo rejection.
+    try {
+      const sellerId = product.seller?._id || product.seller
+      const seller = sellerId
+        ? await Seller.findById(sellerId).select('user')
+        : null
+      if (seller?.user) {
+        const reasonText = String(reason || '').trim()
+        await createNotificationService({
+          recipient: seller.user,
+          type: 'product',
+          title: 'Product Rejected',
+          message: reasonText
+            ? `${product.name} was rejected. Reason: ${reasonText}`
+            : `${product.name} was rejected.`,
+          product: product._id,
+          store: product.store?._id || product.store || undefined,
+          link: `/seller/products/${product._id}/edit`,
+        })
+      }
+    } catch (notificationError) {
+      console.error('Failed to create product rejection notification:', notificationError)
     }
 
     return res.status(200).json({

@@ -1,7 +1,13 @@
+
 // import Order from '../models/Order.js'
 // import Product from '../models/Product.js'
 // import Commission from '../models/Commission.js'
 // import CommissionSetting from '../models/CommissionSetting.js'
+// import User from '../models/User.js'
+
+// import {
+//   createNotificationService,
+// } from '../services/notificationService.js'
 
 // import {
 //   generateOrderNumber,
@@ -11,7 +17,11 @@
 // // CREATE ORDER
 // // ============================================================
 
-// export const createOrder = async (req, res, next) => {
+// export const createOrder = async (
+//   req,
+//   res,
+//   next
+// ) => {
 //   try {
 //     const {
 //       customer,
@@ -61,8 +71,14 @@
 //       'country',
 //     ]
 
-//     for (const field of requiredCustomerFields) {
-//       if (!String(customer[field] || '').trim()) {
+//     for (
+//       const field of requiredCustomerFields
+//     ) {
+//       if (
+//         !String(
+//           customer[field] || ''
+//         ).trim()
+//       ) {
 //         return res.status(400).json({
 //           success: false,
 //           message:
@@ -108,7 +124,9 @@
 //       }
 
 //       const product =
-//         await Product.findById(productId)
+//         await Product.findById(
+//           productId
+//         )
 
 //       if (!product) {
 //         return res.status(404).json({
@@ -213,7 +231,9 @@
 
 //       const itemSubtotal =
 //         Number(
-//           (price * quantity).toFixed(2)
+//           (
+//             price * quantity
+//           ).toFixed(2)
 //         )
 
 //       // ======================================================
@@ -259,11 +279,14 @@
 //       orderItems.push({
 //         product: product._id,
 
-//         seller: product.seller,
+//         seller:
+//           product.seller,
 
-//         store: product.store,
+//         store:
+//           product.store,
 
-//         name: product.name,
+//         name:
+//           product.name,
 
 //         image,
 
@@ -277,7 +300,8 @@
 
 //         sizeData,
 
-//         subtotal: itemSubtotal,
+//         subtotal:
+//           itemSubtotal,
 //       })
 //     }
 
@@ -291,7 +315,9 @@
 //           .reduce(
 //             (sum, item) =>
 //               sum +
-//               Number(item.subtotal || 0),
+//               Number(
+//                 item.subtotal || 0
+//               ),
 //             0
 //           )
 //           .toFixed(2)
@@ -309,7 +335,9 @@
 //       )
 
 //     if (
-//       !Number.isFinite(calculatedShipping) ||
+//       !Number.isFinite(
+//         calculatedShipping
+//       ) ||
 //       calculatedShipping < 0
 //     ) {
 //       return res.status(400).json({
@@ -324,10 +352,14 @@
 //     // ========================================================
 
 //     const calculatedDiscount =
-//       Number(discount || 0)
+//       Number(
+//         discount || 0
+//       )
 
 //     if (
-//       !Number.isFinite(calculatedDiscount) ||
+//       !Number.isFinite(
+//         calculatedDiscount
+//       ) ||
 //       calculatedDiscount < 0
 //     ) {
 //       return res.status(400).json({
@@ -515,6 +547,77 @@
 //       })
 
 //     // ========================================================
+//     // ADMIN ORDER NOTIFICATION
+//     // ========================================================
+//     //
+//     // When a customer creates an order:
+//     // 1. Find all admin users.
+//     // 2. Create an unread notification for each admin.
+//     //
+//     // Notification failure must NOT cancel the order.
+//     // The order has already been successfully created.
+//     // ========================================================
+
+//     try {
+//       const admins =
+//         await User.find({
+//           role: 'admin',
+//         }).select('_id')
+
+//       if (admins.length > 0) {
+//         const productNames =
+//           orderItems
+//             .map(
+//               (item) =>
+//                 item.name
+//             )
+//             .filter(Boolean)
+
+//         const productSummary =
+//           productNames.length === 1
+//             ? productNames[0]
+//             : `${productNames[0]} + ${
+//                 productNames.length - 1
+//               } more`
+
+//         const notificationMessage =
+//           `New order ${order.orderNumber} was placed by ${customer.firstName} ${customer.lastName} for ${productSummary}. Total: ${calculatedTotal.toFixed(2)}.`
+
+//         await Promise.all(
+//           admins.map(
+//             (admin) =>
+//               createNotificationService({
+//                 recipient:
+//                   admin._id,
+
+//                 type:
+//                   'order',
+
+//                 title:
+//                   'New Order Received',
+
+//                 message:
+//                   notificationMessage,
+
+//                 order:
+//                   order._id,
+
+//                 link:
+//                   '/admin/orders',
+//               })
+//           )
+//         )
+//       }
+//     } catch (
+//       notificationError
+//     ) {
+//       console.error(
+//         'Failed to create admin order notification:',
+//         notificationError
+//       )
+//     }
+
+//     // ========================================================
 //     // GET CURRENT COMMISSION SETTING
 //     // ========================================================
 
@@ -562,7 +665,9 @@
 //     const sellerGroups =
 //       new Map()
 
-//     for (const item of orderItems) {
+//     for (
+//       const item of orderItems
+//     ) {
 //       const sellerId =
 //         String(item.seller)
 
@@ -669,7 +774,9 @@
 //     // UPDATE PRODUCT STOCK
 //     // ========================================================
 
-//     for (const item of orderItems) {
+//     for (
+//       const item of orderItems
+//     ) {
 //       await Product.findByIdAndUpdate(
 //         item.product,
 //         {
@@ -1018,6 +1125,8 @@
 //     next(error)
 //   }
 // }
+
+
 
 import Order from '../models/Order.js'
 import Product from '../models/Product.js'
