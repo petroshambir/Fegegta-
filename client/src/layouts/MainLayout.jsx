@@ -41,6 +41,35 @@
 // export default MainLayout
 
 
+// import { useLocation } from 'react-router-dom'
+// import Navbar from '../components/Navbar'
+// import Footer from '../components/Footer'
+
+// function MainLayout({ children }) {
+//   const { pathname, search } = useLocation()
+//   const isSellerStorePage = /^\/store\/[^/]+\/?$/.test(pathname)
+//   const isSellerStoreCart =
+//     pathname === '/cart' &&
+//     Boolean(new URLSearchParams(search).get('store'))
+//   const hideMarketplaceNavbar =
+//     isSellerStorePage || isSellerStoreCart
+
+//   return (
+//     <div className="min-h-screen bg-white text-gray-900">
+//       {!hideMarketplaceNavbar && <Navbar />}
+
+//       <main>
+//         {children}
+//       </main>
+
+//       <Footer />
+//     </div>
+//   )
+// }
+
+// export default MainLayout
+
+
 import { useLocation } from 'react-router-dom'
 import Navbar from '../components/Navbar'
 import Footer from '../components/Footer'
@@ -48,21 +77,21 @@ import Footer from '../components/Footer'
 function MainLayout({ children }) {
   const { pathname, search } = useLocation()
   const isSellerStorePage = /^\/store\/[^/]+\/?$/.test(pathname)
-  const isSellerStoreCart =
-    pathname === '/cart' &&
-    Boolean(new URLSearchParams(search).get('store'))
-  const hideMarketplaceNavbar =
-    isSellerStorePage || isSellerStoreCart
+  const hasSellerStoreContext = Boolean(
+    new URLSearchParams(search).get('store')
+  )
+  const isSellerStoreJourney =
+    isSellerStorePage || hasSellerStoreContext
 
   return (
     <div className="min-h-screen bg-white text-gray-900">
-      {!hideMarketplaceNavbar && <Navbar />}
+      {!isSellerStoreJourney && <Navbar />}
 
       <main>
         {children}
       </main>
 
-      <Footer />
+      {!isSellerStoreJourney && <Footer />}
     </div>
   )
 }
