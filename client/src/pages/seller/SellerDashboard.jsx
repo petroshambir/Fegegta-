@@ -2876,7 +2876,6 @@
 
 // export default SellerDashboard
 
-
 import React, { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import {
@@ -3030,35 +3029,45 @@ function SellerDashboard() {
   // STORE URL
   // ---------------------------------------------------------
 
+  // The database Store document is returned either directly or under `store`.
+  const storeRecord =
+    store?.store &&
+    typeof store.store === 'object'
+      ? store.store
+      : store
+
   const storeName =
+    storeRecord?.name ||
+    storeRecord?.storeName ||
     store?.storeName ||
-    store?.name ||
-    store?.store?.storeName ||
-    store?.store?.name ||
-    store?.businessName ||
-    store?.shopName ||
-    user?.store?.storeName ||
     user?.store?.name ||
+    user?.store?.storeName ||
     user?.storeName ||
-    user?.businessName ||
-    user?.shopName ||
     ''
 
-  // Build the public route from the registered store name or saved slug.
-  const registeredStoreSlug =
-    store?.slug ||
+  // Use the exact slug saved on the Store document. It may contain a unique
+  // suffix that cannot be recreated from the store name alone.
+  const savedStoreSlug =
+    storeRecord?.slug ||
+    storeRecord?.storeSlug ||
     store?.storeSlug ||
-    store?.store?.slug ||
-    store?.store?.storeSlug ||
-    storeName
+    user?.store?.slug ||
+    user?.store?.storeSlug ||
+    ''
 
-  const slug = registeredStoreSlug
-    ? createStoreSlug(registeredStoreSlug)
+  const slug = savedStoreSlug
+    ? String(savedStoreSlug).trim()
+    : storeName
+      ? createStoreSlug(storeName)
+      : ''
+
+  const storePath = slug
+    ? `/store/${encodeURIComponent(slug)}`
     : ''
 
   // Copy, share, and View Store all use this exact same URL.
-  const publicUrl = slug
-    ? `${window.location.origin}/store/${encodeURIComponent(slug)}`
+  const publicUrl = storePath
+    ? `${window.location.origin}${storePath}`
     : ''
 
   // ---------------------------------------------------------
@@ -3359,7 +3368,7 @@ function SellerDashboard() {
 
                 {slug && (
                   <Link
-                    to={`/store/${encodeURIComponent(slug)}`}
+                    to={storePath}
                     className="inline-flex items-center gap-2 rounded-xl bg-black px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-gray-800"
                   >
                     <ExternalLink className="h-4 w-4" />
