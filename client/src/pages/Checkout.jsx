@@ -5460,9 +5460,7 @@
 // // ***REMOVED***4OtugWhZ13NE9IrVz7Ec1wyxhCpixjc5XC6zPYUz4xNLX4BP0SbvGJlEA
 
 
-
-
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 
@@ -5731,7 +5729,7 @@ function Checkout() {
   const { t } = useLanguage()
   const { search } = useLocation()
   const navigate = useNavigate()
-  const { user, getToken } = useAuth()
+  const { getToken } = useAuth()
 
   const {
     cartItems,
@@ -5741,7 +5739,9 @@ function Checkout() {
 
   const storeSlug =
     new URLSearchParams(search).get('store') ||
-    cartItems.find((item) => item.storeSlug)?.storeSlug ||
+    cartItems.find(
+      (item) => item.storeSlug,
+    )?.storeSlug ||
     ''
 
   const storePath = storeSlug
@@ -5768,7 +5768,7 @@ function Checkout() {
   })
 
   /* ==========================================================
-     REAL SHIPPING STATE
+     SHIPPING STATE
   ========================================================== */
 
   const [shippingMethod, setShippingMethod] =
@@ -5786,8 +5786,16 @@ function Checkout() {
   const [shippingError, setShippingError] =
     useState('')
 
+  /* ==========================================================
+     TEST PAYMENT
+  ========================================================== */
+
   const [paymentMethod, setPaymentMethod] =
     useState('test')
+
+  /* ==========================================================
+     SIZE DATA
+  ========================================================== */
 
   const [sizeData, setSizeData] = useState(() => {
     const initialData = {}
@@ -5802,8 +5810,17 @@ function Checkout() {
   })
 
   const [errors, setErrors] = useState({})
+
   const [isSubmitting, setIsSubmitting] =
     useState(false)
+
+  /*
+   * Prevent duplicate order requests.
+   *
+   * React state can update after the click event has
+   * already started. This ref gives us an immediate lock.
+   */
+  const submitLockRef = useRef(false)
 
   /* ==========================================================
      SHIPPING PRICE
@@ -5957,7 +5974,7 @@ function Checkout() {
   }
 
   /* ==========================================================
-     FREE TEST SHIPPING RATE
+     FREE TEST SHIPPING
   ========================================================== */
 
   const getShippingRates = async () => {
@@ -6019,7 +6036,8 @@ function Checkout() {
             : 'FedEx Test Shipping',
         price: 0,
         currency: 'EUR',
-        estimatedDelivery: 'Test delivery',
+        estimatedDelivery:
+          'Test delivery',
       }
 
       setShippingRates([testRate])
@@ -6253,6 +6271,10 @@ function Checkout() {
   }
 
   const handleBack = () => {
+    if (isSubmitting) {
+      return
+    }
+
     setStep((previous) =>
       Math.max(1, previous - 1),
     )
@@ -6268,6 +6290,17 @@ function Checkout() {
   ========================================================== */
 
   const handlePlaceOrder = async () => {
+    /*
+     * Immediate duplicate-submit protection.
+     */
+    if (submitLockRef.current) {
+      return
+    }
+
+    if (isSubmitting) {
+      return
+    }
+
     if (!validateStepThree()) {
       window.scrollTo({
         top: 0,
@@ -6292,6 +6325,10 @@ function Checkout() {
       return
     }
 
+    /*
+     * Lock immediately before starting the request.
+     */
+    submitLockRef.current = true
     setIsSubmitting(true)
 
     setErrors((previous) => ({
@@ -6305,6 +6342,12 @@ function Checkout() {
       if (!token) {
         throw new Error(
           'Your session has expired. Please login again.',
+        )
+      }
+
+      if (!cartItems.length) {
+        throw new Error(
+          'Your cart is empty.',
         )
       }
 
@@ -6341,7 +6384,8 @@ function Checkout() {
                   : undefined,
             },
 
-            name: item.name || '',
+            name:
+              item.name || '',
 
             image:
               getProductImage(item),
@@ -6385,6 +6429,13 @@ function Checkout() {
           formData.country.trim(),
       }
 
+      /*
+       * TEST PAYMENT
+       *
+       * No Stripe.
+       * No PayPal.
+       * No real money is charged.
+       */
       const orderData = {
         customer,
 
@@ -6416,7 +6467,7 @@ function Checkout() {
             '',
         },
 
-        paymentMethod,
+        paymentMethod: 'test',
 
         items: orderItems,
 
@@ -6426,6 +6477,22 @@ function Checkout() {
         total:
           Number(finalTotal || 0),
       }
+
+      /*
+       * Unique request key.
+       *
+       * If your backend later supports idempotency,
+       * it can use this key to reject duplicate requests.
+       */
+      const idempotencyKey =
+        `checkout-${Date.now()}-${Math.random()
+          .toString(36)
+          .slice(2)}`
+
+      console.log(
+        'Creating test order:',
+        orderData,
+      )
 
       const response = await fetch(
         `${API_URL}/orders`,
@@ -6438,6 +6505,9 @@ function Checkout() {
 
             Authorization:
               `Bearer ${token}`,
+
+            'Idempotency-Key':
+              idempotencyKey,
           },
 
           body: JSON.stringify(
@@ -6446,29 +6516,67 @@ function Checkout() {
         },
       )
 
-      const data =
-        await response.json()
+      /*
+       * Read response safely.
+       */
+      const responseText =
+        await response.text()
+
+      let data = {}
+
+      if (responseText) {
+        try {
+          data =
+            JSON.parse(responseText)
+        } catch {
+          data = {
+            message:
+              responseText,
+          }
+        }
+      }
+
+      console.log(
+        'Order API response:',
+        data,
+      )
 
       if (!response.ok) {
         throw new Error(
           data.message ||
-            'Unable to place order.',
+            data.error ||
+            `Order request failed with status ${response.status}.`,
         )
       }
 
+      /*
+       * Find the created order ID.
+       */
+      const createdOrderId =
+        data.order?._id ||
+        data.order?.id ||
+        data._id ||
+        data.id
+
+      if (!createdOrderId) {
+        throw new Error(
+          'The server accepted the order but did not return an order ID.',
+        )
+      }
+
+      /*
+       * Only clear the cart after successful order creation.
+       */
       clearCart()
 
       const orderSuccessPath =
-        `/order-success/${
-          data.order?._id ||
-          data.order?.id ||
-          data._id ||
-          ''
-        }`
+        `/order-success/${createdOrderId}`
 
       navigate(
         storeSlug
-          ? `${orderSuccessPath}?store=${encodeURIComponent(storeSlug)}`
+          ? `${orderSuccessPath}?store=${encodeURIComponent(
+              storeSlug,
+            )}`
           : orderSuccessPath,
       )
     } catch (error) {
@@ -6488,6 +6596,12 @@ function Checkout() {
         top: 0,
         behavior: 'smooth',
       })
+
+      /*
+       * Unlock only when the request failed.
+       * This allows the customer to try again.
+       */
+      submitLockRef.current = false
     } finally {
       setIsSubmitting(false)
     }
@@ -6589,8 +6703,6 @@ function Checkout() {
 
             {step === 1 && (
               <>
-                {/* Customer information */}
-
                 <section className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm sm:p-6">
                   <SectionHeader
                     icon={
@@ -6640,9 +6752,7 @@ function Checkout() {
                     />
 
                     <InputField
-                      label={t(
-                        'email',
-                      )}
+                      label={t('email')}
                       name="email"
                       type="email"
                       value={
@@ -6658,9 +6768,7 @@ function Checkout() {
                     />
 
                     <InputField
-                      label={t(
-                        'phone',
-                      )}
+                      label={t('phone')}
                       name="phone"
                       type="tel"
                       value={
@@ -6676,8 +6784,6 @@ function Checkout() {
                     />
                   </div>
                 </section>
-
-                {/* Shipping address */}
 
                 <section className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm sm:p-6">
                   <SectionHeader
@@ -6726,9 +6832,7 @@ function Checkout() {
 
                     <div className="grid gap-4 sm:grid-cols-2">
                       <InputField
-                        label={t(
-                          'city',
-                        )}
+                        label={t('city')}
                         name="city"
                         value={
                           formData.city
@@ -6743,9 +6847,7 @@ function Checkout() {
                       />
 
                       <InputField
-                        label={t(
-                          'state',
-                        )}
+                        label={t('state')}
                         name="state"
                         value={
                           formData.state
@@ -6795,10 +6897,6 @@ function Checkout() {
                   </div>
                 </section>
 
-                {/* ==================================================
-                    REAL SHIPPING
-                ================================================== */}
-
                 <section className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm sm:p-6">
                   <SectionHeader
                     icon={
@@ -6807,7 +6905,7 @@ function Checkout() {
                     title={t(
                       'shippingMethod',
                     )}
-                    description="Choose your shipping carrier and calculate the current shipping price."
+                    description="Choose your shipping carrier and calculate the test shipping price."
                   />
 
                   <div className="mt-6 space-y-3">
@@ -7157,9 +7255,7 @@ function Checkout() {
                     title={t(
                       'paymentMethod',
                     )}
-                    description={t(
-                      'secureCheckout',
-                    )}
+                    description="Test payment. No real payment will be processed."
                   />
 
                   <div className="mt-6 space-y-3">
@@ -7206,15 +7302,14 @@ function Checkout() {
 
                       <div>
                         <p className="text-sm font-semibold text-gray-900">
-                          {t(
-                            'securePurchase',
-                          )}
+                          Test payment
                         </p>
 
                         <p className="mt-1 text-xs leading-5 text-gray-500">
-                          {t(
-                            'secureCheckout',
-                          )}
+                          No card information
+                          is collected and
+                          no external payment
+                          provider is contacted.
                         </p>
                       </div>
                     </div>
@@ -7284,6 +7379,10 @@ function Checkout() {
     </div>
   )
 }
+
+/* ============================================================
+   PRODUCT SIZE EDITOR
+============================================================ */
 
 function ProductSizeEditor({
   item,
@@ -7419,7 +7518,7 @@ function ProductSizeEditor({
 }
 
 /* ============================================================
-  PRODUCT IMAGE
+   PRODUCT IMAGE
 ============================================================ */
 
 function ProductImage({ item }) {
@@ -7453,7 +7552,7 @@ function ProductImage({ item }) {
 }
 
 /* ============================================================
-  WOMEN SIZE
+   WOMEN SIZE
 ============================================================ */
 
 function WomenSizeForm({
@@ -7622,7 +7721,7 @@ function WomenSizeForm({
 }
 
 /* ============================================================
-  MEN SIZE
+   MEN SIZE
 ============================================================ */
 
 function MenSizeForm({
@@ -7806,7 +7905,7 @@ function MenSizeForm({
 }
 
 /* ============================================================
-  SHOES
+   SHOES
 ============================================================ */
 
 function ShoesSizeForm({
@@ -7969,7 +8068,9 @@ function ShoesSizeForm({
             unit={
               sizeData.unit
             }
-            onChange={(unit) =>
+            onChange={(
+              unit,
+            ) =>
               onChange({
                 unit,
               })
@@ -7992,7 +8093,9 @@ function ShoesSizeForm({
             {sizeData.size && (
               <span>
                 {t('shoeSize')}:{' '}
-                {sizeData.size}
+                {
+                  sizeData.size
+                }
               </span>
             )}
 
@@ -8029,7 +8132,7 @@ function ShoesSizeForm({
 }
 
 /* ============================================================
-  BAG SIZE
+   BAG SIZE
 ============================================================ */
 
 function BagSizeForm({
@@ -8146,7 +8249,7 @@ function BagSizeForm({
 }
 
 /* ============================================================
-  UNIT SELECTOR
+   UNIT SELECTOR
 ============================================================ */
 
 function UnitSelector({
@@ -8196,7 +8299,7 @@ function UnitSelector({
 }
 
 /* ============================================================
-  SIZE BUTTON
+   SIZE BUTTON
 ============================================================ */
 
 function SizeButton({
@@ -8224,7 +8327,7 @@ function SizeButton({
 }
 
 /* ============================================================
-  MEASUREMENT INPUT
+   MEASUREMENT INPUT
 ============================================================ */
 
 function MeasurementInput({
@@ -8256,7 +8359,7 @@ function MeasurementInput({
 }
 
 /* ============================================================
-  CUSTOM MEASUREMENT TOGGLE
+   CUSTOM MEASUREMENT TOGGLE
 ============================================================ */
 
 function CustomMeasurementToggle({
@@ -8295,7 +8398,7 @@ function CustomMeasurementToggle({
 }
 
 /* ============================================================
-  TYPE LABEL
+   TYPE LABEL
 ============================================================ */
 
 function getTypeLabel(type, t) {
@@ -8329,7 +8432,7 @@ function getTypeLabel(type, t) {
 }
 
 /* ============================================================
-  ORDER SIZE SUMMARY
+   ORDER SIZE SUMMARY
 ============================================================ */
 
 function OrderSizeSummary({
@@ -8461,7 +8564,7 @@ function OrderSizeSummary({
 }
 
 /* ============================================================
-  CHECKOUT PROGRESS
+   CHECKOUT PROGRESS
 ============================================================ */
 
 function CheckoutProgress({
@@ -8518,7 +8621,7 @@ function CheckoutProgress({
 }
 
 /* ============================================================
-  PROGRESS STEP
+   PROGRESS STEP
 ============================================================ */
 
 function ProgressStep({
@@ -8559,7 +8662,7 @@ function ProgressStep({
 }
 
 /* ============================================================
-  SECTION HEADER
+   SECTION HEADER
 ============================================================ */
 
 function SectionHeader({
@@ -8587,7 +8690,7 @@ function SectionHeader({
 }
 
 /* ============================================================
-  INPUT FIELD
+   INPUT FIELD
 ============================================================ */
 
 function InputField({
@@ -8640,7 +8743,7 @@ function InputField({
 }
 
 /* ============================================================
-  SHIPPING OPTION
+   SHIPPING OPTION
 ============================================================ */
 
 function ShippingOption({
@@ -8690,7 +8793,7 @@ function ShippingOption({
 }
 
 /* ============================================================
-  PAYMENT OPTION
+   PAYMENT OPTION
 ============================================================ */
 
 function PaymentOption({
@@ -8733,7 +8836,7 @@ function PaymentOption({
 }
 
 /* ============================================================
-  ORDER SUMMARY
+   ORDER SUMMARY
 ============================================================ */
 
 function OrderSummary({
@@ -8877,17 +8980,15 @@ function OrderSummary({
             </span>
           </div>
 
-          {/* ==================================================
-              FREE TEST SHIPPING PRICE
-          ================================================== */}
-
           <div className="flex items-center justify-between gap-4">
             <span className="text-gray-500">
               {t('shipping')}
             </span>
 
             <span className="font-medium text-gray-900">
-              {Number(shipping || 0) > 0
+              {Number(
+                shipping || 0,
+              ) > 0
                 ? `€${Number(
                     shipping,
                   ).toFixed(2)}`
@@ -8978,7 +9079,7 @@ function OrderSummary({
 }
 
 /* ============================================================
-  TRUST ITEM
+   TRUST ITEM
 ============================================================ */
 
 function TrustItem({
