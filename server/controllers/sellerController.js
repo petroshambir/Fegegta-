@@ -1,0 +1,1495 @@
+
+// import Order from '../models/Order.js'
+// import Product from '../models/Product.js'
+// import Store from '../models/Store.js'
+// import Seller from '../models/Seller.js'
+// import {
+//   createOrderNotificationService,
+// } from '../services/notificationService.js'
+
+// // ============================================================
+// // SELLER PROFILE
+// // ============================================================
+
+// export const getSellerProfile = async (
+//   req,
+//   res,
+//   next
+// ) => {
+//   try {
+//     const seller = await Seller.findOne({
+//       user: req.user.id,
+//     })
+//       .populate(
+//         'user',
+//         'name email phone role'
+//       )
+//       .populate(
+//         'store',
+//         'name slug description logo banner status'
+//       )
+
+//     if (!seller) {
+//       return res.status(404).json({
+//         success: false,
+//         message:
+//           'Seller profile not found.',
+//       })
+//     }
+
+//     return res.status(200).json({
+//       success: true,
+//       seller,
+//     })
+//   } catch (error) {
+//     next(error)
+//   }
+// }
+
+// // ============================================================
+// // UPDATE SELLER PROFILE
+// // ============================================================
+
+// export const updateSellerProfile = async (
+//   req,
+//   res,
+//   next
+// ) => {
+//   try {
+//     const seller = await Seller.findOne({
+//       user: req.user.id,
+//     })
+
+//     if (!seller) {
+//       return res.status(404).json({
+//         success: false,
+//         message:
+//           'Seller profile not found.',
+//       })
+//     }
+
+//     const {
+//       businessName,
+//       phone,
+//       email,
+//       address,
+//       description,
+//       logo,
+//       documents,
+//     } = req.body
+
+//     if (
+//       businessName !== undefined
+//     ) {
+//       seller.businessName =
+//         businessName
+//     }
+
+//     if (phone !== undefined) {
+//       seller.phone = phone
+//     }
+
+//     if (email !== undefined) {
+//       seller.email = email
+//     }
+
+//     if (address !== undefined) {
+//       seller.address = address
+//     }
+
+//     if (
+//       description !== undefined
+//     ) {
+//       seller.description =
+//         description
+//     }
+
+//     if (logo !== undefined) {
+//       seller.logo = logo
+//     }
+
+//     if (
+//       documents !== undefined
+//     ) {
+//       seller.documents =
+//         documents
+//     }
+
+//     await seller.save()
+
+//     const updatedSeller =
+//       await Seller.findById(
+//         seller._id
+//       )
+//         .populate(
+//           'user',
+//           'name email phone role'
+//         )
+//         .populate(
+//           'store',
+//           'name slug description logo banner status'
+//         )
+
+//     return res.status(200).json({
+//       success: true,
+//       message:
+//         'Seller profile updated successfully.',
+//       seller: updatedSeller,
+//     })
+//   } catch (error) {
+//     next(error)
+//   }
+// }
+
+// // ============================================================
+// // SELLER DASHBOARD
+// // ============================================================
+
+// export const getSellerDashboard = async (
+//   req,
+//   res,
+//   next
+// ) => {
+//   try {
+//     const sellerId =
+//       req.seller?._id
+
+//     if (!sellerId) {
+//       return res.status(403).json({
+//         success: false,
+//         message:
+//           'Seller account not found.',
+//       })
+//     }
+
+//     const [
+//       products,
+//       stores,
+//       orders,
+//     ] = await Promise.all([
+//       Product.countDocuments({
+//         seller: sellerId,
+//       }),
+
+//       Store.countDocuments({
+//         seller: sellerId,
+//       }),
+
+//       Order.countDocuments({
+//         'items.seller': sellerId,
+//       }),
+//     ])
+
+//     const salesResult =
+//       await Order.aggregate([
+//         {
+//           $match: {
+//             'items.seller':
+//               sellerId,
+
+//             status: {
+//               $nin: [
+//                 'cancelled',
+//               ],
+//             },
+//           },
+//         },
+
+//         {
+//           $unwind:
+//             '$items',
+//         },
+
+//         {
+//           $match: {
+//             'items.seller':
+//               sellerId,
+//           },
+//         },
+
+//         {
+//           $group: {
+//             _id: null,
+
+//             sales: {
+//               $sum: {
+//                 $multiply: [
+//                   '$items.price',
+//                   '$items.quantity',
+//                 ],
+//               },
+//             },
+//           },
+//         },
+//       ])
+
+//     return res.status(200).json({
+//       success: true,
+
+//       dashboard: {
+//         products,
+//         stores,
+//         orders,
+//         sales:
+//           salesResult[0]
+//             ?.sales || 0,
+//       },
+//     })
+//   } catch (error) {
+//     next(error)
+//   }
+// }
+
+// // ============================================================
+// // SELLER PRODUCTS
+// // ============================================================
+
+// export const getSellerProducts = async (
+//   req,
+//   res,
+//   next
+// ) => {
+//   try {
+//     const sellerId =
+//       req.seller?._id
+
+//     if (!sellerId) {
+//       return res.status(403).json({
+//         success: false,
+//         message:
+//           'Seller account not found.',
+//       })
+//     }
+
+//     const products =
+//       await Product.find({
+//         seller: sellerId,
+//       })
+//         .populate(
+//           'store',
+//           'name slug status'
+//         )
+//         .sort({
+//           createdAt: -1,
+//         })
+
+//     return res.status(200).json({
+//       success: true,
+//       products,
+//     })
+//   } catch (error) {
+//     next(error)
+//   }
+// }
+
+// // ============================================================
+// // SELLER ORDERS
+// // ============================================================
+
+// export const getSellerOrders = async (
+//   req,
+//   res,
+//   next
+// ) => {
+//   try {
+//     const sellerId =
+//       req.seller?._id
+
+//     if (!sellerId) {
+//       return res.status(403).json({
+//         success: false,
+//         message:
+//           'Seller account not found.',
+//       })
+//     }
+
+//     const orders =
+//       await Order.find({
+//         'items.seller':
+//           sellerId,
+//       })
+//         .sort({
+//           createdAt: -1,
+//         })
+//         .populate(
+//           'user',
+//           'name email phone'
+//         )
+//         .populate(
+//           'items.product'
+//         )
+//         .populate(
+//           'items.seller',
+//           'businessName email phone status'
+//         )
+//         .populate(
+//           'items.store',
+//           'name slug status'
+//         )
+
+//     const sellerOrders = orders.map((order) => {
+//       const orderData = order.toObject()
+//       orderData.items = (orderData.items || []).filter((item) => {
+//         const itemSellerId =
+//           item.seller && typeof item.seller === 'object'
+//             ? item.seller._id || item.seller.id
+//             : item.seller
+
+//         return String(itemSellerId || '') === String(sellerId)
+//       })
+//       return orderData
+//     })
+
+//     return res.status(200).json({
+//       success: true,
+//       orders: sellerOrders,
+//     })
+//   } catch (error) {
+//     next(error)
+//   }
+// }
+
+// // ============================================================
+// // SELLER SALES
+// // ============================================================
+
+// export const getSellerSales = async (
+//   req,
+//   res,
+//   next
+// ) => {
+//   try {
+//     const sellerId =
+//       req.seller?._id
+
+//     if (!sellerId) {
+//       return res.status(403).json({
+//         success: false,
+//         message:
+//           'Seller account not found.',
+//       })
+//     }
+
+//     const sales =
+//       await Order.aggregate([
+//         {
+//           $match: {
+//             'items.seller':
+//               sellerId,
+
+//             status: {
+//               $nin: [
+//                 'cancelled',
+//               ],
+//             },
+//           },
+//         },
+
+//         {
+//           $unwind:
+//             '$items',
+//         },
+
+//         {
+//           $match: {
+//             'items.seller':
+//               sellerId,
+//           },
+//         },
+
+//         {
+//           $group: {
+//             _id: null,
+
+//             totalSales: {
+//               $sum: {
+//                 $multiply: [
+//                   '$items.price',
+//                   '$items.quantity',
+//                 ],
+//               },
+//             },
+
+//             totalItems: {
+//               $sum:
+//                 '$items.quantity',
+//             },
+
+//             totalOrders: {
+//               $addToSet:
+//                 '$_id',
+//             },
+//           },
+//         },
+//       ])
+
+//     const result =
+//       sales[0]
+
+//     return res.status(200).json({
+//       success: true,
+
+//       sales: {
+//         totalSales:
+//           result?.totalSales ||
+//           0,
+
+//         totalItems:
+//           result?.totalItems ||
+//           0,
+
+//         totalOrders:
+//           result
+//             ?.totalOrders
+//             ?.length || 0,
+//       },
+//     })
+//   } catch (error) {
+//     next(error)
+//   }
+// }
+
+// // ============================================================
+// // UPDATE SELLER ORDER STATUS
+// // ============================================================
+
+// export const updateSellerOrderStatus =
+//   async (
+//     req,
+//     res,
+//     next
+//   ) => {
+//     try {
+//       const sellerId =
+//         req.seller?._id
+
+//       if (!sellerId) {
+//         return res.status(403).json({
+//           success: false,
+//           message:
+//             'Seller account not found.',
+//         })
+//       }
+
+//       const order =
+//         await Order.findById(
+//           req.params.id
+//         )
+
+//       if (!order) {
+//         return res.status(404).json({
+//           success: false,
+//           message:
+//             'Order not found.',
+//         })
+//       }
+
+//       const sellerHasItem =
+//         order.items.some(
+//           (item) =>
+//             String(
+//               item.seller
+//             ) ===
+//             String(
+//               sellerId
+//             )
+//         )
+
+//       if (!sellerHasItem) {
+//         return res.status(403).json({
+//           success: false,
+//           message:
+//             'This order does not contain your products.',
+//         })
+//       }
+
+//       const {
+//         status,
+//       } = req.body
+
+//       const allowedStatuses = [
+//         'processing',
+//         'shipped',
+//         'delivered',
+//       ]
+
+//       if (
+//         !allowedStatuses.includes(
+//           status
+//         )
+//       ) {
+//         return res.status(400).json({
+//           success: false,
+//           message:
+//             'Invalid seller order status.',
+//         })
+//       }
+
+//       order.status =
+//         status
+
+//       await order.save()
+
+//       // ======================================================
+//       // CUSTOMER NOTIFICATION
+//       // ======================================================
+//       //
+//       // When seller changes the order status,
+//       // notify the customer.
+//       //
+//       // This uses the existing notification service.
+//       // If this order has a logged-in customer,
+//       // order.user contains the customer's User ID.
+//       // ======================================================
+
+//       try {
+//         if (order.user) {
+//           const statusText =
+//             status
+//               .charAt(0)
+//               .toUpperCase() +
+//             status.slice(1)
+
+//           await createOrderNotificationService(
+//             {
+//               recipient:
+//                 order.user,
+
+//               orderId:
+//                 order._id,
+
+//               orderNumber:
+//                 order.orderNumber,
+
+//               title:
+//                 'Order Status Updated',
+
+//               message:
+//                 `Your order ${
+//                   order.orderNumber ||
+//                   ''
+//                 } is now ${statusText}.`,
+//             }
+//           )
+//         }
+//       } catch (
+//         notificationError
+//       ) {
+//         // Notification failure should NOT
+//         // cancel the successful order update.
+//         console.error(
+//           'Seller order status notification error:',
+//           notificationError
+//         )
+//       }
+
+//       return res.status(200).json({
+//         success: true,
+//         message:
+//           'Order status updated successfully.',
+//         order,
+//       })
+//     } catch (error) {
+//       next(error)
+//     }
+//   }
+
+// // ============================================================
+// // SELLER STORE
+// // ============================================================
+
+// export const getMyStore = async (
+//   req,
+//   res,
+//   next
+// ) => {
+//   try {
+//     const sellerId =
+//       req.seller?._id
+
+//     if (!sellerId) {
+//       return res.status(403).json({
+//         success: false,
+//         message:
+//           'Seller account not found.',
+//       })
+//     }
+
+//     const store =
+//       await Store.findOne({
+//         seller: sellerId,
+//       }).populate(
+//         'seller',
+//         'businessName email phone status'
+//       )
+
+//     if (!store) {
+//       return res.status(404).json({
+//         success: false,
+//         message:
+//           'Store not found.',
+//       })
+//     }
+
+//     return res.status(200).json({
+//       success: true,
+//       store,
+//     })
+//   } catch (error) {
+//     next(error)
+//   }
+// }
+
+// // ============================================================
+// // UPDATE SELLER STORE SETTINGS
+// // ============================================================
+
+// export const updateMyStore = async (
+//   req,
+//   res,
+//   next
+// ) => {
+//   try {
+//     const sellerId = req.seller?._id
+
+//     if (!sellerId) {
+//       return res.status(403).json({
+//         success: false,
+//         message: 'Seller account not found.',
+//       })
+//     }
+
+//     const store = await Store.findOne({ seller: sellerId })
+
+//     if (!store) {
+//       return res.status(404).json({
+//         success: false,
+//         message: 'Store not found.',
+//       })
+//     }
+
+//     const { storeName, storeDescription } = req.body
+
+//     if (storeName !== undefined) {
+//       const name = String(storeName).trim()
+//       if (!name) {
+//         return res.status(400).json({
+//           success: false,
+//           message: 'Store name is required.',
+//         })
+//       }
+//       store.name = name
+//     }
+
+//     if (storeDescription !== undefined) {
+//       store.description = String(storeDescription).trim()
+//     }
+
+//     const logoFile = req.files?.logo?.[0]
+//     const coverFile = req.files?.coverImage?.[0]
+
+//     if (logoFile?.path) {
+//       store.logo = logoFile.path
+//     }
+
+//     if (coverFile?.path) {
+//       store.banner = coverFile.path
+//     }
+
+//     // Keep the existing public URL stable when the store name changes.
+//     await store.save()
+
+//     return res.status(200).json({
+//       success: true,
+//       message: 'Store settings updated successfully.',
+//       store,
+//     })
+//   } catch (error) {
+//     next(error)
+//   }
+// }
+
+
+
+
+import Order from '../models/Order.js'
+import Product from '../models/Product.js'
+import Store from '../models/Store.js'
+import Seller from '../models/Seller.js'
+import Notification from '../models/Notification.js'
+import {
+  createOrderNotificationService,
+} from '../services/notificationService.js'
+
+// ============================================================
+// SELLER PROFILE
+// ============================================================
+
+export const getSellerProfile = async (
+  req,
+  res,
+  next
+) => {
+  try {
+    const seller = await Seller.findOne({
+      user: req.user.id,
+    })
+      .populate(
+        'user',
+        'name email phone role'
+      )
+      .populate(
+        'store',
+        'name slug description logo banner status'
+      )
+
+    if (!seller) {
+      return res.status(404).json({
+        success: false,
+        message:
+          'Seller profile not found.',
+      })
+    }
+
+    return res.status(200).json({
+      success: true,
+      seller,
+    })
+  } catch (error) {
+    next(error)
+  }
+}
+
+// ============================================================
+// UPDATE SELLER PROFILE
+// ============================================================
+
+export const updateSellerProfile = async (
+  req,
+  res,
+  next
+) => {
+  try {
+    const seller = await Seller.findOne({
+      user: req.user.id,
+    })
+
+    if (!seller) {
+      return res.status(404).json({
+        success: false,
+        message:
+          'Seller profile not found.',
+      })
+    }
+
+    const {
+      businessName,
+      phone,
+      email,
+      address,
+      description,
+      logo,
+      documents,
+    } = req.body
+
+    if (
+      businessName !== undefined
+    ) {
+      seller.businessName =
+        businessName
+    }
+
+    if (phone !== undefined) {
+      seller.phone = phone
+    }
+
+    if (email !== undefined) {
+      seller.email = email
+    }
+
+    if (address !== undefined) {
+      seller.address = address
+    }
+
+    if (
+      description !== undefined
+    ) {
+      seller.description =
+        description
+    }
+
+    if (logo !== undefined) {
+      seller.logo = logo
+    }
+
+    if (
+      documents !== undefined
+    ) {
+      seller.documents =
+        documents
+    }
+
+    await seller.save()
+
+    const updatedSeller =
+      await Seller.findById(
+        seller._id
+      )
+        .populate(
+          'user',
+          'name email phone role'
+        )
+        .populate(
+          'store',
+          'name slug description logo banner status'
+        )
+
+    return res.status(200).json({
+      success: true,
+      message:
+        'Seller profile updated successfully.',
+      seller: updatedSeller,
+    })
+  } catch (error) {
+    next(error)
+  }
+}
+
+// ============================================================
+// SELLER DASHBOARD
+// ============================================================
+
+export const getSellerDashboard = async (
+  req,
+  res,
+  next
+) => {
+  try {
+    const sellerId =
+      req.seller?._id
+
+    if (!sellerId) {
+      return res.status(403).json({
+        success: false,
+        message:
+          'Seller account not found.',
+      })
+    }
+
+    const [
+      products,
+      stores,
+      orders,
+    ] = await Promise.all([
+      Product.countDocuments({
+        seller: sellerId,
+      }),
+
+      Store.countDocuments({
+        seller: sellerId,
+      }),
+
+      Order.countDocuments({
+        'items.seller': sellerId,
+      }),
+    ])
+
+    const salesResult =
+      await Order.aggregate([
+        {
+          $match: {
+            'items.seller':
+              sellerId,
+
+            status: {
+              $nin: [
+                'cancelled',
+              ],
+            },
+          },
+        },
+
+        {
+          $unwind:
+            '$items',
+        },
+
+        {
+          $match: {
+            'items.seller':
+              sellerId,
+          },
+        },
+
+        {
+          $group: {
+            _id: null,
+
+            sales: {
+              $sum: {
+                $multiply: [
+                  '$items.price',
+                  '$items.quantity',
+                ],
+              },
+            },
+          },
+        },
+      ])
+
+    return res.status(200).json({
+      success: true,
+
+      dashboard: {
+        products,
+        stores,
+        orders,
+        sales:
+          salesResult[0]
+            ?.sales || 0,
+      },
+    })
+  } catch (error) {
+    next(error)
+  }
+}
+
+// ============================================================
+// SELLER PRODUCTS
+// ============================================================
+
+export const getSellerProducts = async (
+  req,
+  res,
+  next
+) => {
+  try {
+    const sellerId =
+      req.seller?._id
+
+    if (!sellerId) {
+      return res.status(403).json({
+        success: false,
+        message:
+          'Seller account not found.',
+      })
+    }
+
+    const products =
+      await Product.find({
+        seller: sellerId,
+      })
+        .populate(
+          'store',
+          'name slug status'
+        )
+        .sort({
+          createdAt: -1,
+        })
+
+    return res.status(200).json({
+      success: true,
+      products,
+    })
+  } catch (error) {
+    next(error)
+  }
+}
+
+// ============================================================
+// SELLER ORDERS
+// ============================================================
+
+export const getSellerOrders = async (
+  req,
+  res,
+  next
+) => {
+  try {
+    const sellerId =
+      req.seller?._id
+
+    if (!sellerId) {
+      return res.status(403).json({
+        success: false,
+        message:
+          'Seller account not found.',
+      })
+    }
+
+    const orders =
+      await Order.find({
+        'items.seller':
+          sellerId,
+      })
+        .sort({
+          createdAt: -1,
+        })
+        .populate(
+          'user',
+          'name email phone'
+        )
+        .populate(
+          'items.product'
+        )
+        .populate(
+          'items.seller',
+          'businessName email phone status'
+        )
+        .populate(
+          'items.store',
+          'name slug status'
+        )
+
+    const sellerOrders = orders.map((order) => {
+      const orderData = order.toObject()
+      orderData.items = (orderData.items || []).filter((item) => {
+        const itemSellerId =
+          item.seller && typeof item.seller === 'object'
+            ? item.seller._id || item.seller.id
+            : item.seller
+
+        return String(itemSellerId || '') === String(sellerId)
+      })
+      return orderData
+    })
+
+    return res.status(200).json({
+      success: true,
+      orders: sellerOrders,
+    })
+  } catch (error) {
+    next(error)
+  }
+}
+
+// ============================================================
+// SELLER SALES
+// ============================================================
+
+export const getSellerSales = async (
+  req,
+  res,
+  next
+) => {
+  try {
+    const sellerId =
+      req.seller?._id
+
+    if (!sellerId) {
+      return res.status(403).json({
+        success: false,
+        message:
+          'Seller account not found.',
+      })
+    }
+
+    const sales =
+      await Order.aggregate([
+        {
+          $match: {
+            'items.seller':
+              sellerId,
+
+            status: {
+              $nin: [
+                'cancelled',
+              ],
+            },
+          },
+        },
+
+        {
+          $unwind:
+            '$items',
+        },
+
+        {
+          $match: {
+            'items.seller':
+              sellerId,
+          },
+        },
+
+        {
+          $group: {
+            _id: null,
+
+            totalSales: {
+              $sum: {
+                $multiply: [
+                  '$items.price',
+                  '$items.quantity',
+                ],
+              },
+            },
+
+            totalItems: {
+              $sum:
+                '$items.quantity',
+            },
+
+            totalOrders: {
+              $addToSet:
+                '$_id',
+            },
+          },
+        },
+      ])
+
+    const result =
+      sales[0]
+
+    return res.status(200).json({
+      success: true,
+
+      sales: {
+        totalSales:
+          result?.totalSales ||
+          0,
+
+        totalItems:
+          result?.totalItems ||
+          0,
+
+        totalOrders:
+          result
+            ?.totalOrders
+            ?.length || 0,
+      },
+    })
+  } catch (error) {
+    next(error)
+  }
+}
+
+// ============================================================
+// UPDATE SELLER ORDER STATUS
+// ============================================================
+
+export const updateSellerOrderStatus =
+  async (
+    req,
+    res,
+    next
+  ) => {
+    try {
+      const sellerId =
+        req.seller?._id
+
+      if (!sellerId) {
+        return res.status(403).json({
+          success: false,
+          message:
+            'Seller account not found.',
+        })
+      }
+
+      const order =
+        await Order.findById(
+          req.params.id
+        )
+
+      if (!order) {
+        return res.status(404).json({
+          success: false,
+          message:
+            'Order not found.',
+        })
+      }
+
+      const sellerHasItem =
+        order.items.some(
+          (item) =>
+            String(
+              item.seller
+            ) ===
+            String(
+              sellerId
+            )
+        )
+
+      if (!sellerHasItem) {
+        return res.status(403).json({
+          success: false,
+          message:
+            'This order does not contain your products.',
+        })
+      }
+
+      const {
+        status,
+      } = req.body
+
+      const allowedStatuses = [
+        'processing',
+        'shipped',
+        'delivered',
+      ]
+
+      if (
+        !allowedStatuses.includes(
+          status
+        )
+      ) {
+        return res.status(400).json({
+          success: false,
+          message:
+            'Invalid seller order status.',
+        })
+      }
+
+      order.status =
+        status
+
+      await order.save()
+
+      // ======================================================
+      // CUSTOMER NOTIFICATION
+      // ======================================================
+      //
+      // When seller changes the order status,
+      // notify the customer.
+      //
+      // This uses the existing notification service.
+      // If this order has a logged-in customer,
+      // order.user contains the customer's User ID.
+      // ======================================================
+
+      try {
+        if (order.user) {
+          const statusText =
+            status
+              .charAt(0)
+              .toUpperCase() +
+            status.slice(1)
+
+          await createOrderNotificationService(
+            {
+              recipient:
+                order.user,
+
+              orderId:
+                order._id,
+
+              orderNumber:
+                order.orderNumber,
+
+              title:
+                'Order Status Updated',
+
+              message:
+                `Your order ${
+                  order.orderNumber ||
+                  ''
+                } is now ${statusText}.`,
+            }
+          )
+        }
+      } catch (
+        notificationError
+      ) {
+        // Notification failure should NOT
+        // cancel the successful order update.
+        console.error(
+          'Seller order status notification error:',
+          notificationError
+        )
+      }
+
+      return res.status(200).json({
+        success: true,
+        message:
+          'Order status updated successfully.',
+        order,
+      })
+    } catch (error) {
+      next(error)
+    }
+  }
+
+// ============================================================
+// SELLER STORE
+// ============================================================
+
+export const getMyStore = async (
+  req,
+  res,
+  next
+) => {
+  try {
+    const sellerId =
+      req.seller?._id
+
+    if (!sellerId) {
+      return res.status(403).json({
+        success: false,
+        message:
+          'Seller account not found.',
+      })
+    }
+
+    const store =
+      await Store.findOne({
+        seller: sellerId,
+      }).populate(
+        'seller',
+        'businessName email phone status'
+      )
+
+    if (!store) {
+      return res.status(404).json({
+        success: false,
+        message:
+          'Store not found.',
+      })
+    }
+
+    return res.status(200).json({
+      success: true,
+      store,
+    })
+  } catch (error) {
+    next(error)
+  }
+}
+
+// ============================================================
+// UPDATE SELLER STORE SETTINGS
+// ============================================================
+
+export const updateMyStore = async (
+  req,
+  res,
+  next
+) => {
+  try {
+    const sellerId = req.seller?._id
+
+    if (!sellerId) {
+      return res.status(403).json({
+        success: false,
+        message: 'Seller account not found.',
+      })
+    }
+
+    const store = await Store.findOne({ seller: sellerId })
+
+    if (!store) {
+      return res.status(404).json({
+        success: false,
+        message: 'Store not found.',
+      })
+    }
+
+    const { storeName, storeDescription } = req.body
+
+    if (storeName !== undefined) {
+      const name = String(storeName).trim()
+      if (!name) {
+        return res.status(400).json({
+          success: false,
+          message: 'Store name is required.',
+        })
+      }
+      store.name = name
+    }
+
+    if (storeDescription !== undefined) {
+      store.description = String(storeDescription).trim()
+    }
+
+    const logoFile = req.files?.logo?.[0]
+    const coverFile = req.files?.coverImage?.[0]
+
+    if (logoFile?.path) {
+      store.logo = logoFile.path
+    }
+
+    if (coverFile?.path) {
+      store.banner = coverFile.path
+    }
+
+    // Keep the existing public URL stable when the store name changes.
+    await store.save()
+
+    return res.status(200).json({
+      success: true,
+      message: 'Store settings updated successfully.',
+      store,
+    })
+  } catch (error) {
+    next(error)
+  }
+}
+
+// ============================================================
+// SELLER NOTIFICATIONS
+// ============================================================
+
+const getSellerUserId = async (req) => {
+  const sellerId = req.seller?._id
+  if (!sellerId) return null
+  const seller = await Seller.findById(sellerId).select('user')
+  return seller?.user || null
+}
+
+export const getSellerNotifications = async (req, res, next) => {
+  try {
+    const userId = await getSellerUserId(req)
+    if (!userId) {
+      return res.status(403).json({ success: false, message: 'Seller account not found.' })
+    }
+
+    const notifications = await Notification.find({ recipient: userId })
+      .populate('order', 'orderNumber orderStatus total shippingAddress createdAt')
+      .populate('product', 'name approvalStatus rejectionReason')
+      .populate('store', 'name slug')
+      .sort({ createdAt: -1 })
+
+    return res.status(200).json({ success: true, notifications })
+  } catch (error) {
+    next(error)
+  }
+}
+
+export const markSellerNotificationAsRead = async (req, res, next) => {
+  try {
+    const userId = await getSellerUserId(req)
+    if (!userId) {
+      return res.status(403).json({ success: false, message: 'Seller account not found.' })
+    }
+
+    const notification = await Notification.findOneAndUpdate(
+      { _id: req.params.id, recipient: userId },
+      { $set: { isRead: true, readAt: new Date() } },
+      { new: true, runValidators: true }
+    )
+
+    if (!notification) {
+      return res.status(404).json({ success: false, message: 'Notification not found.' })
+    }
+
+    return res.status(200).json({ success: true, notification })
+  } catch (error) {
+    next(error)
+  }
+}
+
+export const markAllSellerNotificationsAsRead = async (req, res, next) => {
+  try {
+    const userId = await getSellerUserId(req)
+    if (!userId) {
+      return res.status(403).json({ success: false, message: 'Seller account not found.' })
+    }
+
+    await Notification.updateMany(
+      { recipient: userId, isRead: false },
+      { $set: { isRead: true, readAt: new Date() } }
+    )
+
+    return res.status(200).json({ success: true, message: 'All notifications marked as read.' })
+  } catch (error) {
+    next(error)
+  }
+}
