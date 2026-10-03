@@ -13,6 +13,73 @@ import { useLanguage } from '../context/LanguageContext'
 
 const API_URL = 'https://fegegta-server.onrender.com/api'
 
+const [error, setError] = useState('')
+
+// ==========================================================
+// HOME BANNER
+// ==========================================================
+
+const defaultBanner = {
+  type: 'text',
+  title: 'Discover products you’ll love.',
+  subtitle:
+    'Shop quality products from trusted sellers in one simple, professional marketplace.',
+  smallText: 'ፈገግታ Marketplace',
+  image: '',
+  buttonText: 'View Products',
+  buttonLink: '/products',
+}
+
+
+const [banner, setBanner] = useState(defaultBanner)
+
+
+// ==========================================================
+// LOAD ACTIVE BANNER
+// ==========================================================
+
+useEffect(() => {
+
+  const fetchBanner = async () => {
+
+    try {
+
+      const response = await fetch(
+        `${API_URL}/banners/active`
+      )
+
+      if (!response.ok) {
+        return
+      }
+
+
+      const data = await response.json()
+
+
+      if (data?.banner) {
+
+        setBanner({
+          ...defaultBanner,
+          ...data.banner,
+        })
+
+      }
+
+
+    } catch (error) {
+
+      console.log(
+        'Using default banner'
+      )
+
+    }
+
+  }
+
+
+  fetchBanner()
+
+}, [])
 // ============================================================
 // PRODUCT AGE GROUP
 // ============================================================
@@ -438,7 +505,7 @@ function Home() {
           HERO
       ==================================================== */}
 
-      <section className="mx-auto max-w-7xl px-4 pb-10 sm:px-6 lg:px-8">
+      {/* <section className="mx-auto max-w-7xl px-4 pb-10 sm:px-6 lg:px-8">
 
         <div className="overflow-hidden rounded-3xl bg-gray-950 px-6 py-14 text-white sm:px-10 lg:px-16 lg:py-20">
 
@@ -470,7 +537,100 @@ function Home() {
 
         </div>
 
-      </section>
+      </section> */}
+
+      <section className="mx-auto max-w-7xl px-4 pb-10 sm:px-6 lg:px-8">
+
+  <div
+    className={`
+      overflow-hidden rounded-3xl px-6 py-14 text-white
+      sm:px-10 lg:px-16 lg:py-20
+      ${
+        banner.image
+          ? 'bg-cover bg-center'
+          : 'bg-gray-950'
+      }
+    `}
+    style={
+      banner.image
+        ? {
+            backgroundImage:
+              `linear-gradient(
+                rgba(0,0,0,.55),
+                rgba(0,0,0,.55)
+              ), url(${banner.image})`,
+          }
+        : {}
+    }
+  >
+
+    <div className="max-w-2xl">
+
+
+      {banner.smallText && (
+        <p className="text-sm font-medium tracking-wide text-gray-300">
+          {banner.smallText}
+        </p>
+      )}
+
+
+
+      {banner.title && (
+
+        <h1 className="mt-4 text-4xl font-bold tracking-tight sm:text-5xl lg:text-6xl">
+
+          {banner.title}
+
+        </h1>
+
+      )}
+
+
+
+      {banner.subtitle && (
+
+        <p className="mt-5 max-w-xl text-base leading-7 text-gray-300 sm:text-lg">
+
+          {banner.subtitle}
+
+        </p>
+
+      )}
+
+
+
+      {banner.buttonText && (
+
+        <Link
+          to={
+            banner.buttonLink ||
+            '/products'
+          }
+          className="
+            mt-8 inline-flex items-center gap-2
+            rounded-xl bg-white px-5 py-3
+            text-sm font-semibold text-gray-900
+            transition hover:bg-gray-100
+          "
+        >
+
+          {banner.buttonText}
+
+
+          <ArrowRight className="h-4 w-4" />
+
+        </Link>
+
+      )}
+
+
+    </div>
+
+
+  </div>
+
+
+</section>
 
       {/* ====================================================
           PRODUCTS
