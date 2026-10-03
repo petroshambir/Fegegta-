@@ -1,4 +1,5 @@
-import React, { useState } from 'react'
+
+import React, { useEffect, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import {
   ArrowLeft,
@@ -12,67 +13,249 @@ import {
   Mail,
   ShoppingBag,
   Hash,
+  Loader2,
+  AlertCircle,
+  Store,
 } from 'lucide-react'
+
+const API_URL =
+  'https://fegegta-server.onrender.com/api'
+
+const getToken = () => {
+  return localStorage.getItem('token')
+}
 
 function AdminOrderDetails() {
   const { id } = useParams()
 
-  const [order] = useState({
-    orderNumber: 'FEG-20261003-81AB3A',
+  const [order, setOrder] = useState(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState('')
 
-    status: 'pending',
+  // ============================================================
+  // LOAD ORDER
+  // ============================================================
 
-    createdAt: '2026-10-03T10:30:00',
+  const loadOrder = async () => {
+    try {
+      setLoading(true)
+      setError('')
 
-    customer: {
-      fullName: 'Meron Tkabo',
-      email: 'meron@gmail.com',
-      phone: '0707415421',
-    },
+      const token = getToken()
 
-    shippingAddress: {
-      fullName: 'Meron Tkabo',
-      phone: '0707415421',
-      address: '1',
-      city: 'Rotterdam',
-      state: 'South Holland',
-      postalCode: '3011AA',
-      country: 'Netherlands',
-    },
+      if (!token) {
+        throw new Error(
+          'Authentication token not found. Please login again.'
+        )
+      }
 
-    shipping: {
-      carrier: 'FedEx',
-      service: 'FedEx Test Shipping',
-      rateId: 'test-fedex',
-      price: 0,
-      currency: 'EUR',
-    },
+      if (!id) {
+        throw new Error(
+          'Order ID is missing.'
+        )
+      }
 
-    payment: {
-      method: 'test',
-      status: 'pending',
-      reference: '',
-    },
+      const response = await fetch(
+        `${API_URL}/orders/${id}`,
+        {
+          method: 'GET',
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+        }
+      )
 
-    items: [
-      {
-        id: '1',
-        name: 'Traditional Habesha Dress',
-        image:
-          'https://images.unsplash.com/photo-1594633312681-425c7b97ccd1?auto=format&fit=crop&w=800&q=80',
-        price: 300,
-        quantity: 1,
-        size: 'M',
-        color: 'White',
-        subtotal: 300,
-      },
-    ],
+      let data = {}
 
-    subtotal: 300,
-    shippingCost: 0,
-    discount: 0,
-    total: 300,
-  })
+      try {
+        data = await response.json()
+      } catch {
+        data = {}
+      }
+
+      if (!response.ok) {
+        throw new Error(
+          data?.message ||
+            'Failed to load order details.'
+        )
+      }
+
+      if (data?.success === false) {
+        throw new Error(
+          data?.message ||
+            'Failed to load order details.'
+        )
+      }
+
+      const receivedOrder =
+        data?.order ||
+        data?.data?.order ||
+        data?.data
+
+      if (!receivedOrder) {
+        throw new Error(
+          'Order details were not returned by the server.'
+        )
+      }
+
+      setOrder(receivedOrder)
+    } catch (error) {
+      console.error(
+        'Load admin order details error:',
+        error
+      )
+
+      setError(
+        error?.message ||
+          'Something went wrong while loading the order.'
+      )
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  // ============================================================
+  // INITIAL LOAD
+  // ============================================================
+
+  useEffect(() => {
+    loadOrder()
+  }, [id])
+
+  // ============================================================
+  // LOADING
+  // ============================================================
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <main className="p-4 sm:p-6 lg:p-8">
+          <div className="flex min-h-[500px] items-center justify-center">
+            <div className="text-center">
+              <Loader2
+                size={38}
+                className="mx-auto animate-spin text-gray-400"
+              />
+
+              <p className="mt-4 text-sm text-gray-500">
+                Loading order details...
+              </p>
+            </div>
+          </div>
+        </main>
+      </div>
+    )
+  }
+
+  // ============================================================
+  // ERROR
+  // ============================================================
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <main className="p-4 sm:p-6 lg:p-8">
+          <div className="mb-6">
+            <Link
+              to="/admin/orders"
+              className="inline-flex items-center gap-2 text-sm font-medium text-gray-600 transition hover:text-gray-900"
+            >
+              <ArrowLeft size={18} />
+              Back to Orders
+            </Link>
+          </div>
+
+          <div className="rounded-2xl border border-red-200 bg-red-50 p-6">
+            <div className="flex items-start gap-3">
+              <AlertCircle
+                size={22}
+                className="mt-0.5 shrink-0 text-red-600"
+              />
+
+              <div>
+                <h1 className="text-base font-semibold text-red-800">
+                  Failed to load order
+                </h1>
+
+                <p className="mt-1 text-sm text-red-700">
+                  {error}
+                </p>
+
+                <button
+                  type="button"
+                  onClick={loadOrder}
+                  className="mt-4 rounded-lg bg-red-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-red-700"
+                >
+                  Try Again
+                </button>
+              </div>
+            </div>
+          </div>
+        </main>
+      </div>
+    )
+  }
+
+  if (!order) {
+    return null
+  }
+
+  // ============================================================
+  // REAL ORDER DATA
+  // ============================================================
+
+  const customer =
+    order.customer || {}
+
+  const shippingAddress =
+    order.shippingAddress || {}
+
+  const items =
+    Array.isArray(order.items)
+      ? order.items
+      : []
+
+  const orderStatus =
+    order.orderStatus ||
+    order.status ||
+    'pending'
+
+  const paymentMethod =
+    order.paymentMethod ||
+    '—'
+
+  const paymentStatus =
+    order.paymentStatus ||
+    'pending'
+
+  const paymentReference =
+    order.paymentReference ||
+    ''
+
+  const subtotal =
+    order.subtotal ?? 0
+
+  const shippingCost =
+    order.shippingCost ?? 0
+
+  const discount =
+    order.discount ?? 0
+
+  const total =
+    order.total ?? 0
+
+  const customerName =
+    [
+      customer.firstName,
+      customer.lastName,
+    ]
+      .filter(Boolean)
+      .join(' ')
+      .trim() ||
+    customer.name ||
+    shippingAddress.fullName ||
+    'Customer'
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -110,19 +293,29 @@ function AdminOrderDetails() {
             </div>
 
             <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-gray-500">
+
               <span className="inline-flex items-center gap-1.5">
                 <Hash size={15} />
-                {order.orderNumber}
+
+                {order.orderNumber ||
+                  order._id ||
+                  id}
               </span>
 
               <span className="inline-flex items-center gap-1.5">
                 <CalendarDays size={15} />
-                {formatDate(order.createdAt)}
+
+                {formatDate(
+                  order.createdAt
+                )}
               </span>
+
             </div>
           </div>
 
-          <OrderStatus status={order.status} />
+          <OrderStatus
+            status={orderStatus}
+          />
         </div>
 
         {/* ================================================== */}
@@ -144,6 +337,7 @@ function AdminOrderDetails() {
             <section className="overflow-hidden rounded-2xl border border-gray-200 bg-white">
               <div className="border-b border-gray-100 px-5 py-4 sm:px-6">
                 <div className="flex items-center gap-2">
+
                   <ShoppingBag
                     size={19}
                     className="text-gray-600"
@@ -152,17 +346,30 @@ function AdminOrderDetails() {
                   <h2 className="text-base font-semibold text-gray-900">
                     Ordered Products
                   </h2>
+
                 </div>
               </div>
 
-              <div className="divide-y divide-gray-100">
-                {order.items.map((item) => (
-                  <OrderItem
-                    key={item.id}
-                    item={item}
-                  />
-                ))}
-              </div>
+              {items.length === 0 ? (
+                <div className="p-6 text-sm text-gray-500">
+                  No products found for this order.
+                </div>
+              ) : (
+                <div className="divide-y divide-gray-100">
+                  {items.map(
+                    (item, index) => (
+                      <OrderItem
+                        key={
+                          item._id ||
+                          item.id ||
+                          `${item.product?._id || item.product || 'item'}-${index}`
+                        }
+                        item={item}
+                      />
+                    )
+                  )}
+                </div>
+              )}
             </section>
 
             {/* ================================================== */}
@@ -172,6 +379,7 @@ function AdminOrderDetails() {
             <section className="rounded-2xl border border-gray-200 bg-white">
               <div className="border-b border-gray-100 px-5 py-4 sm:px-6">
                 <div className="flex items-center gap-2">
+
                   <User
                     size={19}
                     className="text-gray-600"
@@ -180,6 +388,7 @@ function AdminOrderDetails() {
                   <h2 className="text-base font-semibold text-gray-900">
                     Customer Information
                   </h2>
+
                 </div>
               </div>
 
@@ -188,19 +397,26 @@ function AdminOrderDetails() {
                 <InfoItem
                   icon={<User size={17} />}
                   label="Full Name"
-                  value={order.customer.fullName}
+                  value={customerName}
                 />
 
                 <InfoItem
                   icon={<Mail size={17} />}
                   label="Email"
-                  value={order.customer.email}
+                  value={
+                    customer.email ||
+                    '—'
+                  }
                 />
 
                 <InfoItem
                   icon={<Phone size={17} />}
                   label="Phone"
-                  value={order.customer.phone}
+                  value={
+                    customer.phone ||
+                    shippingAddress.phone ||
+                    '—'
+                  }
                 />
 
                 <InfoItem
@@ -219,6 +435,7 @@ function AdminOrderDetails() {
             <section className="rounded-2xl border border-gray-200 bg-white">
               <div className="border-b border-gray-100 px-5 py-4 sm:px-6">
                 <div className="flex items-center gap-2">
+
                   <MapPin
                     size={19}
                     className="text-gray-600"
@@ -227,6 +444,7 @@ function AdminOrderDetails() {
                   <h2 className="text-base font-semibold text-gray-900">
                     Shipping Address
                   </h2>
+
                 </div>
               </div>
 
@@ -236,37 +454,51 @@ function AdminOrderDetails() {
 
                   <InfoItem
                     label="Full Name"
-                    value={order.shippingAddress.fullName}
+                    value={
+                      shippingAddress.fullName
+                    }
                   />
 
                   <InfoItem
                     label="Phone"
-                    value={order.shippingAddress.phone}
+                    value={
+                      shippingAddress.phone
+                    }
                   />
 
                   <InfoItem
                     label="Address"
-                    value={order.shippingAddress.address}
+                    value={
+                      shippingAddress.address
+                    }
                   />
 
                   <InfoItem
                     label="City"
-                    value={order.shippingAddress.city}
+                    value={
+                      shippingAddress.city
+                    }
                   />
 
                   <InfoItem
                     label="State / Province"
-                    value={order.shippingAddress.state}
+                    value={
+                      shippingAddress.state
+                    }
                   />
 
                   <InfoItem
                     label="Postal Code"
-                    value={order.shippingAddress.postalCode}
+                    value={
+                      shippingAddress.postalCode
+                    }
                   />
 
                   <InfoItem
                     label="Country"
-                    value={order.shippingAddress.country}
+                    value={
+                      shippingAddress.country
+                    }
                   />
 
                 </div>
@@ -281,6 +513,7 @@ function AdminOrderDetails() {
             <section className="rounded-2xl border border-gray-200 bg-white">
               <div className="border-b border-gray-100 px-5 py-4 sm:px-6">
                 <div className="flex items-center gap-2">
+
                   <Truck
                     size={19}
                     className="text-gray-600"
@@ -289,6 +522,7 @@ function AdminOrderDetails() {
                   <h2 className="text-base font-semibold text-gray-900">
                     Shipping Information
                   </h2>
+
                 </div>
               </div>
 
@@ -296,22 +530,39 @@ function AdminOrderDetails() {
 
                 <InfoItem
                   label="Carrier"
-                  value={order.shipping.carrier}
+                  value={
+                    getShippingValue(
+                      order,
+                      'carrier'
+                    )
+                  }
                 />
 
                 <InfoItem
                   label="Service"
-                  value={order.shipping.service}
+                  value={
+                    getShippingValue(
+                      order,
+                      'service'
+                    )
+                  }
                 />
 
                 <InfoItem
                   label="Rate ID"
-                  value={order.shipping.rateId}
+                  value={
+                    getShippingValue(
+                      order,
+                      'rateId'
+                    )
+                  }
                 />
 
                 <InfoItem
                   label="Shipping Cost"
-                  value={formatCurrency(order.shipping.price)}
+                  value={formatCurrency(
+                    shippingCost
+                  )}
                 />
 
               </div>
@@ -324,6 +575,7 @@ function AdminOrderDetails() {
             <section className="rounded-2xl border border-gray-200 bg-white">
               <div className="border-b border-gray-100 px-5 py-4 sm:px-6">
                 <div className="flex items-center gap-2">
+
                   <CreditCard
                     size={19}
                     className="text-gray-600"
@@ -332,6 +584,7 @@ function AdminOrderDetails() {
                   <h2 className="text-base font-semibold text-gray-900">
                     Payment Information
                   </h2>
+
                 </div>
               </div>
 
@@ -340,26 +593,85 @@ function AdminOrderDetails() {
                 <InfoItem
                   label="Payment Method"
                   value={formatLabel(
-                    order.payment.method
+                    paymentMethod
                   )}
                 />
 
                 <InfoItem
                   label="Payment Status"
                   value={formatLabel(
-                    order.payment.status
+                    paymentStatus
                   )}
                 />
 
                 <InfoItem
                   label="Payment Reference"
                   value={
-                    order.payment.reference || '—'
+                    paymentReference ||
+                    '—'
                   }
                 />
 
               </div>
             </section>
+
+            {/* ================================================== */}
+            {/* CUSTOMER NOTES */}
+            {/* ================================================== */}
+
+            {order.notes && (
+              <section className="rounded-2xl border border-gray-200 bg-white">
+                <div className="border-b border-gray-100 px-5 py-4 sm:px-6">
+                  <h2 className="text-base font-semibold text-gray-900">
+                    Customer Notes
+                  </h2>
+                </div>
+
+                <div className="p-5 sm:p-6">
+                  <p className="whitespace-pre-wrap break-words text-sm leading-6 text-gray-700">
+                    {order.notes}
+                  </p>
+                </div>
+              </section>
+            )}
+
+            {/* ================================================== */}
+            {/* SELLERS / STORES */}
+            {/* ================================================== */}
+
+            {items.length > 0 && (
+              <section className="rounded-2xl border border-gray-200 bg-white">
+                <div className="border-b border-gray-100 px-5 py-4 sm:px-6">
+                  <div className="flex items-center gap-2">
+
+                    <Store
+                      size={19}
+                      className="text-gray-600"
+                    />
+
+                    <h2 className="text-base font-semibold text-gray-900">
+                      Seller / Store Information
+                    </h2>
+
+                  </div>
+                </div>
+
+                <div className="divide-y divide-gray-100">
+                  {items.map(
+                    (item, index) => (
+                      <SellerItem
+                        key={
+                          item._id ||
+                          item.id ||
+                          `seller-${index}`
+                        }
+                        item={item}
+                      />
+                    )
+                  )}
+                </div>
+              </section>
+            )}
 
           </div>
 
@@ -384,28 +696,32 @@ function AdminOrderDetails() {
 
                 <SummaryRow
                   label="Subtotal"
-                  value={order.subtotal}
+                  value={subtotal}
                 />
 
                 <SummaryRow
                   label="Shipping"
-                  value={order.shippingCost}
+                  value={shippingCost}
                 />
 
                 <SummaryRow
                   label="Discount"
-                  value={order.discount}
+                  value={discount}
                 />
 
                 <div className="border-t border-gray-100 pt-4">
                   <div className="flex items-center justify-between">
+
                     <span className="text-base font-bold text-gray-900">
                       Total
                     </span>
 
                     <span className="text-xl font-bold text-gray-900">
-                      {formatCurrency(order.total)}
+                      {formatCurrency(
+                        total
+                      )}
                     </span>
+
                   </div>
                 </div>
 
@@ -425,7 +741,7 @@ function AdminOrderDetails() {
 
               <div className="p-5">
                 <OrderStatus
-                  status={order.status}
+                  status={orderStatus}
                   large
                 />
               </div>
@@ -439,24 +755,32 @@ function AdminOrderDetails() {
               <div className="p-5">
 
                 <div className="flex items-start gap-3">
+
                   <CalendarDays
                     size={20}
                     className="mt-0.5 text-gray-500"
                   />
 
                   <div>
+
                     <p className="text-xs font-medium uppercase tracking-wide text-gray-400">
                       Order Date
                     </p>
 
                     <p className="mt-1 text-sm font-semibold text-gray-900">
-                      {formatDate(order.createdAt)}
+                      {formatDate(
+                        order.createdAt
+                      )}
                     </p>
 
                     <p className="mt-1 text-xs text-gray-500">
-                      {formatTime(order.createdAt)}
+                      {formatTime(
+                        order.createdAt
+                      )}
                     </p>
+
                   </div>
+
                 </div>
 
               </div>
@@ -475,39 +799,86 @@ function AdminOrderDetails() {
 // ============================================================
 
 function OrderItem({ item }) {
+  const product =
+    item.product &&
+    typeof item.product === 'object'
+      ? item.product
+      : null
+
+  const image =
+    item.image ||
+    getProductImage(product)
+
+  const productName =
+    item.name ||
+    product?.name ||
+    'Product'
+
+  const quantity =
+    item.quantity ?? 0
+
+  const price =
+    item.price ?? 0
+
+  const subtotal =
+    item.subtotal ??
+    Number(price) * Number(quantity)
+
+  const size =
+    item.size ||
+    item.sizeData?.size ||
+    ''
+
+  const color =
+    item.color ||
+    item.sizeData?.color ||
+    ''
+
   return (
     <div className="flex flex-col gap-4 p-5 sm:flex-row sm:p-6">
 
+      {/* PRODUCT IMAGE */}
+
       <div className="h-24 w-24 shrink-0 overflow-hidden rounded-xl border border-gray-200 bg-gray-50">
-        <img
-          src={item.image}
-          alt={item.name}
-          className="h-full w-full object-cover"
-        />
+
+        {image ? (
+          <img
+            src={image}
+            alt={productName}
+            className="h-full w-full object-cover"
+          />
+        ) : (
+          <div className="flex h-full w-full items-center justify-center text-gray-300">
+            <Package size={30} />
+          </div>
+        )}
+
       </div>
+
+      {/* PRODUCT DETAILS */}
 
       <div className="min-w-0 flex-1">
 
         <h3 className="text-sm font-semibold text-gray-900">
-          {item.name}
+          {productName}
         </h3>
 
         <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-xs text-gray-500">
 
-          {item.size && (
+          {size && (
             <span>
               Size:{' '}
               <span className="font-medium text-gray-700">
-                {item.size}
+                {size}
               </span>
             </span>
           )}
 
-          {item.color && (
+          {color && (
             <span>
               Color:{' '}
               <span className="font-medium text-gray-700">
-                {item.color}
+                {color}
               </span>
             </span>
           )}
@@ -515,11 +886,62 @@ function OrderItem({ item }) {
           <span>
             Quantity:{' '}
             <span className="font-medium text-gray-700">
-              {item.quantity}
+              {quantity}
             </span>
           </span>
 
         </div>
+
+        {/* SIZE DATA */}
+
+        {item.sizeData &&
+          typeof item.sizeData === 'object' &&
+          Object.keys(item.sizeData)
+            .filter(
+              (key) =>
+                ![
+                  'size',
+                  'color',
+                ].includes(key)
+            )
+            .length > 0 && (
+            <div className="mt-3 rounded-lg bg-gray-50 p-3">
+              <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-gray-400">
+                Selected Options
+              </p>
+
+              <div className="grid gap-2 sm:grid-cols-2">
+                {Object.entries(
+                  item.sizeData
+                )
+                  .filter(
+                    ([key]) =>
+                      ![
+                        'size',
+                        'color',
+                      ].includes(key)
+                  )
+                  .map(
+                    ([key, value]) => (
+                      <div
+                        key={key}
+                        className="text-xs text-gray-600"
+                      >
+                        <span className="font-medium text-gray-700">
+                          {formatLabel(
+                            key
+                          )}
+                          :
+                        </span>{' '}
+                        {String(
+                          value ?? ''
+                        )}
+                      </div>
+                    )
+                  )}
+              </div>
+            </div>
+          )}
 
         <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
 
@@ -529,7 +951,9 @@ function OrderItem({ item }) {
             </p>
 
             <p className="mt-0.5 text-sm font-semibold text-gray-800">
-              {formatCurrency(item.price)}
+              {formatCurrency(
+                price
+              )}
             </p>
           </div>
 
@@ -539,12 +963,90 @@ function OrderItem({ item }) {
             </p>
 
             <p className="mt-0.5 text-sm font-bold text-gray-900">
-              {formatCurrency(item.subtotal)}
+              {formatCurrency(
+                subtotal
+              )}
             </p>
           </div>
 
         </div>
+
       </div>
+    </div>
+  )
+}
+
+// ============================================================
+// SELLER ITEM
+// ============================================================
+
+function SellerItem({ item }) {
+  const seller =
+    item.seller &&
+    typeof item.seller === 'object'
+      ? item.seller
+      : null
+
+  const store =
+    item.store &&
+    typeof item.store === 'object'
+      ? item.store
+      : null
+
+  const sellerName =
+    seller?.businessName ||
+    seller?.name ||
+    'Seller'
+
+  const storeName =
+    store?.name ||
+    'Store'
+
+  return (
+    <div className="grid gap-5 p-5 sm:grid-cols-2 sm:p-6">
+
+      <InfoItem
+        label="Product"
+        value={
+          item.name ||
+          item.product?.name ||
+          'Product'
+        }
+      />
+
+      <InfoItem
+        label="Store"
+        value={storeName}
+      />
+
+      <InfoItem
+        label="Seller"
+        value={sellerName}
+      />
+
+      <InfoItem
+        label="Seller Email"
+        value={
+          seller?.email ||
+          '—'
+        }
+      />
+
+      <InfoItem
+        label="Seller Phone"
+        value={
+          seller?.phone ||
+          '—'
+        }
+      />
+
+      <InfoItem
+        label="Store Slug"
+        value={
+          store?.slug ||
+          '—'
+        }
+      />
 
     </div>
   )
@@ -568,7 +1070,11 @@ function InfoItem({
       </div>
 
       <p className="mt-1.5 break-words text-sm font-medium text-gray-900">
-        {value || '—'}
+        {value !== undefined &&
+        value !== null &&
+        String(value).trim() !== ''
+          ? value
+          : '—'}
       </p>
 
     </div>
@@ -585,6 +1091,7 @@ function SummaryRow({
 }) {
   return (
     <div className="flex items-center justify-between gap-4 text-sm">
+
       <span className="text-gray-500">
         {label}
       </span>
@@ -592,6 +1099,7 @@ function SummaryRow({
       <span className="font-medium text-gray-900">
         {formatCurrency(value)}
       </span>
+
     </div>
   )
 }
@@ -657,14 +1165,91 @@ function OrderStatus({
 }
 
 // ============================================================
+// GET SHIPPING VALUE
+// ============================================================
+
+function getShippingValue(
+  order,
+  field
+) {
+  if (
+    order?.shipping &&
+    typeof order.shipping === 'object'
+  ) {
+    return (
+      order.shipping[field] ||
+      '—'
+    )
+  }
+
+  if (field === 'carrier') {
+    return (
+      order?.shippingCarrier ||
+      '—'
+    )
+  }
+
+  if (field === 'service') {
+    return (
+      order?.shippingService ||
+      '—'
+    )
+  }
+
+  if (field === 'rateId') {
+    return (
+      order?.shippingRateId ||
+      '—'
+    )
+  }
+
+  return '—'
+}
+
+// ============================================================
+// PRODUCT IMAGE
+// ============================================================
+
+function getProductImage(
+  product
+) {
+  const images =
+    product?.images
+
+  if (
+    !Array.isArray(images) ||
+    images.length === 0
+  ) {
+    return ''
+  }
+
+  const firstImage =
+    images[0]
+
+  if (
+    typeof firstImage === 'object'
+  ) {
+    return (
+      firstImage?.url ||
+      firstImage?.secure_url ||
+      ''
+    )
+  }
+
+  return firstImage || ''
+}
+
+// ============================================================
 // FORMAT LABEL
 // ============================================================
 
 function formatLabel(value) {
   return String(value || '')
     .replace(/_/g, ' ')
-    .replace(/\b\w/g, (char) =>
-      char.toUpperCase()
+    .replace(
+      /\b\w/g,
+      (char) =>
+        char.toUpperCase()
     )
 }
 
@@ -693,7 +1278,11 @@ function formatDate(value) {
 
   const date = new Date(value)
 
-  if (Number.isNaN(date.getTime())) {
+  if (
+    Number.isNaN(
+      date.getTime()
+    )
+  ) {
     return '—'
   }
 
@@ -711,14 +1300,22 @@ function formatTime(value) {
 
   const date = new Date(value)
 
-  if (Number.isNaN(date.getTime())) {
+  if (
+    Number.isNaN(
+      date.getTime()
+    )
+  ) {
     return '—'
   }
 
-  return date.toLocaleTimeString([], {
-    hour: '2-digit',
-    minute: '2-digit',
-  })
+  return date.toLocaleTimeString(
+    [],
+    {
+      hour: '2-digit',
+      minute: '2-digit',
+    }
+  )
 }
 
 export default AdminOrderDetails
+
