@@ -70,6 +70,7 @@ import AdminCommission from './pages/admin/AdminCommission'
 import AdminNotifications from './pages/admin/AdminNotifications'
 import AdminSettings from './pages/admin/AdminSettings'
 import MyOrders from './pages/MyOrders';
+import AdminOrderDetails from './pages/admin/AdminOrderDetails'
 // ============================================================
 // PROTECTION COMPONENTS
 // ============================================================
@@ -357,6 +358,14 @@ function App() {
           }
         />
 
+<Route
+  path="/admin/orders/:id"
+  element={
+    <AdminProtectedRoute>
+      <AdminOrderDetails />
+    </AdminProtectedRoute>
+  }
+/>
         {/* ADMIN'S OWN PRODUCTS */}
 
         {/* <Route
