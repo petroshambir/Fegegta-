@@ -437,6 +437,8 @@ import addressRoutes from './routes/addressRoutes.js'
 import favoriteRoutes from './routes/favoriteRoutes.js'
 import sellerApplicationRoutes from './routes/sellerApplicationRoutes.js'
 import notificationRoutes from './routes/notificationRoutes.js'
+import bannerRoutes from './routes/bannerRoutes.js'
+import adminBannerRoutes from './routes/adminBannerRoutes.js'
 
 // ============================================================
 // ERROR MIDDLEWARE
@@ -672,6 +674,15 @@ app.use(
   favoriteRoutes
 )
 
+app.use(
+  '/api/banners',
+  bannerRoutes
+)
+
+app.use(
+  '/api/admin/banners',
+  adminBannerRoutes
+)
 // ============================================================
 // 404 ROUTE
 // ============================================================
