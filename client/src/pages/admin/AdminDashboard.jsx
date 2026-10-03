@@ -760,6 +760,24 @@ import AdminSidebar from '../../components/admin/AdminSidebar'
 import AdminHeader from '../../components/admin/AdminHeader'
 import AdminStatCard from '../../components/admin/AdminStatCard'
 
+const [showBannerEditor, setShowBannerEditor] = useState(false)
+const [bannerImage, setBannerImage] = useState(null)
+const [bannerSaving, setBannerSaving] = useState(false)
+const [bannerError, setBannerError] = useState('')
+const [bannerSuccess, setBannerSuccess] = useState('')
+
+const [bannerForm, setBannerForm] = useState({
+  title: '',
+  subtitle: '',
+  description: '',
+  buttonText: '',
+  buttonLink: '',
+  image: '',
+  type: 'image-text',
+  isActive: true,
+  order: 0,
+})
+
 // ============================================================
 // FEGEGTA BACKEND API
 // ============================================================
@@ -1430,71 +1448,370 @@ function AdminDashboard() {
               </div>
             </section>
           </div>
+{/* ==================================================
+HOME BANNER MANAGEMENT
+================================================== */}
 
-          {/* ==================================================
-              HOME BANNER MANAGEMENT
-          ================================================== */}
+<section className="mt-6 rounded-2xl border border-gray-200 bg-white p-6">
 
-          <section className="mt-6 rounded-2xl border border-gray-200 bg-white p-6">
+  <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
 
-            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
 
-              <div>
-                <h2 className="text-lg font-bold text-gray-900">
-                  Home Banner
-                </h2>
+<div>
+  <h2 className="text-lg font-bold text-gray-900">
+    Home Banner
+  </h2>
 
-                <p className="mt-1 text-sm text-gray-500">
-                  Manage the banner displayed on the Fegegta Home page.
-                </p>
-              </div>
+  <p className="mt-1 text-sm text-gray-500">
+    Manage the banner displayed on the Fegegta Home page.
+  </p>
+</div>
 
-              <Link
-                to="/admin/banners"
-                className="inline-flex items-center justify-center gap-2 rounded-xl bg-black px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-gray-800"
-              >
-                Manage Banner
+<button
+  type="button"
+  onClick={() => setShowBannerEditor(true)}
+  className="inline-flex items-center justify-center gap-2 rounded-xl bg-black px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-gray-800"
+>
+  Manage Banner
+  <ArrowRight size={16} />
+</button>
+```
 
-                <ArrowRight size={16} />
-              </Link>
+  </div>
 
-            </div>
+  <div className="mt-5 grid grid-cols-1 gap-3 sm:grid-cols-3">
 
-            <div className="mt-5 grid grid-cols-1 gap-3 sm:grid-cols-3">
+```
+<div className="rounded-xl border border-gray-200 bg-gray-50 p-4">
+  <p className="text-sm font-semibold text-gray-900">
+    Image + Text
+  </p>
 
-              <div className="rounded-xl border border-gray-200 bg-gray-50 p-4">
-                <p className="text-sm font-semibold text-gray-900">
-                  Image + Text
-                </p>
+  <p className="mt-1 text-xs leading-5 text-gray-500">
+    Show a banner image together with title, description and button.
+  </p>
+</div>
 
-                <p className="mt-1 text-xs leading-5 text-gray-500">
-                  Show a banner image together with title, description and button.
-                </p>
-              </div>
+<div className="rounded-xl border border-gray-200 bg-gray-50 p-4">
+  <p className="text-sm font-semibold text-gray-900">
+    Image Only
+  </p>
 
-              <div className="rounded-xl border border-gray-200 bg-gray-50 p-4">
-                <p className="text-sm font-semibold text-gray-900">
-                  Image Only
-                </p>
+  <p className="mt-1 text-xs leading-5 text-gray-500">
+    Show only the banner image without text.
+  </p>
+</div>
 
-                <p className="mt-1 text-xs leading-5 text-gray-500">
-                  Show only the banner image without text.
-                </p>
-              </div>
+<div className="rounded-xl border border-gray-200 bg-gray-50 p-4">
+  <p className="text-sm font-semibold text-gray-900">
+    Text Only
+  </p>
 
-              <div className="rounded-xl border border-gray-200 bg-gray-50 p-4">
-                <p className="text-sm font-semibold text-gray-900">
-                  Text Only
-                </p>
+  <p className="mt-1 text-xs leading-5 text-gray-500">
+    Show only the banner text without an image.
+  </p>
+</div>
+```
 
-                <p className="mt-1 text-xs leading-5 text-gray-500">
-                  Show only the banner text without an image.
-                </p>
-              </div>
+  </div>
 
-            </div>
+{/* ==================================================
+BANNER EDITOR
+================================================== */}
 
-          </section>
+{showBannerEditor && ( <div className="mt-6 rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
+
+
+  <div className="flex items-start justify-between gap-4">
+
+    <div>
+      <h3 className="text-lg font-bold text-gray-900">
+        Banner Editor
+      </h3>
+
+      <p className="mt-1 text-sm text-gray-500">
+        Create or update the banner shown on the Home page.
+      </p>
+    </div>
+
+    <button
+      type="button"
+      onClick={() => setShowBannerEditor(false)}
+      className="rounded-lg px-3 py-2 text-sm font-medium text-gray-500 transition hover:bg-gray-100 hover:text-gray-900"
+    >
+      Close
+    </button>
+
+  </div>
+
+  {/* BANNER TYPE */}
+
+  <div className="mt-6">
+
+    <label className="block text-sm font-semibold text-gray-900">
+      Banner Type
+    </label>
+
+    <select
+      value={bannerForm.type}
+      onChange={(e) =>
+        setBannerForm((prev) => ({
+          ...prev,
+          type: e.target.value,
+        }))
+      }
+      className="mt-2 w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-sm outline-none transition focus:border-black"
+    >
+      <option value="image-text">
+        Image + Text
+      </option>
+
+      <option value="image-only">
+        Image Only
+      </option>
+
+      <option value="text-only">
+        Text Only
+      </option>
+    </select>
+
+  </div>
+
+  {/* IMAGE */}
+
+  {bannerForm.type !== 'text-only' && (
+    <div className="mt-5">
+
+      <label className="block text-sm font-semibold text-gray-900">
+        Banner Image
+      </label>
+
+      <input
+        type="file"
+        accept="image/*"
+        onChange={(e) =>
+          setBannerImage(e.target.files?.[0] || null)
+        }
+        className="mt-2 block w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-sm"
+      />
+
+      {bannerForm.image && !bannerImage && (
+        <div className="mt-3 overflow-hidden rounded-xl border border-gray-200">
+          <img
+            src={bannerForm.image}
+            alt="Current banner"
+            className="h-40 w-full object-cover"
+          />
+        </div>
+      )}
+
+    </div>
+  )}
+
+  {/* TEXT FIELDS */}
+
+  {bannerForm.type !== 'image-only' && (
+    <div className="mt-5 space-y-5">
+
+      <div>
+        <label className="block text-sm font-semibold text-gray-900">
+          Title
+        </label>
+
+        <input
+          type="text"
+          value={bannerForm.title}
+          onChange={(e) =>
+            setBannerForm((prev) => ({
+              ...prev,
+              title: e.target.value,
+            }))
+          }
+          placeholder="Banner title"
+          className="mt-2 w-full rounded-xl border border-gray-300 px-4 py-3 text-sm outline-none transition focus:border-black"
+        />
+      </div>
+
+      <div>
+        <label className="block text-sm font-semibold text-gray-900">
+          Subtitle
+        </label>
+
+        <input
+          type="text"
+          value={bannerForm.subtitle}
+          onChange={(e) =>
+            setBannerForm((prev) => ({
+              ...prev,
+              subtitle: e.target.value,
+            }))
+          }
+          placeholder="Banner subtitle"
+          className="mt-2 w-full rounded-xl border border-gray-300 px-4 py-3 text-sm outline-none transition focus:border-black"
+        />
+      </div>
+
+      <div>
+        <label className="block text-sm font-semibold text-gray-900">
+          Description
+        </label>
+
+        <textarea
+          value={bannerForm.description}
+          onChange={(e) =>
+            setBannerForm((prev) => ({
+              ...prev,
+              description: e.target.value,
+            }))
+          }
+          placeholder="Banner description"
+          rows={4}
+          className="mt-2 w-full rounded-xl border border-gray-300 px-4 py-3 text-sm outline-none transition focus:border-black"
+        />
+      </div>
+
+      <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
+
+        <div>
+          <label className="block text-sm font-semibold text-gray-900">
+            Button Text
+          </label>
+
+          <input
+            type="text"
+            value={bannerForm.buttonText}
+            onChange={(e) =>
+              setBannerForm((prev) => ({
+                ...prev,
+                buttonText: e.target.value,
+              }))
+            }
+            placeholder="Shop Now"
+            className="mt-2 w-full rounded-xl border border-gray-300 px-4 py-3 text-sm outline-none transition focus:border-black"
+          />
+        </div>
+
+        <div>
+          <label className="block text-sm font-semibold text-gray-900">
+            Button Link
+          </label>
+
+          <input
+            type="text"
+            value={bannerForm.buttonLink}
+            onChange={(e) =>
+              setBannerForm((prev) => ({
+                ...prev,
+                buttonLink: e.target.value,
+              }))
+            }
+            placeholder="/products"
+            className="mt-2 w-full rounded-xl border border-gray-300 px-4 py-3 text-sm outline-none transition focus:border-black"
+          />
+        </div>
+
+      </div>
+
+    </div>
+  )}
+
+  {/* ORDER + ACTIVE */}
+
+  <div className="mt-5 grid grid-cols-1 gap-5 sm:grid-cols-2">
+
+    <div>
+      <label className="block text-sm font-semibold text-gray-900">
+        Display Order
+      </label>
+
+      <input
+        type="number"
+        value={bannerForm.order}
+        onChange={(e) =>
+          setBannerForm((prev) => ({
+            ...prev,
+            order: e.target.value,
+          }))
+        }
+        min="0"
+        className="mt-2 w-full rounded-xl border border-gray-300 px-4 py-3 text-sm outline-none transition focus:border-black"
+      />
+    </div>
+
+    <div className="flex items-end">
+
+      <label className="flex w-full cursor-pointer items-center justify-between rounded-xl border border-gray-200 bg-gray-50 px-4 py-3">
+
+        <div>
+          <p className="text-sm font-semibold text-gray-900">
+            Active Banner
+          </p>
+
+          <p className="mt-1 text-xs text-gray-500">
+            Show this banner on the Home page.
+          </p>
+        </div>
+
+        <input
+          type="checkbox"
+          checked={bannerForm.isActive}
+          onChange={(e) =>
+            setBannerForm((prev) => ({
+              ...prev,
+              isActive: e.target.checked,
+            }))
+          }
+          className="h-5 w-5"
+        />
+
+      </label>
+
+    </div>
+
+  </div>
+
+  {/* ACTIONS */}
+
+  <div className="mt-6 flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
+
+    <button
+      type="button"
+      onClick={() => setShowBannerEditor(false)}
+      className="rounded-xl border border-gray-200 bg-white px-5 py-3 text-sm font-semibold text-gray-700 transition hover:bg-gray-50"
+    >
+      Cancel
+    </button>
+
+    <button
+      type="button"
+      onClick={saveBanner}
+      disabled={bannerSaving}
+      className="rounded-xl bg-black px-5 py-3 text-sm font-semibold text-white transition hover:bg-gray-800 disabled:cursor-not-allowed disabled:opacity-60"
+    >
+      {bannerSaving ? 'Saving...' : 'Save Banner'}
+    </button>
+
+  </div>
+
+  {bannerError && (
+    <div className="mt-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+      {bannerError}
+    </div>
+  )}
+
+  {bannerSuccess && (
+    <div className="mt-4 rounded-xl border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-700">
+      {bannerSuccess}
+    </div>
+  )}
+
+</div>
+
+
+)}
+
+</section>
+
 
           {/* ==================================================
               SELLER EARNINGS OVERVIEW
