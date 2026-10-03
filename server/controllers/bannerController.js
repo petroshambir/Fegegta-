@@ -1,7 +1,7 @@
 import Banner from '../models/Banner.js'
 
 // ============================================================
-// GET ACTIVE BANNERS
+// GET ACTIVE BANNER
 // PUBLIC
 // ============================================================
 
@@ -11,7 +11,7 @@ export const getActiveBanners = async (
   next
 ) => {
   try {
-    const banners = await Banner.find({
+    const banner = await Banner.findOne({
       isActive: true,
     }).sort({
       order: 1,
@@ -20,7 +20,7 @@ export const getActiveBanners = async (
 
     return res.status(200).json({
       success: true,
-      banners,
+      banner: banner || null,
     })
   } catch (error) {
     next(error)
@@ -75,6 +75,15 @@ export const createBanner = async (
       order,
     } = req.body
 
+    const shouldBeActive =
+      isActive === undefined
+        ? true
+        : String(isActive) === 'true'
+
+    // ----------------------------------------------------------
+    // GET IMAGE
+    // ----------------------------------------------------------
+
     let image = ''
 
     if (req.file) {
@@ -84,6 +93,27 @@ export const createBanner = async (
         req.file.url ||
         ''
     }
+
+    // ----------------------------------------------------------
+    // ONLY ONE ACTIVE BANNER
+    // ----------------------------------------------------------
+
+    if (shouldBeActive) {
+      await Banner.updateMany(
+        {
+          isActive: true,
+        },
+        {
+          $set: {
+            isActive: false,
+          },
+        }
+      )
+    }
+
+    // ----------------------------------------------------------
+    // CREATE BANNER
+    // ----------------------------------------------------------
 
     const banner = await Banner.create({
       title:
@@ -122,10 +152,7 @@ export const createBanner = async (
           ? type
           : 'image-text',
 
-      isActive:
-        isActive === undefined
-          ? true
-          : String(isActive) === 'true',
+      isActive: shouldBeActive,
 
       order:
         Number.isFinite(Number(order))
@@ -178,6 +205,10 @@ export const updateBanner = async (
       order,
     } = req.body
 
+    // ----------------------------------------------------------
+    // UPDATE TEXT FIELDS
+    // ----------------------------------------------------------
+
     if (title !== undefined) {
       banner.title =
         String(title).trim()
@@ -203,6 +234,10 @@ export const updateBanner = async (
         String(buttonLink).trim()
     }
 
+    // ----------------------------------------------------------
+    // UPDATE TYPE
+    // ----------------------------------------------------------
+
     if (
       type !== undefined &&
       [
@@ -214,10 +249,39 @@ export const updateBanner = async (
       banner.type = type
     }
 
+    // ----------------------------------------------------------
+    // UPDATE ACTIVE STATUS
+    // ----------------------------------------------------------
+
     if (isActive !== undefined) {
-      banner.isActive =
+      const nextIsActive =
         String(isActive) === 'true'
+
+      // If this banner is being activated,
+      // deactivate all other banners.
+      if (nextIsActive) {
+        await Banner.updateMany(
+          {
+            _id: {
+              $ne: banner._id,
+            },
+            isActive: true,
+          },
+          {
+            $set: {
+              isActive: false,
+            },
+          }
+        )
+      }
+
+      banner.isActive =
+        nextIsActive
     }
+
+    // ----------------------------------------------------------
+    // UPDATE ORDER
+    // ----------------------------------------------------------
 
     if (order !== undefined) {
       const numericOrder =
@@ -233,6 +297,10 @@ export const updateBanner = async (
       }
     }
 
+    // ----------------------------------------------------------
+    // UPDATE IMAGE
+    // ----------------------------------------------------------
+
     if (req.file) {
       banner.image =
         req.file.path ||
@@ -240,6 +308,10 @@ export const updateBanner = async (
         req.file.url ||
         banner.image
     }
+
+    // ----------------------------------------------------------
+    // SAVE
+    // ----------------------------------------------------------
 
     await banner.save()
 
@@ -266,7 +338,7 @@ export const deleteBanner = async (
 ) => {
   try {
     const banner =
-      await Banner.findByIdAndDelete(
+      await Banner.findById(
         req.params.id
       )
 
@@ -277,10 +349,19 @@ export const deleteBanner = async (
       })
     }
 
+    // ----------------------------------------------------------
+    // DELETE FROM DATABASE
+    // ----------------------------------------------------------
+
+    await Banner.findByIdAndDelete(
+      req.params.id
+    )
+
     return res.status(200).json({
       success: true,
       message:
         'Banner deleted successfully.',
+      bannerId: req.params.id,
     })
   } catch (error) {
     next(error)
@@ -310,8 +391,36 @@ export const toggleBanner = async (
       })
     }
 
-    banner.isActive =
-      !banner.isActive
+    // ----------------------------------------------------------
+    // ACTIVATE
+    // ----------------------------------------------------------
+
+    if (!banner.isActive) {
+      // Deactivate all other active banners
+      await Banner.updateMany(
+        {
+          _id: {
+            $ne: banner._id,
+          },
+          isActive: true,
+        },
+        {
+          $set: {
+            isActive: false,
+          },
+        }
+      )
+
+      banner.isActive = true
+    }
+
+    // ----------------------------------------------------------
+    // DEACTIVATE
+    // ----------------------------------------------------------
+
+    else {
+      banner.isActive = false
+    }
 
     await banner.save()
 
