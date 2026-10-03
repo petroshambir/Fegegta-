@@ -1126,7 +1126,6 @@
 //   }
 // }
 
-
 import Order from '../models/Order.js'
 import Product from '../models/Product.js'
 import Commission from '../models/Commission.js'
@@ -1455,30 +1454,6 @@ export const createOrder = async (
     // ========================================================
     // SHIPPING COST
     // ========================================================
-    //
-    // Frontend can send:
-    //
-    // 1. shippingCost: 10
-    //
-    // OR
-    //
-    // 2. shipping: 10
-    //
-    // OR
-    //
-    // 3. shipping: {
-    //      price: 10,
-    //      carrier: 'DHL',
-    //      service: 'Express'
-    //    }
-    //
-    // Test checkout sends:
-    //
-    // shipping.price = 0
-    //
-    // Therefore we must read shipping.price when
-    // shipping is an object.
-    // ========================================================
 
     let rawShippingCost = 0
 
@@ -1595,13 +1570,17 @@ export const createOrder = async (
         'bank_transfer'
     }
 
-    // Test checkout
-    // This is used only by the checkout testing flow.
+    // ========================================================
+    // ALLOWED PAYMENT METHODS
+    // ========================================================
+
     const allowedPaymentMethods = [
       'cash_on_delivery',
       'stripe',
       'paypal',
       'bank_transfer',
+
+      // Temporary checkout testing
       'test',
     ]
 
@@ -1682,7 +1661,7 @@ export const createOrder = async (
     const order =
       await Order.create({
         orderNumber:
-          generateOrderNumber(),
+          await generateOrderNumber(),
 
         customer:
           customerId,
@@ -1724,10 +1703,6 @@ export const createOrder = async (
 
     // ========================================================
     // ADMIN ORDER NOTIFICATION
-    // ========================================================
-    //
-    // Notification failure must NOT cancel the order.
-    // The order has already been successfully created.
     // ========================================================
 
     try {
