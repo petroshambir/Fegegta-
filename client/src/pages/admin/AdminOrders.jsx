@@ -433,15 +433,22 @@ function AdminOrders() {
                             {/* VIEW */}
                             <td className="px-5 py-4 text-right">
                               {orderId ? (
-                                <Link
-                                  to={`/account/orders/${orderId}`}
-                                  className="inline-flex rounded-lg border border-gray-200 p-2 text-gray-600 transition hover:bg-gray-50 hover:text-gray-900"
-                                  title="View order"
-                                >
-                                  <Eye
-                                    size={17}
-                                  />
-                                </Link>
+                                // <Link
+                                //   to={`/account/orders/${orderId}`}
+                                //   className="inline-flex rounded-lg border border-gray-200 p-2 text-gray-600 transition hover:bg-gray-50 hover:text-gray-900"
+                                //   title="View order"
+                                // >
+                                //   <Eye
+                                //     size={17}
+                                //   />
+                                // </Link>
+                                <Link 
+  to={`/admin/orders/${orderId}`}
+  className="inline-flex rounded-lg border border-gray-200 p-2 text-gray-600 transition hover:bg-gray-50 hover:text-gray-900"
+  title="View order"
+>
+  <Eye size={17} />
+</Link>
                               ) : (
                                 <span className="text-xs text-gray-400">
                                   —
