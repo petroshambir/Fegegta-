@@ -1127,7 +1127,6 @@
 // }
 
 
-
 import Order from '../models/Order.js'
 import Product from '../models/Product.js'
 import Commission from '../models/Commission.js'
@@ -1406,7 +1405,8 @@ export const createOrder = async (
       // ======================================================
 
       orderItems.push({
-        product: product._id,
+        product:
+          product._id,
 
         seller:
           product.seller,
@@ -1455,12 +1455,56 @@ export const createOrder = async (
     // ========================================================
     // SHIPPING COST
     // ========================================================
+    //
+    // Frontend can send:
+    //
+    // 1. shippingCost: 10
+    //
+    // OR
+    //
+    // 2. shipping: 10
+    //
+    // OR
+    //
+    // 3. shipping: {
+    //      price: 10,
+    //      carrier: 'DHL',
+    //      service: 'Express'
+    //    }
+    //
+    // Test checkout sends:
+    //
+    // shipping.price = 0
+    //
+    // Therefore we must read shipping.price when
+    // shipping is an object.
+    // ========================================================
+
+    let rawShippingCost = 0
+
+    if (
+      shippingCost !== undefined &&
+      shippingCost !== null &&
+      shippingCost !== ''
+    ) {
+      rawShippingCost =
+        shippingCost
+    } else if (
+      shipping &&
+      typeof shipping === 'object'
+    ) {
+      rawShippingCost =
+        shipping.price ??
+        shipping.cost ??
+        0
+    } else {
+      rawShippingCost =
+        shipping ?? 0
+    }
 
     const calculatedShipping =
       Number(
-        shippingCost ??
-        shipping ??
-        0
+        rawShippingCost
       )
 
     if (
@@ -1551,11 +1595,14 @@ export const createOrder = async (
         'bank_transfer'
     }
 
+    // Test checkout
+    // This is used only by the checkout testing flow.
     const allowedPaymentMethods = [
       'cash_on_delivery',
       'stripe',
       'paypal',
       'bank_transfer',
+      'test',
     ]
 
     if (
@@ -1678,10 +1725,6 @@ export const createOrder = async (
     // ========================================================
     // ADMIN ORDER NOTIFICATION
     // ========================================================
-    //
-    // When a customer creates an order:
-    // 1. Find all admin users.
-    // 2. Create an unread notification for each admin.
     //
     // Notification failure must NOT cancel the order.
     // The order has already been successfully created.
