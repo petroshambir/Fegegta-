@@ -672,6 +672,9 @@ const Contact = () => {
                 <p>+251 929 180 178</p>
               </div>
             </a>
+            <a  href="https://wa.me/251993501570"
+              target="_blank"
+              rel="noopener noreferrer">+251993501570</a>
 
             {/* EMAIL */}
             <a
