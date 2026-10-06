@@ -13,6 +13,7 @@ import Cart from './pages/Cart'
 import Categories from './pages/Categories'
 import Checkout from './pages/Checkout'
 import OrderConfirmation from './pages/OrderConfirmation'
+import Contact from './pages/Contact'
 
 // ============================================================
 // AUTH PAGES
@@ -505,7 +506,7 @@ function App() {
           element={<Home />}
         />
         <Route path="/my-orders" element={<MyOrders />} />
-
+<Route path="/contact" element={<Contact />} />
       </Routes>
     </MainLayout>
   )
