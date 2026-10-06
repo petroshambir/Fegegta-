@@ -11,9 +11,9 @@ import {
   Users,
 } from 'lucide-react'
 
-import founderImage from '../assets/about-founder.jpg'
-import aboutImage1 from '../assets/about-1.jpg'
-import aboutImage2 from '../assets/about-2.jpg'
+import founderImage from '../assets/about-founder.jpeg'
+import aboutImage1 from '../assets/about-1.jpeg'
+import aboutImage2 from '../assets/about-2.jpeg'
 
 // ============================================================
 // ABOUT PAGE
