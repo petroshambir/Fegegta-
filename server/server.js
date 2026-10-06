@@ -421,6 +421,7 @@ import dotenv from 'dotenv'
 // ============================================================
 
 import connectDB from './config/db.js'
+import contactRoutes from './routes/contactRoutes.js'
 
 // ============================================================
 // ROUTES
@@ -545,6 +546,8 @@ app.use(
     limit: '10mb',
   })
 )
+
+app.use('/api/contact', contactRoutes)
 
 app.use(
   express.urlencoded({
