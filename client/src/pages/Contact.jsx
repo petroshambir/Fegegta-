@@ -1069,6 +1069,14 @@ const Contact = () => {
                     className="mt-2 block font-semibold hover:underline"
                   >
                     +251 993 501 570
+                  </a><br /><br />
+                     <a
+                    href="https://wa.me/251993501570"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="mt-2 block font-semibold hover:underline"
+                  >
+                    +251 993 501 570
                   </a>
                 </div>
               </div>
