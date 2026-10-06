@@ -596,7 +596,7 @@ import {
 
 import founderImage from '../assets/about-founder.jpeg'
 import aboutImage1 from '../assets/about-1.jpeg'
-import aboutImage2 from '../assets/about-14.jpeg'
+import aboutImage2 from '../assets/about-2.jpeg'
 import aboutImage3 from '../assets/about-11.jpeg'
 import aboutImage4 from '../assets/about-4.jpeg'
 import aboutImage5 from '../assets/about-5.jpeg'
